@@ -1,0 +1,15 @@
+{
+  "name": "mpob-developer-level-dashboard",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Mandate Decision Studio (developer level): step-by-step B20/B30 biodiesel mandate app with the V3 evidence behind every step",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node --test test.mjs",
+    "shoot": "node shoot.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

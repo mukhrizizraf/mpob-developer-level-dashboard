@@ -1,0 +1,3243 @@
+{
+  "surface": "dashboard",
+  "title": "Malaysia Biodiesel Mandate Decision Studio",
+  "generatedAt": "2026-09-11T22:50:56+08:00",
+  "status": "analytical-snapshot",
+  "filters": [],
+  "queries": {
+    "model_registry": {
+      "rows": [
+        {
+          "modelVersion": "Codex-V3-P1",
+          "modelStatus": "ANALYTICAL SNAPSHOT",
+          "modelMethod": "OLS-HAC cost equation; real-data log-price Johansen trace test; 10,000-path BSF Monte Carlo; financing comparison; dual-trigger rule",
+          "functionalForm": "Level-level",
+          "sampleStart": "2010-01",
+          "dataThrough": "2026-04",
+          "dataThroughLabel": "2026-04",
+          "sampleSize": 195,
+          "estimatedAt": "2026-09-11T22:50:56+08:00",
+          "estimatedAtLabel": "2026-09-11",
+          "refreshMode": "Codex V3 authorised Python refresh",
+          "operationalMaster": "MPOB_V3_Codex_Master.xlsx",
+          "inputVariableCount": 20,
+          "inputScope": "Codex V3 20-variable master",
+          "crossSurfaceBoundary": "Do not compare H1/H2 headlines directly with dashboards built from another master or pipeline."
+        }
+      ],
+      "source": {
+        "label": "Codex V3 model registry",
+        "files": [
+          "codex_pipeline/run_codex_v3.py"
+        ],
+        "filters": [
+          "Codex V3 authorised refresh"
+        ],
+        "caveats": [
+          "ANALYTICAL SNAPSHOT; no output becomes OFFICIAL through this pipeline."
+        ],
+        "metricDefinitions": []
+      }
+    },
+    "decision_snapshot": {
+      "rows": [
+        {
+          "period": "2026-04",
+          "mopsRmT": 4004.93,
+          "pmeRmT": 4650.94,
+          "viabilityGapRmT": -646.01,
+          "fundRmMn": 1000.0,
+          "bslRateRmT": 25.0,
+          "savingsCaptureRate": 1.0,
+          "b30Authorised": "false",
+          "dataMode": "ANALYTICAL SNAPSHOT"
+        }
+      ],
+      "source": {
+        "label": "Latest Codex V3 decision inputs",
+        "files": [
+          "MPOB_V3_Codex_Master.xlsx"
+        ],
+        "filters": [
+          "Codex V3 authorised refresh"
+        ],
+        "caveats": [
+          "ANALYTICAL SNAPSHOT; no output becomes OFFICIAL through this pipeline."
+        ],
+        "metricDefinitions": []
+      }
+    },
+    "model_assumptions": {
+      "rows": [
+        {
+          "seedCapitalRmMn": 1000.0,
+          "savingsCaptureRate": 1.0,
+          "b15VolumeMt": 1.3913592000000004,
+          "b20VolumeMt": 1.8551456000000004,
+          "b30VolumeMt": 2.7827184000000007,
+          "solvencyTarget": 0.85,
+          "mcPaths": 10000,
+          "headlineMonths": 9,
+          "robustnessMonths": 60,
+          "b30GapThreshold": 0,
+          "b15GapFloor": -500,
+          "fundSafetyMultiple": 3,
+          "rolling12AvgB20DrawdownRmMn": 213.9611,
+          "annualCpoProductionMt": 5.866118
+        }
+      ],
+      "source": {
+        "label": "Codex V3 model assumptions",
+        "files": [
+          "codex_pipeline/v3_config.py"
+        ],
+        "filters": [
+          "Codex V3 authorised refresh"
+        ],
+        "caveats": [
+          "ANALYTICAL SNAPSHOT; no output becomes OFFICIAL through this pipeline."
+        ],
+        "metricDefinitions": []
+      }
+    },
+    "rq1_coefficients": {
+      "rows": [
+        {
+          "Variable": "const",
+          "Coefficient": 168.9537,
+          "p-value": 0.0,
+          "Sig": "***",
+          "CI 95% lo": 144.0497,
+          "CI 95% hi": 193.8577
+        },
+        {
+          "Variable": "cpo_lag1",
+          "Coefficient": 1.054,
+          "p-value": 0.0,
+          "Sig": "***",
+          "CI 95% lo": 1.0507,
+          "CI 95% hi": 1.0573
+        },
+        {
+          "Variable": "meoh_rm",
+          "Coefficient": 0.1117,
+          "p-value": 0.0,
+          "Sig": "***",
+          "CI 95% lo": 0.0974,
+          "CI 95% hi": 0.1261
+        },
+        {
+          "Variable": "gly_rm",
+          "Coefficient": -0.0945,
+          "p-value": 0.0,
+          "Sig": "***",
+          "CI 95% lo": -0.1039,
+          "CI 95% hi": -0.0851
+        }
+      ],
+      "source": {
+        "label": "RQ1 OLS-HAC APM-Bio coefficients",
+        "files": [
+          "codex_pipeline/rq1_apm_bio.py"
+        ],
+        "filters": [
+          "Codex V3 authorised refresh"
+        ],
+        "caveats": [
+          "ANALYTICAL SNAPSHOT; no output becomes OFFICIAL through this pipeline."
+        ],
+        "metricDefinitions": []
+      }
+    },
+    "rq1_breakeven": {
+      "rows": [
+        {
+          "Brent (USD/bbl)": 60,
+          "MOPS diesel (RM/t)": 2070.9,
+          "Break-even CPO (RM/t)": 1894.4
+        },
+        {
+          "Brent (USD/bbl)": 70,
+          "MOPS diesel (RM/t)": 2403.6,
+          "Break-even CPO (RM/t)": 2210.1
+        },
+        {
+          "Brent (USD/bbl)": 80,
+          "MOPS diesel (RM/t)": 2736.3,
+          "Break-even CPO (RM/t)": 2525.7
+        },
+        {
+          "Brent (USD/bbl)": 90,
+          "MOPS diesel (RM/t)": 3068.9,
+          "Break-even CPO (RM/t)": 2841.3
+        },
+        {
+          "Brent (USD/bbl)": 100,
+          "MOPS diesel (RM/t)": 3401.6,
+          "Break-even CPO (RM/t)": 3157.0
+        },
+        {
+          "Brent (USD/bbl)": 110,
+          "MOPS diesel (RM/t)": 3734.3,
+          "Break-even CPO (RM/t)": 3472.6
+        },
+        {
+          "Brent (USD/bbl)": 120,
+          "MOPS diesel (RM/t)": 4067.0,
+          "Break-even CPO (RM/t)": 3788.2
+        },
+        {
+          "Brent (USD/bbl)": 130,
+          "MOPS diesel (RM/t)": 4399.7,
+          "Break-even CPO (RM/t)": 4103.8
+        },
+        {
+          "Brent (USD/bbl)": 140,
+          "MOPS diesel (RM/t)": 4732.3,
+          "Break-even CPO (RM/t)": 4419.5
+        }
+      ],
+      "source": {
+        "label": "RQ1 Brent and break-even CPO grid",
+        "files": [
+          "codex_pipeline/rq1_apm_bio.py"
+        ],
+        "filters": [
+          "Codex V3 authorised refresh"
+        ],
+        "caveats": [
+          "ANALYTICAL SNAPSHOT; no output becomes OFFICIAL through this pipeline."
+        ],
+        "metricDefinitions": []
+      }
+    },
+    "rq2_scenarios_9m": {
+      "rows": [
+        {
+          "Scenario": "A · Low oil",
+          "solvency_prob": 0.002,
+          "p6_months": 0.3201,
+          "var95_rm_m": 2863.3206,
+          "cvar95_rm_m": 2997.3629,
+          "mean_min_fund": 0.1983,
+          "median_end": 0.0
+        },
+        {
+          "Scenario": "B · Base",
+          "solvency_prob": 0.2768,
+          "p6_months": 0.8715,
+          "var95_rm_m": 2231.7748,
+          "cvar95_rm_m": 2387.0575,
+          "mean_min_fund": 67.6734,
+          "median_end": 0.0
+        },
+        {
+          "Scenario": "C · High oil",
+          "solvency_prob": 0.8853,
+          "p6_months": 0.9946,
+          "var95_rm_m": 1576.6807,
+          "cvar95_rm_m": 1737.385,
+          "mean_min_fund": 479.9799,
+          "median_end": 532.3257
+        },
+        {
+          "Scenario": "D · Geopolitical shock",
+          "solvency_prob": 0.3206,
+          "p6_months": 0.9628,
+          "var95_rm_m": 2154.6886,
+          "cvar95_rm_m": 2302.6177,
+          "mean_min_fund": 75.1792,
+          "median_end": 0.0
+        }
+      ],
+      "source": {
+        "label": "RQ2 10,000-path BSF stress simulation",
+        "files": [
+          "codex_pipeline/rq2_bsf_resilience.py"
+        ],
+        "filters": [
+          "Codex V3 authorised refresh"
+        ],
+        "caveats": [
+          "ANALYTICAL SNAPSHOT; no output becomes OFFICIAL through this pipeline."
+        ],
+        "metricDefinitions": []
+      }
+    },
+    "rq2_scenarios_60m": {
+      "rows": [
+        {
+          "Scenario": "A · Low oil",
+          "solvency_prob": 0.0112,
+          "p6_months": 0.9364,
+          "var95_rm_m": 24087.4383,
+          "cvar95_rm_m": 26497.1131,
+          "mean_min_fund": 4.8177,
+          "median_end": 0.0
+        },
+        {
+          "Scenario": "B · Base",
+          "solvency_prob": 0.0667,
+          "p6_months": 0.9512,
+          "var95_rm_m": 20849.6291,
+          "cvar95_rm_m": 23463.6222,
+          "mean_min_fund": 30.2134,
+          "median_end": 0.0
+        },
+        {
+          "Scenario": "C · High oil",
+          "solvency_prob": 0.1866,
+          "p6_months": 0.9638,
+          "var95_rm_m": 17641.1181,
+          "cvar95_rm_m": 20358.6374,
+          "mean_min_fund": 91.0639,
+          "median_end": 15.9578
+        },
+        {
+          "Scenario": "D · Geopolitical shock",
+          "solvency_prob": 0.0,
+          "p6_months": 0.9655,
+          "var95_rm_m": 23580.281,
+          "cvar95_rm_m": 25873.3108,
+          "mean_min_fund": 0.0,
+          "median_end": 0.0
+        }
+      ],
+      "source": {
+        "label": "RQ2 10,000-path BSF stress simulation",
+        "files": [
+          "codex_pipeline/rq2_bsf_resilience.py"
+        ],
+        "filters": [
+          "Codex V3 authorised refresh"
+        ],
+        "caveats": [
+          "ANALYTICAL SNAPSHOT; no output becomes OFFICIAL through this pipeline."
+        ],
+        "metricDefinitions": []
+      }
+    },
+    "rq2_capture": {
+      "rows": [
+        {
+          "Savings capture": 1.0,
+          "Scenario": "A · Low oil",
+          "Horizon (months)": 60,
+          "Solvency prob": 0.0112,
+          "P(survive ≥6m)": 0.9364,
+          "Meets target": "No"
+        },
+        {
+          "Savings capture": 0.75,
+          "Scenario": "A · Low oil",
+          "Horizon (months)": 60,
+          "Solvency prob": 0.0111,
+          "P(survive ≥6m)": 0.9364,
+          "Meets target": "No"
+        },
+        {
+          "Savings capture": 0.5,
+          "Scenario": "A · Low oil",
+          "Horizon (months)": 60,
+          "Solvency prob": 0.0108,
+          "P(survive ≥6m)": 0.9364,
+          "Meets target": "No"
+        },
+        {
+          "Savings capture": 0.25,
+          "Scenario": "A · Low oil",
+          "Horizon (months)": 60,
+          "Solvency prob": 0.0106,
+          "P(survive ≥6m)": 0.9364,
+          "Meets target": "No"
+        },
+        {
+          "Savings capture": 1.0,
+          "Scenario": "B · Base",
+          "Horizon (months)": 60,
+          "Solvency prob": 0.0667,
+          "P(survive ≥6m)": 0.9512,
+          "Meets target": "No"
+        },
+        {
+          "Savings capture": 0.75,
+          "Scenario": "B · Base",
+          "Horizon (months)": 60,
+          "Solvency prob": 0.0658,
+          "P(survive ≥6m)": 0.9512,
+          "Meets target": "No"
+        },
+        {
+          "Savings capture": 0.5,
+          "Scenario": "B · Base",
+          "Horizon (months)": 60,
+          "Solvency prob": 0.0649,
+          "P(survive ≥6m)": 0.9512,
+          "Meets target": "No"
+        },
+        {
+          "Savings capture": 0.25,
+          "Scenario": "B · Base",
+          "Horizon (months)": 60,
+          "Solvency prob": 0.0642,
+          "P(survive ≥6m)": 0.9512,
+          "Meets target": "No"
+        },
+        {
+          "Savings capture": 1.0,
+          "Scenario": "C · High oil",
+          "Horizon (months)": 60,
+          "Solvency prob": 0.1866,
+          "P(survive ≥6m)": 0.9638,
+          "Meets target": "No"
+        },
+        {
+          "Savings capture": 0.75,
+          "Scenario": "C · High oil",
+          "Horizon (months)": 60,
+          "Solvency prob": 0.1852,
+          "P(survive ≥6m)": 0.9638,
+          "Meets target": "No"
+        },
+        {
+          "Savings capture": 0.5,
+          "Scenario": "C · High oil",
+          "Horizon (months)": 60,
+          "Solvency prob": 0.1836,
+          "P(survive ≥6m)": 0.9638,
+          "Meets target": "No"
+        },
+        {
+          "Savings capture": 0.25,
+          "Scenario": "C · High oil",
+          "Horizon (months)": 60,
+          "Solvency prob": 0.1824,
+          "P(survive ≥6m)": 0.9638,
+          "Meets target": "No"
+        },
+        {
+          "Savings capture": 1.0,
+          "Scenario": "D · Geopolitical shock",
+          "Horizon (months)": 60,
+          "Solvency prob": 0.0,
+          "P(survive ≥6m)": 0.9655,
+          "Meets target": "No"
+        },
+        {
+          "Savings capture": 0.75,
+          "Scenario": "D · Geopolitical shock",
+          "Horizon (months)": 60,
+          "Solvency prob": 0.0,
+          "P(survive ≥6m)": 0.9655,
+          "Meets target": "No"
+        },
+        {
+          "Savings capture": 0.5,
+          "Scenario": "D · Geopolitical shock",
+          "Horizon (months)": 60,
+          "Solvency prob": 0.0,
+          "P(survive ≥6m)": 0.9654,
+          "Meets target": "No"
+        },
+        {
+          "Savings capture": 0.25,
+          "Scenario": "D · Geopolitical shock",
+          "Horizon (months)": 60,
+          "Solvency prob": 0.0,
+          "P(survive ≥6m)": 0.9654,
+          "Meets target": "No"
+        }
+      ],
+      "source": {
+        "label": "RQ2 savings-capture sensitivity",
+        "files": [
+          "codex_pipeline/rq2_bsf_resilience.py"
+        ],
+        "filters": [
+          "Codex V3 authorised refresh"
+        ],
+        "caveats": [
+          "ANALYTICAL SNAPSHOT; no output becomes OFFICIAL through this pipeline."
+        ],
+        "metricDefinitions": []
+      }
+    },
+    "rq2_seed": {
+      "rows": [
+        {
+          "Mandate": "B15",
+          "Scenario": "A · Low oil",
+          "BSL rate (RM/t)": 25.0,
+          "Horizon (months)": 60,
+          "Optimal F0 (RM mn)": 5000.0
+        },
+        {
+          "Mandate": "B20",
+          "Scenario": "A · Low oil",
+          "BSL rate (RM/t)": 25.0,
+          "Horizon (months)": 60,
+          "Optimal F0 (RM mn)": 5000.0
+        },
+        {
+          "Mandate": "B30",
+          "Scenario": "A · Low oil",
+          "BSL rate (RM/t)": 25.0,
+          "Horizon (months)": 60,
+          "Optimal F0 (RM mn)": 5000.0
+        },
+        {
+          "Mandate": "B15",
+          "Scenario": "D · Geopolitical shock",
+          "BSL rate (RM/t)": 25.0,
+          "Horizon (months)": 60,
+          "Optimal F0 (RM mn)": 5000.0
+        },
+        {
+          "Mandate": "B20",
+          "Scenario": "D · Geopolitical shock",
+          "BSL rate (RM/t)": 25.0,
+          "Horizon (months)": 60,
+          "Optimal F0 (RM mn)": 5000.0
+        },
+        {
+          "Mandate": "B30",
+          "Scenario": "D · Geopolitical shock",
+          "BSL rate (RM/t)": 25.0,
+          "Horizon (months)": 60,
+          "Optimal F0 (RM mn)": 5000.0
+        }
+      ],
+      "source": {
+        "label": "RQ2 minimum seed-capital search",
+        "files": [
+          "codex_pipeline/rq2_bsf_resilience.py"
+        ],
+        "filters": [
+          "Codex V3 authorised refresh"
+        ],
+        "caveats": [
+          "ANALYTICAL SNAPSHOT; no output becomes OFFICIAL through this pipeline."
+        ],
+        "metricDefinitions": []
+      }
+    },
+    "rq3_financing": {
+      "rows": [
+        {
+          "Instrument": "Export-point levy",
+          "Collection point": "Export transaction",
+          "Rate (RM/t)": 25.0,
+          "Annual revenue (RM mn)": 133.29,
+          "Revenue CV (↓=stable)": 0.183,
+          "Grower burden (RM/t)": 3.57,
+          "Meets RM500mn": "No",
+          "H3 assessment": "Compare after stakeholder validation",
+          "Note": "Export-volume-based; buyer pass-through is an assumption."
+        },
+        {
+          "Instrument": "BSL (proposed)",
+          "Collection point": "CPO production ring-fenced",
+          "Rate (RM/t)": 25,
+          "Annual revenue (RM mn)": 146.65,
+          "Revenue CV (↓=stable)": 0.182,
+          "Grower burden (RM/t)": 7.14,
+          "Meets RM500mn": "No",
+          "H3 assessment": "Selectable ring-fenced scenario",
+          "Note": "Proposed BSL; it is not an existing levy."
+        },
+        {
+          "Instrument": "Production tax",
+          "Collection point": "CPO production general revenue",
+          "Rate (RM/t)": 25.0,
+          "Annual revenue (RM mn)": 146.65,
+          "Revenue CV (↓=stable)": 0.182,
+          "Grower burden (RM/t)": 25.0,
+          "Meets RM500mn": "No",
+          "H3 assessment": "Comparator with full producer incidence",
+          "Note": "Full producer incidence is assumed; not ring-fenced."
+        },
+        {
+          "Instrument": "Subsidy savings",
+          "Collection point": "When viability gap is positive",
+          "Rate (RM/t)": null,
+          "Annual revenue (RM mn)": 80.72,
+          "Revenue CV (↓=stable)": 2.029,
+          "Grower burden (RM/t)": 0.0,
+          "Meets RM500mn": "No",
+          "H3 assessment": "No new levy but variable",
+          "Note": "Calculated from the V3 historical viability-gap series."
+        },
+        {
+          "Instrument": "Seed capital (one-off)",
+          "Collection point": "Government appropriation",
+          "Rate (RM/t)": null,
+          "Annual revenue (RM mn)": 0.0,
+          "Revenue CV (↓=stable)": 0.0,
+          "Grower burden (RM/t)": 0.0,
+          "Meets RM500mn": "No",
+          "H3 assessment": "One-off capital only",
+          "Note": "A decision parameter, not recurring revenue."
+        },
+        {
+          "Instrument": "WPL baseline comparator",
+          "Collection point": "Existing windfall-profit levy",
+          "Rate (RM/t)": null,
+          "Annual revenue (RM mn)": null,
+          "Revenue CV (↓=stable)": null,
+          "Grower burden (RM/t)": null,
+          "Meets RM500mn": "Not estimated",
+          "H3 assessment": "Baseline only - not selectable",
+          "Note": "Not modelled because the V3 master contains no WPL revenue series."
+        }
+      ],
+      "source": {
+        "label": "RQ3 financing comparison",
+        "files": [
+          "codex_pipeline/rq3_financing.py"
+        ],
+        "filters": [
+          "Codex V3 authorised refresh"
+        ],
+        "caveats": [
+          "ANALYTICAL SNAPSHOT; no output becomes OFFICIAL through this pipeline."
+        ],
+        "metricDefinitions": []
+      }
+    },
+    "rq3_bsl": {
+      "rows": [
+        {
+          "Production scenario": "Low production (−10%)",
+          "CPO production (MT)": "5.28 mn",
+          "BSL rate (RM/t)": 20.0,
+          "Annual revenue (RM mn)": 105.59,
+          "Meets RM500mn target": "No"
+        },
+        {
+          "Production scenario": "Low production (−10%)",
+          "CPO production (MT)": "5.28 mn",
+          "BSL rate (RM/t)": 25.0,
+          "Annual revenue (RM mn)": 131.99,
+          "Meets RM500mn target": "No"
+        },
+        {
+          "Production scenario": "Low production (−10%)",
+          "CPO production (MT)": "5.28 mn",
+          "BSL rate (RM/t)": 30.0,
+          "Annual revenue (RM mn)": 158.39,
+          "Meets RM500mn target": "No"
+        },
+        {
+          "Production scenario": "Base production",
+          "CPO production (MT)": "5.87 mn",
+          "BSL rate (RM/t)": 20.0,
+          "Annual revenue (RM mn)": 117.32,
+          "Meets RM500mn target": "No"
+        },
+        {
+          "Production scenario": "Base production",
+          "CPO production (MT)": "5.87 mn",
+          "BSL rate (RM/t)": 25.0,
+          "Annual revenue (RM mn)": 146.65,
+          "Meets RM500mn target": "No"
+        },
+        {
+          "Production scenario": "Base production",
+          "CPO production (MT)": "5.87 mn",
+          "BSL rate (RM/t)": 30.0,
+          "Annual revenue (RM mn)": 175.98,
+          "Meets RM500mn target": "No"
+        },
+        {
+          "Production scenario": "High production (+10%)",
+          "CPO production (MT)": "6.45 mn",
+          "BSL rate (RM/t)": 20.0,
+          "Annual revenue (RM mn)": 129.05,
+          "Meets RM500mn target": "No"
+        },
+        {
+          "Production scenario": "High production (+10%)",
+          "CPO production (MT)": "6.45 mn",
+          "BSL rate (RM/t)": 25.0,
+          "Annual revenue (RM mn)": 161.32,
+          "Meets RM500mn target": "No"
+        },
+        {
+          "Production scenario": "High production (+10%)",
+          "CPO production (MT)": "6.45 mn",
+          "BSL rate (RM/t)": 30.0,
+          "Annual revenue (RM mn)": 193.58,
+          "Meets RM500mn target": "No"
+        }
+      ],
+      "source": {
+        "label": "RQ3 BSL revenue scenarios",
+        "files": [
+          "codex_pipeline/rq3_financing.py"
+        ],
+        "filters": [
+          "Codex V3 authorised refresh"
+        ],
+        "caveats": [
+          "ANALYTICAL SNAPSHOT; no output becomes OFFICIAL through this pipeline."
+        ],
+        "metricDefinitions": []
+      }
+    },
+    "rq4_summary": {
+      "rows": [
+        {
+          "vol_b15": 68.7979,
+          "vol_b20": 91.7306,
+          "vol_b30": 137.5959,
+          "vol_dual": 91.7306,
+          "mean_b15": 83.877,
+          "mean_b20": 111.836,
+          "mean_b30": 167.754,
+          "mean_dual": 111.836,
+          "reduction_vs_b30": 0.3333,
+          "b30_months_share": 0.1684,
+          "switches_per_year": 1.53,
+          "cum_saving_vs_b30_rm_mn": 10959.93
+        }
+      ],
+      "source": {
+        "label": "RQ4 dual-trigger backtest summary",
+        "files": [
+          "codex_pipeline/rq4_mandate_rule.py"
+        ],
+        "filters": [
+          "Codex V3 authorised refresh"
+        ],
+        "caveats": [
+          "ANALYTICAL SNAPSHOT; no output becomes OFFICIAL through this pipeline."
+        ],
+        "metricDefinitions": []
+      }
+    },
+    "rq4_matrix": {
+      "rows": [
+        {
+          "Energy": "Low",
+          "Geopolitics": "Normal",
+          "Ceiling": "B20",
+          "Brent mean (USD/bbl)": 97.0,
+          "Net fiscal cost 5y (RM mn, mean)": 11500.9,
+          "Net fiscal cost 5y (RM mn, p95)": 17832.7,
+          "Fiscal cost sigma (RM mn)": 3872.4,
+          "Switches per year": 0.39,
+          "CPO absorbed (mn t/5y)": 7.229,
+          "End fund median (RM mn)": 0.0
+        },
+        {
+          "Energy": "Low",
+          "Geopolitics": "Normal",
+          "Ceiling": "B30",
+          "Brent mean (USD/bbl)": 97.0,
+          "Net fiscal cost 5y (RM mn, mean)": 11501.1,
+          "Net fiscal cost 5y (RM mn, p95)": 17832.7,
+          "Fiscal cost sigma (RM mn)": 3872.0,
+          "Switches per year": 0.42,
+          "CPO absorbed (mn t/5y)": 7.26,
+          "End fund median (RM mn)": 0.0
+        },
+        {
+          "Energy": "Low",
+          "Geopolitics": "RU level-shift",
+          "Ceiling": "B20",
+          "Brent mean (USD/bbl)": 109.0,
+          "Net fiscal cost 5y (RM mn, mean)": 9028.1,
+          "Net fiscal cost 5y (RM mn, p95)": 15911.1,
+          "Fiscal cost sigma (RM mn)": 4047.2,
+          "Switches per year": 0.62,
+          "CPO absorbed (mn t/5y)": 7.469,
+          "End fund median (RM mn)": 0.0
+        },
+        {
+          "Energy": "Low",
+          "Geopolitics": "RU level-shift",
+          "Ceiling": "B30",
+          "Brent mean (USD/bbl)": 109.0,
+          "Net fiscal cost 5y (RM mn, mean)": 9029.0,
+          "Net fiscal cost 5y (RM mn, p95)": 15911.1,
+          "Fiscal cost sigma (RM mn)": 4046.2,
+          "Switches per year": 0.73,
+          "CPO absorbed (mn t/5y)": 7.619,
+          "End fund median (RM mn)": 0.0
+        },
+        {
+          "Energy": "Low",
+          "Geopolitics": "ME spike/decay",
+          "Ceiling": "B20",
+          "Brent mean (USD/bbl)": 85.0,
+          "Net fiscal cost 5y (RM mn, mean)": 17648.1,
+          "Net fiscal cost 5y (RM mn, p95)": 23642.3,
+          "Fiscal cost sigma (RM mn)": 3380.0,
+          "Switches per year": 0.2,
+          "CPO absorbed (mn t/5y)": 7.097,
+          "End fund median (RM mn)": 0.0
+        },
+        {
+          "Energy": "Low",
+          "Geopolitics": "ME spike/decay",
+          "Ceiling": "B30",
+          "Brent mean (USD/bbl)": 85.0,
+          "Net fiscal cost 5y (RM mn, mean)": 17648.1,
+          "Net fiscal cost 5y (RM mn, p95)": 23642.3,
+          "Fiscal cost sigma (RM mn)": 3380.0,
+          "Switches per year": 0.2,
+          "CPO absorbed (mn t/5y)": 7.097,
+          "End fund median (RM mn)": 0.0
+        },
+        {
+          "Energy": "Baseline",
+          "Geopolitics": "Normal",
+          "Ceiling": "B20",
+          "Brent mean (USD/bbl)": 111.0,
+          "Net fiscal cost 5y (RM mn, mean)": 8561.2,
+          "Net fiscal cost 5y (RM mn, p95)": 15765.8,
+          "Fiscal cost sigma (RM mn)": 4279.1,
+          "Switches per year": 0.67,
+          "CPO absorbed (mn t/5y)": 7.576,
+          "End fund median (RM mn)": 0.0
+        },
+        {
+          "Energy": "Baseline",
+          "Geopolitics": "Normal",
+          "Ceiling": "B30",
+          "Brent mean (USD/bbl)": 111.0,
+          "Net fiscal cost 5y (RM mn, mean)": 8562.5,
+          "Net fiscal cost 5y (RM mn, p95)": 15765.8,
+          "Fiscal cost sigma (RM mn)": 4278.0,
+          "Switches per year": 0.83,
+          "CPO absorbed (mn t/5y)": 7.834,
+          "End fund median (RM mn)": 0.0
+        },
+        {
+          "Energy": "Baseline",
+          "Geopolitics": "RU level-shift",
+          "Ceiling": "B20",
+          "Brent mean (USD/bbl)": 125.0,
+          "Net fiscal cost 5y (RM mn, mean)": 6078.2,
+          "Net fiscal cost 5y (RM mn, p95)": 12930.5,
+          "Fiscal cost sigma (RM mn)": 3857.4,
+          "Switches per year": 0.79,
+          "CPO absorbed (mn t/5y)": 7.97,
+          "End fund median (RM mn)": 0.0
+        },
+        {
+          "Energy": "Baseline",
+          "Geopolitics": "RU level-shift",
+          "Ceiling": "B30",
+          "Brent mean (USD/bbl)": 125.0,
+          "Net fiscal cost 5y (RM mn, mean)": 6079.4,
+          "Net fiscal cost 5y (RM mn, p95)": 12930.5,
+          "Fiscal cost sigma (RM mn)": 3856.9,
+          "Switches per year": 1.09,
+          "CPO absorbed (mn t/5y)": 8.671,
+          "End fund median (RM mn)": 0.0
+        },
+        {
+          "Energy": "Baseline",
+          "Geopolitics": "ME spike/decay",
+          "Ceiling": "B20",
+          "Brent mean (USD/bbl)": 109.0,
+          "Net fiscal cost 5y (RM mn, mean)": 12052.8,
+          "Net fiscal cost 5y (RM mn, p95)": 17914.9,
+          "Fiscal cost sigma (RM mn)": 3336.2,
+          "Switches per year": 0.28,
+          "CPO absorbed (mn t/5y)": 7.187,
+          "End fund median (RM mn)": 0.0
+        },
+        {
+          "Energy": "Baseline",
+          "Geopolitics": "ME spike/decay",
+          "Ceiling": "B30",
+          "Brent mean (USD/bbl)": 109.0,
+          "Net fiscal cost 5y (RM mn, mean)": 12052.9,
+          "Net fiscal cost 5y (RM mn, p95)": 17914.9,
+          "Fiscal cost sigma (RM mn)": 3336.1,
+          "Switches per year": 0.31,
+          "CPO absorbed (mn t/5y)": 7.194,
+          "End fund median (RM mn)": 0.0
+        },
+        {
+          "Energy": "High",
+          "Geopolitics": "Normal",
+          "Ceiling": "B20",
+          "Brent mean (USD/bbl)": 126.0,
+          "Net fiscal cost 5y (RM mn, mean)": 5987.3,
+          "Net fiscal cost 5y (RM mn, p95)": 13467.5,
+          "Fiscal cost sigma (RM mn)": 4080.6,
+          "Switches per year": 0.78,
+          "CPO absorbed (mn t/5y)": 8.023,
+          "End fund median (RM mn)": 45.7
+        },
+        {
+          "Energy": "High",
+          "Geopolitics": "Normal",
+          "Ceiling": "B30",
+          "Brent mean (USD/bbl)": 126.0,
+          "Net fiscal cost 5y (RM mn, mean)": 5988.9,
+          "Net fiscal cost 5y (RM mn, p95)": 13467.5,
+          "Fiscal cost sigma (RM mn)": 4080.1,
+          "Switches per year": 1.08,
+          "CPO absorbed (mn t/5y)": 8.85,
+          "End fund median (RM mn)": 46.9
+        },
+        {
+          "Energy": "High",
+          "Geopolitics": "RU level-shift",
+          "Ceiling": "B20",
+          "Brent mean (USD/bbl)": 143.0,
+          "Net fiscal cost 5y (RM mn, mean)": 3923.6,
+          "Net fiscal cost 5y (RM mn, p95)": 10616.2,
+          "Fiscal cost sigma (RM mn)": 3171.8,
+          "Switches per year": 0.78,
+          "CPO absorbed (mn t/5y)": 8.437,
+          "End fund median (RM mn)": 3066.1
+        },
+        {
+          "Energy": "High",
+          "Geopolitics": "RU level-shift",
+          "Ceiling": "B30",
+          "Brent mean (USD/bbl)": 143.0,
+          "Net fiscal cost 5y (RM mn, mean)": 3924.6,
+          "Net fiscal cost 5y (RM mn, p95)": 10616.2,
+          "Fiscal cost sigma (RM mn)": 3171.9,
+          "Switches per year": 1.2,
+          "CPO absorbed (mn t/5y)": 9.939,
+          "End fund median (RM mn)": 3834.0
+        },
+        {
+          "Energy": "High",
+          "Geopolitics": "ME spike/decay",
+          "Ceiling": "B20",
+          "Brent mean (USD/bbl)": 137.0,
+          "Net fiscal cost 5y (RM mn, mean)": 5878.3,
+          "Net fiscal cost 5y (RM mn, p95)": 10998.2,
+          "Fiscal cost sigma (RM mn)": 2971.2,
+          "Switches per year": 0.9,
+          "CPO absorbed (mn t/5y)": 8.034,
+          "End fund median (RM mn)": 0.0
+        },
+        {
+          "Energy": "High",
+          "Geopolitics": "ME spike/decay",
+          "Ceiling": "B30",
+          "Brent mean (USD/bbl)": 137.0,
+          "Net fiscal cost 5y (RM mn, mean)": 5883.3,
+          "Net fiscal cost 5y (RM mn, p95)": 10998.2,
+          "Fiscal cost sigma (RM mn)": 2970.2,
+          "Switches per year": 1.5,
+          "CPO absorbed (mn t/5y)": 8.441,
+          "End fund median (RM mn)": 0.0
+        }
+      ],
+      "source": {
+        "label": "RQ4 18-combination policy matrix",
+        "files": [
+          "codex_pipeline/rq4_mandate_rule.py"
+        ],
+        "filters": [
+          "Codex V3 authorised refresh"
+        ],
+        "caveats": [
+          "ANALYTICAL SNAPSHOT; no output becomes OFFICIAL through this pipeline."
+        ],
+        "metricDefinitions": []
+      }
+    },
+    "rq4_map": {
+      "rows": [
+        {
+          "CPO (RM/t)": 2000,
+          "Brent (USD/bbl)": 80,
+          "PME (RM/t)": 2261.2,
+          "MOPS (RM/t)": 2736.3,
+          "VG (RM/t)": 475.1,
+          "Mandate": "B30"
+        },
+        {
+          "CPO (RM/t)": 2500,
+          "Brent (USD/bbl)": 80,
+          "PME (RM/t)": 2774.4,
+          "MOPS (RM/t)": 2736.3,
+          "VG (RM/t)": -38.2,
+          "Mandate": "B20"
+        },
+        {
+          "CPO (RM/t)": 3000,
+          "Brent (USD/bbl)": 80,
+          "PME (RM/t)": 3287.7,
+          "MOPS (RM/t)": 2736.3,
+          "VG (RM/t)": -551.4,
+          "Mandate": "B20"
+        },
+        {
+          "CPO (RM/t)": 3500,
+          "Brent (USD/bbl)": 80,
+          "PME (RM/t)": 3800.9,
+          "MOPS (RM/t)": 2736.3,
+          "VG (RM/t)": -1064.7,
+          "Mandate": "B20"
+        },
+        {
+          "CPO (RM/t)": 4000,
+          "Brent (USD/bbl)": 80,
+          "PME (RM/t)": 4314.2,
+          "MOPS (RM/t)": 2736.3,
+          "VG (RM/t)": -1577.9,
+          "Mandate": "B20"
+        },
+        {
+          "CPO (RM/t)": 4500,
+          "Brent (USD/bbl)": 80,
+          "PME (RM/t)": 4827.4,
+          "MOPS (RM/t)": 2736.3,
+          "VG (RM/t)": -2091.2,
+          "Mandate": "B20"
+        },
+        {
+          "CPO (RM/t)": 2000,
+          "Brent (USD/bbl)": 110,
+          "PME (RM/t)": 2261.2,
+          "MOPS (RM/t)": 3734.3,
+          "VG (RM/t)": 1473.1,
+          "Mandate": "B30"
+        },
+        {
+          "CPO (RM/t)": 2500,
+          "Brent (USD/bbl)": 110,
+          "PME (RM/t)": 2774.4,
+          "MOPS (RM/t)": 3734.3,
+          "VG (RM/t)": 959.9,
+          "Mandate": "B30"
+        },
+        {
+          "CPO (RM/t)": 3000,
+          "Brent (USD/bbl)": 110,
+          "PME (RM/t)": 3287.7,
+          "MOPS (RM/t)": 3734.3,
+          "VG (RM/t)": 446.6,
+          "Mandate": "B30"
+        },
+        {
+          "CPO (RM/t)": 3500,
+          "Brent (USD/bbl)": 110,
+          "PME (RM/t)": 3800.9,
+          "MOPS (RM/t)": 3734.3,
+          "VG (RM/t)": -66.6,
+          "Mandate": "B20"
+        },
+        {
+          "CPO (RM/t)": 4000,
+          "Brent (USD/bbl)": 110,
+          "PME (RM/t)": 4314.2,
+          "MOPS (RM/t)": 3734.3,
+          "VG (RM/t)": -579.9,
+          "Mandate": "B20"
+        },
+        {
+          "CPO (RM/t)": 4500,
+          "Brent (USD/bbl)": 110,
+          "PME (RM/t)": 4827.4,
+          "MOPS (RM/t)": 3734.3,
+          "VG (RM/t)": -1093.1,
+          "Mandate": "B20"
+        },
+        {
+          "CPO (RM/t)": 2000,
+          "Brent (USD/bbl)": 140,
+          "PME (RM/t)": 2261.2,
+          "MOPS (RM/t)": 4732.3,
+          "VG (RM/t)": 2471.2,
+          "Mandate": "B30"
+        },
+        {
+          "CPO (RM/t)": 2500,
+          "Brent (USD/bbl)": 140,
+          "PME (RM/t)": 2774.4,
+          "MOPS (RM/t)": 4732.3,
+          "VG (RM/t)": 1957.9,
+          "Mandate": "B30"
+        },
+        {
+          "CPO (RM/t)": 3000,
+          "Brent (USD/bbl)": 140,
+          "PME (RM/t)": 3287.7,
+          "MOPS (RM/t)": 4732.3,
+          "VG (RM/t)": 1444.7,
+          "Mandate": "B30"
+        },
+        {
+          "CPO (RM/t)": 3500,
+          "Brent (USD/bbl)": 140,
+          "PME (RM/t)": 3800.9,
+          "MOPS (RM/t)": 4732.3,
+          "VG (RM/t)": 931.4,
+          "Mandate": "B30"
+        },
+        {
+          "CPO (RM/t)": 4000,
+          "Brent (USD/bbl)": 140,
+          "PME (RM/t)": 4314.2,
+          "MOPS (RM/t)": 4732.3,
+          "VG (RM/t)": 418.2,
+          "Mandate": "B30"
+        },
+        {
+          "CPO (RM/t)": 4500,
+          "Brent (USD/bbl)": 140,
+          "PME (RM/t)": 4827.4,
+          "MOPS (RM/t)": 4732.3,
+          "VG (RM/t)": -95.1,
+          "Mandate": "B20"
+        }
+      ],
+      "source": {
+        "label": "RQ4 CPO-Brent mandate map",
+        "files": [
+          "codex_pipeline/rq4_mandate_rule.py"
+        ],
+        "filters": [
+          "Codex V3 authorised refresh"
+        ],
+        "caveats": [
+          "ANALYTICAL SNAPSHOT; no output becomes OFFICIAL through this pipeline."
+        ],
+        "metricDefinitions": []
+      }
+    },
+    "rq1_monthly": {
+      "rows": [
+        {
+          "period": "2010-01",
+          "mopsRmT": 2246.41,
+          "pmeRmT": 3018.05,
+          "cpoRmT": 2701.0,
+          "viabilityGapRmT": -771.65,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2010-02",
+          "mopsRmT": 2218.05,
+          "pmeRmT": 3032.03,
+          "cpoRmT": 2701.0,
+          "viabilityGapRmT": -813.98,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2010-03",
+          "mopsRmT": 2289.09,
+          "pmeRmT": 3014.8,
+          "cpoRmT": 2701.0,
+          "viabilityGapRmT": -725.7,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2010-04",
+          "mopsRmT": 2358.92,
+          "pmeRmT": 3001.54,
+          "cpoRmT": 2701.0,
+          "viabilityGapRmT": -642.61,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2010-05",
+          "mopsRmT": 2161.35,
+          "pmeRmT": 2993.99,
+          "cpoRmT": 2701.0,
+          "viabilityGapRmT": -832.64,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2010-06",
+          "mopsRmT": 2147.38,
+          "pmeRmT": 2968.99,
+          "cpoRmT": 2701.0,
+          "viabilityGapRmT": -821.61,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2010-07",
+          "mopsRmT": 2119.66,
+          "pmeRmT": 2935.02,
+          "cpoRmT": 2701.0,
+          "viabilityGapRmT": -815.36,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2010-08",
+          "mopsRmT": 2077.79,
+          "pmeRmT": 2883.79,
+          "cpoRmT": 2701.0,
+          "viabilityGapRmT": -806.0,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2010-09",
+          "mopsRmT": 2015.64,
+          "pmeRmT": 2930.6,
+          "cpoRmT": 2701.0,
+          "viabilityGapRmT": -914.96,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2010-10",
+          "mopsRmT": 2113.92,
+          "pmeRmT": 2924.37,
+          "cpoRmT": 2701.0,
+          "viabilityGapRmT": -810.45,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2010-11",
+          "mopsRmT": 2214.73,
+          "pmeRmT": 2955.06,
+          "cpoRmT": 2701.0,
+          "viabilityGapRmT": -740.33,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2010-12",
+          "mopsRmT": 2437.21,
+          "pmeRmT": 2970.4,
+          "cpoRmT": 2701.0,
+          "viabilityGapRmT": -533.19,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2011-01",
+          "mopsRmT": 2557.13,
+          "pmeRmT": 2964.78,
+          "cpoRmT": 3219.0,
+          "viabilityGapRmT": -407.65,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2011-02",
+          "mopsRmT": 2738.07,
+          "pmeRmT": 3527.05,
+          "cpoRmT": 3219.0,
+          "viabilityGapRmT": -788.98,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2011-03",
+          "mopsRmT": 2997.76,
+          "pmeRmT": 3524.15,
+          "cpoRmT": 3219.0,
+          "viabilityGapRmT": -526.39,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2011-04",
+          "mopsRmT": 3182.86,
+          "pmeRmT": 3507.73,
+          "cpoRmT": 3219.0,
+          "viabilityGapRmT": -324.87,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2011-05",
+          "mopsRmT": 2983.26,
+          "pmeRmT": 3491.3,
+          "cpoRmT": 3219.0,
+          "viabilityGapRmT": -508.04,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2011-06",
+          "mopsRmT": 2980.71,
+          "pmeRmT": 3498.4,
+          "cpoRmT": 3219.0,
+          "viabilityGapRmT": -517.69,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2011-07",
+          "mopsRmT": 3012.96,
+          "pmeRmT": 3441.0,
+          "cpoRmT": 3219.0,
+          "viabilityGapRmT": -428.04,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2011-08",
+          "mopsRmT": 2793.27,
+          "pmeRmT": 3444.41,
+          "cpoRmT": 3219.0,
+          "viabilityGapRmT": -651.14,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2011-09",
+          "mopsRmT": 2903.13,
+          "pmeRmT": 3439.61,
+          "cpoRmT": 3219.0,
+          "viabilityGapRmT": -536.47,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2011-10",
+          "mopsRmT": 2845.38,
+          "pmeRmT": 3429.68,
+          "cpoRmT": 3219.0,
+          "viabilityGapRmT": -584.3,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2011-11",
+          "mopsRmT": 2912.72,
+          "pmeRmT": 3459.58,
+          "cpoRmT": 3219.0,
+          "viabilityGapRmT": -546.85,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2011-12",
+          "mopsRmT": 2897.34,
+          "pmeRmT": 3490.05,
+          "cpoRmT": 3219.0,
+          "viabilityGapRmT": -592.71,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2012-01",
+          "mopsRmT": 2969.12,
+          "pmeRmT": 3530.17,
+          "cpoRmT": 3182.5,
+          "viabilityGapRmT": -561.05,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2012-02",
+          "mopsRmT": 3113.37,
+          "pmeRmT": 3480.63,
+          "cpoRmT": 3108.5,
+          "viabilityGapRmT": -367.26,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2012-03",
+          "mopsRmT": 3279.76,
+          "pmeRmT": 3416.89,
+          "cpoRmT": 3278.0,
+          "viabilityGapRmT": -137.13,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2012-04",
+          "mopsRmT": 3145.17,
+          "pmeRmT": 3579.4,
+          "cpoRmT": 3480.5,
+          "viabilityGapRmT": -434.23,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2012-05",
+          "mopsRmT": 2951.78,
+          "pmeRmT": 3737.53,
+          "cpoRmT": 3188.5,
+          "viabilityGapRmT": -785.75,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2012-06",
+          "mopsRmT": 2632.26,
+          "pmeRmT": 3443.34,
+          "cpoRmT": 2955.5,
+          "viabilityGapRmT": -811.08,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2012-07",
+          "mopsRmT": 2807.85,
+          "pmeRmT": 3183.99,
+          "cpoRmT": 3031.5,
+          "viabilityGapRmT": -376.14,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2012-08",
+          "mopsRmT": 2998.36,
+          "pmeRmT": 3276.28,
+          "cpoRmT": 2805.5,
+          "viabilityGapRmT": -277.92,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2012-09",
+          "mopsRmT": 2900.89,
+          "pmeRmT": 3024.38,
+          "cpoRmT": 2719.5,
+          "viabilityGapRmT": -123.49,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2012-10",
+          "mopsRmT": 2826.02,
+          "pmeRmT": 2925.57,
+          "cpoRmT": 2243.5,
+          "viabilityGapRmT": -99.56,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2012-11",
+          "mopsRmT": 2781.42,
+          "pmeRmT": 2478.16,
+          "cpoRmT": 2214.0,
+          "viabilityGapRmT": 303.26,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2012-12",
+          "mopsRmT": 2840.72,
+          "pmeRmT": 2448.63,
+          "cpoRmT": 2052.0,
+          "viabilityGapRmT": 392.09,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2013-01",
+          "mopsRmT": 2955.45,
+          "pmeRmT": 2348.21,
+          "cpoRmT": 2221.0,
+          "viabilityGapRmT": 607.24,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2013-02",
+          "mopsRmT": 3104.99,
+          "pmeRmT": 2509.31,
+          "cpoRmT": 2391.0,
+          "viabilityGapRmT": 595.68,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2013-03",
+          "mopsRmT": 2907.66,
+          "pmeRmT": 2689.21,
+          "cpoRmT": 2332.0,
+          "viabilityGapRmT": 218.46,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2013-04",
+          "mopsRmT": 2687.4,
+          "pmeRmT": 2626.94,
+          "cpoRmT": 2294.5,
+          "viabilityGapRmT": 60.47,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2013-05",
+          "mopsRmT": 2673.94,
+          "pmeRmT": 2577.37,
+          "cpoRmT": 2270.0,
+          "viabilityGapRmT": 96.57,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2013-06",
+          "mopsRmT": 2811.23,
+          "pmeRmT": 2519.87,
+          "cpoRmT": 2386.5,
+          "viabilityGapRmT": 291.36,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2013-07",
+          "mopsRmT": 2969.07,
+          "pmeRmT": 2600.45,
+          "cpoRmT": 2325.0,
+          "viabilityGapRmT": 368.62,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2013-08",
+          "mopsRmT": 3099.63,
+          "pmeRmT": 2523.01,
+          "cpoRmT": 2334.0,
+          "viabilityGapRmT": 576.62,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2013-09",
+          "mopsRmT": 3024.74,
+          "pmeRmT": 2528.46,
+          "cpoRmT": 2355.0,
+          "viabilityGapRmT": 496.28,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2013-10",
+          "mopsRmT": 2867.8,
+          "pmeRmT": 2592.02,
+          "cpoRmT": 2356.0,
+          "viabilityGapRmT": 275.78,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2013-11",
+          "mopsRmT": 2876.74,
+          "pmeRmT": 2622.94,
+          "cpoRmT": 2570.0,
+          "viabilityGapRmT": 253.79,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2013-12",
+          "mopsRmT": 3054.93,
+          "pmeRmT": 2861.07,
+          "cpoRmT": 2574.5,
+          "viabilityGapRmT": 193.87,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2014-01",
+          "mopsRmT": 3080.21,
+          "pmeRmT": 2917.52,
+          "cpoRmT": 2528.5,
+          "viabilityGapRmT": 162.69,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2014-02",
+          "mopsRmT": 3118.51,
+          "pmeRmT": 2877.4,
+          "cpoRmT": 2632.0,
+          "viabilityGapRmT": 241.11,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2014-03",
+          "mopsRmT": 3044.66,
+          "pmeRmT": 2966.16,
+          "cpoRmT": 2855.0,
+          "viabilityGapRmT": 78.5,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2014-04",
+          "mopsRmT": 3020.56,
+          "pmeRmT": 3180.98,
+          "cpoRmT": 2689.5,
+          "viabilityGapRmT": -160.42,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2014-05",
+          "mopsRmT": 3049.61,
+          "pmeRmT": 2997.07,
+          "cpoRmT": 2593.0,
+          "viabilityGapRmT": 52.54,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2014-06",
+          "mopsRmT": 3111.74,
+          "pmeRmT": 2884.86,
+          "cpoRmT": 2434.5,
+          "viabilityGapRmT": 226.88,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2014-07",
+          "mopsRmT": 2932.29,
+          "pmeRmT": 2715.4,
+          "cpoRmT": 2400.0,
+          "viabilityGapRmT": 216.89,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2014-08",
+          "mopsRmT": 2745.61,
+          "pmeRmT": 2676.03,
+          "cpoRmT": 2173.5,
+          "viabilityGapRmT": 69.58,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2014-09",
+          "mopsRmT": 2605.15,
+          "pmeRmT": 2412.27,
+          "cpoRmT": 2055.5,
+          "viabilityGapRmT": 192.88,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2014-10",
+          "mopsRmT": 2358.49,
+          "pmeRmT": 2301.75,
+          "cpoRmT": 2172.0,
+          "viabilityGapRmT": 56.74,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2014-11",
+          "mopsRmT": 2214.59,
+          "pmeRmT": 2479.66,
+          "cpoRmT": 2219.0,
+          "viabilityGapRmT": -265.06,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2014-12",
+          "mopsRmT": 1866.01,
+          "pmeRmT": 2549.77,
+          "cpoRmT": 2144.0,
+          "viabilityGapRmT": -683.76,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2015-01",
+          "mopsRmT": 1535.56,
+          "pmeRmT": 2478.24,
+          "cpoRmT": 2294.0,
+          "viabilityGapRmT": -942.68,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2015-02",
+          "mopsRmT": 1863.79,
+          "pmeRmT": 2638.63,
+          "cpoRmT": 2264.5,
+          "viabilityGapRmT": -774.84,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2015-03",
+          "mopsRmT": 1829.17,
+          "pmeRmT": 2624.88,
+          "cpoRmT": 2240.0,
+          "viabilityGapRmT": -795.72,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2015-04",
+          "mopsRmT": 1907.36,
+          "pmeRmT": 2586.4,
+          "cpoRmT": 2160.0,
+          "viabilityGapRmT": -679.04,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2015-05",
+          "mopsRmT": 2037.01,
+          "pmeRmT": 2450.06,
+          "cpoRmT": 2162.0,
+          "viabilityGapRmT": -413.04,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2015-06",
+          "mopsRmT": 2045.25,
+          "pmeRmT": 2445.04,
+          "cpoRmT": 2264.5,
+          "viabilityGapRmT": -399.79,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2015-07",
+          "mopsRmT": 1907.91,
+          "pmeRmT": 2537.97,
+          "cpoRmT": 2189.5,
+          "viabilityGapRmT": -630.06,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2015-08",
+          "mopsRmT": 1640.94,
+          "pmeRmT": 2459.7,
+          "cpoRmT": 1970.0,
+          "viabilityGapRmT": -818.76,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2015-09",
+          "mopsRmT": 1710.68,
+          "pmeRmT": 2206.63,
+          "cpoRmT": 1986.0,
+          "viabilityGapRmT": -495.95,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2015-10",
+          "mopsRmT": 1690.59,
+          "pmeRmT": 2252.19,
+          "cpoRmT": 2211.5,
+          "viabilityGapRmT": -561.6,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2015-11",
+          "mopsRmT": 1589.01,
+          "pmeRmT": 2492.33,
+          "cpoRmT": 2120.5,
+          "viabilityGapRmT": -903.32,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2015-12",
+          "mopsRmT": 1426.27,
+          "pmeRmT": 2410.93,
+          "cpoRmT": 2150.5,
+          "viabilityGapRmT": -984.66,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2016-01",
+          "mopsRmT": 1244.26,
+          "pmeRmT": 2466.82,
+          "cpoRmT": 2250.5,
+          "viabilityGapRmT": -1222.57,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2016-02",
+          "mopsRmT": 1266.28,
+          "pmeRmT": 2578.06,
+          "cpoRmT": 2430.0,
+          "viabilityGapRmT": -1311.78,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2016-03",
+          "mopsRmT": 1424.49,
+          "pmeRmT": 2783.49,
+          "cpoRmT": 2531.0,
+          "viabilityGapRmT": -1359.0,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2016-04",
+          "mopsRmT": 1463.97,
+          "pmeRmT": 2863.81,
+          "cpoRmT": 2647.0,
+          "viabilityGapRmT": -1399.84,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2016-05",
+          "mopsRmT": 1702.62,
+          "pmeRmT": 2945.41,
+          "cpoRmT": 2617.0,
+          "viabilityGapRmT": -1242.79,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2016-06",
+          "mopsRmT": 1784.42,
+          "pmeRmT": 2902.69,
+          "cpoRmT": 2541.5,
+          "viabilityGapRmT": -1118.27,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2016-07",
+          "mopsRmT": 1628.15,
+          "pmeRmT": 2791.23,
+          "cpoRmT": 2335.5,
+          "viabilityGapRmT": -1163.08,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2016-08",
+          "mopsRmT": 1604.68,
+          "pmeRmT": 2582.53,
+          "cpoRmT": 2591.5,
+          "viabilityGapRmT": -977.85,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2016-09",
+          "mopsRmT": 1594.14,
+          "pmeRmT": 2817.81,
+          "cpoRmT": 2862.0,
+          "viabilityGapRmT": -1223.67,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2016-10",
+          "mopsRmT": 1692.74,
+          "pmeRmT": 3122.95,
+          "cpoRmT": 2719.5,
+          "viabilityGapRmT": -1430.21,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2016-11",
+          "mopsRmT": 1615.35,
+          "pmeRmT": 2985.45,
+          "cpoRmT": 2885.0,
+          "viabilityGapRmT": -1370.1,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2016-12",
+          "mopsRmT": 2055.94,
+          "pmeRmT": 3200.91,
+          "cpoRmT": 3200.0,
+          "viabilityGapRmT": -1144.97,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2017-01",
+          "mopsRmT": 2164.76,
+          "pmeRmT": 3521.74,
+          "cpoRmT": 3268.0,
+          "viabilityGapRmT": -1356.98,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2017-02",
+          "mopsRmT": 2186.7,
+          "pmeRmT": 3591.94,
+          "cpoRmT": 3233.0,
+          "viabilityGapRmT": -1405.24,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2017-03",
+          "mopsRmT": 2046.76,
+          "pmeRmT": 3559.3,
+          "cpoRmT": 2955.5,
+          "viabilityGapRmT": -1512.53,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2017-04",
+          "mopsRmT": 2047.03,
+          "pmeRmT": 3263.62,
+          "cpoRmT": 2752.5,
+          "viabilityGapRmT": -1216.59,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2017-05",
+          "mopsRmT": 1943.55,
+          "pmeRmT": 3016.51,
+          "cpoRmT": 2803.5,
+          "viabilityGapRmT": -1072.96,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2017-06",
+          "mopsRmT": 1800.03,
+          "pmeRmT": 3085.3,
+          "cpoRmT": 2686.0,
+          "viabilityGapRmT": -1285.27,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2017-07",
+          "mopsRmT": 1864.21,
+          "pmeRmT": 2913.53,
+          "cpoRmT": 2629.5,
+          "viabilityGapRmT": -1049.32,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2017-08",
+          "mopsRmT": 1916.73,
+          "pmeRmT": 2830.51,
+          "cpoRmT": 2633.0,
+          "viabilityGapRmT": -913.78,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2017-09",
+          "mopsRmT": 1969.46,
+          "pmeRmT": 2837.2,
+          "cpoRmT": 2780.5,
+          "viabilityGapRmT": -867.74,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2017-10",
+          "mopsRmT": 1995.46,
+          "pmeRmT": 3002.91,
+          "cpoRmT": 2736.0,
+          "viabilityGapRmT": -1007.45,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2017-11",
+          "mopsRmT": 2180.81,
+          "pmeRmT": 2973.18,
+          "cpoRmT": 2689.0,
+          "viabilityGapRmT": -792.37,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2017-12",
+          "mopsRmT": 2255.56,
+          "pmeRmT": 2956.56,
+          "cpoRmT": 2407.0,
+          "viabilityGapRmT": -701.0,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2018-01",
+          "mopsRmT": 2400.02,
+          "pmeRmT": 2644.0,
+          "cpoRmT": 2486.5,
+          "viabilityGapRmT": -243.98,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2018-02",
+          "mopsRmT": 2265.34,
+          "pmeRmT": 2772.78,
+          "cpoRmT": 2488.0,
+          "viabilityGapRmT": -507.44,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2018-03",
+          "mopsRmT": 2269.49,
+          "pmeRmT": 2752.0,
+          "cpoRmT": 2426.5,
+          "viabilityGapRmT": -482.51,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2018-04",
+          "mopsRmT": 2447.09,
+          "pmeRmT": 2671.47,
+          "cpoRmT": 2418.0,
+          "viabilityGapRmT": -224.38,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2018-05",
+          "mopsRmT": 2667.68,
+          "pmeRmT": 2653.37,
+          "cpoRmT": 2396.0,
+          "viabilityGapRmT": 14.32,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2018-06",
+          "mopsRmT": 2619.44,
+          "pmeRmT": 2586.11,
+          "cpoRmT": 2324.0,
+          "viabilityGapRmT": 33.33,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2018-07",
+          "mopsRmT": 2630.19,
+          "pmeRmT": 2481.67,
+          "cpoRmT": 2215.0,
+          "viabilityGapRmT": 148.52,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2018-08",
+          "mopsRmT": 2541.72,
+          "pmeRmT": 2354.31,
+          "cpoRmT": 2183.5,
+          "viabilityGapRmT": 187.41,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2018-09",
+          "mopsRmT": 2722.49,
+          "pmeRmT": 2348.43,
+          "cpoRmT": 2177.5,
+          "viabilityGapRmT": 374.06,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2018-10",
+          "mopsRmT": 2778.29,
+          "pmeRmT": 2345.71,
+          "cpoRmT": 2082.0,
+          "viabilityGapRmT": 432.57,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2018-11",
+          "mopsRmT": 2259.5,
+          "pmeRmT": 2275.34,
+          "cpoRmT": 1830.5,
+          "viabilityGapRmT": -15.84,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2018-12",
+          "mopsRmT": 2063.97,
+          "pmeRmT": 2034.47,
+          "cpoRmT": 1794.5,
+          "viabilityGapRmT": 29.49,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2019-01",
+          "mopsRmT": 2163.9,
+          "pmeRmT": 1985.38,
+          "cpoRmT": 2037.0,
+          "viabilityGapRmT": 178.53,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2019-02",
+          "mopsRmT": 2313.08,
+          "pmeRmT": 2275.15,
+          "cpoRmT": 2100.5,
+          "viabilityGapRmT": 37.93,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2019-03",
+          "mopsRmT": 2375.86,
+          "pmeRmT": 2349.05,
+          "cpoRmT": 1903.5,
+          "viabilityGapRmT": 26.81,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2019-04",
+          "mopsRmT": 2560.32,
+          "pmeRmT": 2100.43,
+          "cpoRmT": 2018.5,
+          "viabilityGapRmT": 459.89,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2019-05",
+          "mopsRmT": 2609.66,
+          "pmeRmT": 2227.22,
+          "cpoRmT": 1946.5,
+          "viabilityGapRmT": 382.44,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2019-06",
+          "mopsRmT": 2371.55,
+          "pmeRmT": 2111.94,
+          "cpoRmT": 1968.0,
+          "viabilityGapRmT": 259.61,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2019-07",
+          "mopsRmT": 2323.47,
+          "pmeRmT": 2136.52,
+          "cpoRmT": 1879.0,
+          "viabilityGapRmT": 186.95,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2019-08",
+          "mopsRmT": 2130.19,
+          "pmeRmT": 2033.75,
+          "cpoRmT": 2066.5,
+          "viabilityGapRmT": 96.44,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2019-09",
+          "mopsRmT": 2191.8,
+          "pmeRmT": 2226.95,
+          "cpoRmT": 2097.0,
+          "viabilityGapRmT": -35.15,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2019-10",
+          "mopsRmT": 2052.99,
+          "pmeRmT": 2263.23,
+          "cpoRmT": 2104.0,
+          "viabilityGapRmT": -210.24,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2019-11",
+          "mopsRmT": 2191.11,
+          "pmeRmT": 2284.34,
+          "cpoRmT": 2493.5,
+          "viabilityGapRmT": -93.23,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2019-12",
+          "mopsRmT": 2396.32,
+          "pmeRmT": 2709.63,
+          "cpoRmT": 2813.0,
+          "viabilityGapRmT": -313.32,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2020-01",
+          "mopsRmT": 2289.1,
+          "pmeRmT": 3076.14,
+          "cpoRmT": 3013.5,
+          "viabilityGapRmT": -787.04,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2020-02",
+          "mopsRmT": 2075.15,
+          "pmeRmT": 3295.32,
+          "cpoRmT": 2714.5,
+          "viabilityGapRmT": -1220.17,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2020-03",
+          "mopsRmT": 1278.95,
+          "pmeRmT": 3009.84,
+          "cpoRmT": 2382.0,
+          "viabilityGapRmT": -1730.88,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2020-04",
+          "mopsRmT": 789.89,
+          "pmeRmT": 2640.5,
+          "cpoRmT": 2299.0,
+          "viabilityGapRmT": -1850.61,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2020-05",
+          "mopsRmT": 1197.19,
+          "pmeRmT": 2528.98,
+          "cpoRmT": 2074.0,
+          "viabilityGapRmT": -1331.79,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2020-06",
+          "mopsRmT": 1581.99,
+          "pmeRmT": 2286.86,
+          "cpoRmT": 2411.5,
+          "viabilityGapRmT": -704.87,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2020-07",
+          "mopsRmT": 1667.01,
+          "pmeRmT": 2605.66,
+          "cpoRmT": 2519.0,
+          "viabilityGapRmT": -938.64,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2020-08",
+          "mopsRmT": 1631.48,
+          "pmeRmT": 2732.84,
+          "cpoRmT": 2815.0,
+          "viabilityGapRmT": -1101.35,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2020-09",
+          "mopsRmT": 1414.41,
+          "pmeRmT": 3023.78,
+          "cpoRmT": 2924.0,
+          "viabilityGapRmT": -1609.37,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2020-10",
+          "mopsRmT": 1359.37,
+          "pmeRmT": 3185.71,
+          "cpoRmT": 2979.5,
+          "viabilityGapRmT": -1826.34,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2020-11",
+          "mopsRmT": 1462.94,
+          "pmeRmT": 3252.45,
+          "cpoRmT": 3422.0,
+          "viabilityGapRmT": -1789.51,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2020-12",
+          "mopsRmT": 1756.81,
+          "pmeRmT": 3730.6,
+          "cpoRmT": 3620.5,
+          "viabilityGapRmT": -1973.8,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2021-01",
+          "mopsRmT": 1965.97,
+          "pmeRmT": 3984.91,
+          "cpoRmT": 3748.5,
+          "viabilityGapRmT": -2018.93,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2021-02",
+          "mopsRmT": 2239.79,
+          "pmeRmT": 4119.75,
+          "cpoRmT": 3895.5,
+          "viabilityGapRmT": -1879.95,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2021-03",
+          "mopsRmT": 2368.59,
+          "pmeRmT": 4301.78,
+          "cpoRmT": 4041.5,
+          "viabilityGapRmT": -1933.19,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2021-04",
+          "mopsRmT": 2345.68,
+          "pmeRmT": 4443.42,
+          "cpoRmT": 4220.0,
+          "viabilityGapRmT": -2097.74,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2021-05",
+          "mopsRmT": 2486.42,
+          "pmeRmT": 4621.53,
+          "cpoRmT": 4572.0,
+          "viabilityGapRmT": -2135.11,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2021-06",
+          "mopsRmT": 2664.66,
+          "pmeRmT": 4946.29,
+          "cpoRmT": 3830.5,
+          "viabilityGapRmT": -2281.63,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2021-07",
+          "mopsRmT": 2759.33,
+          "pmeRmT": 4187.09,
+          "cpoRmT": 4128.5,
+          "viabilityGapRmT": -1427.75,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2021-08",
+          "mopsRmT": 2560.5,
+          "pmeRmT": 4475.61,
+          "cpoRmT": 4555.0,
+          "viabilityGapRmT": -1915.1,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2021-09",
+          "mopsRmT": 2587.03,
+          "pmeRmT": 4905.97,
+          "cpoRmT": 4556.0,
+          "viabilityGapRmT": -2318.95,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2021-10",
+          "mopsRmT": 2868.82,
+          "pmeRmT": 4926.36,
+          "cpoRmT": 5051.0,
+          "viabilityGapRmT": -2057.53,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2021-11",
+          "mopsRmT": 2824.53,
+          "pmeRmT": 5467.11,
+          "cpoRmT": 5341.0,
+          "viabilityGapRmT": -2642.58,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2021-12",
+          "mopsRmT": 2672.89,
+          "pmeRmT": 5796.75,
+          "cpoRmT": 5070.0,
+          "viabilityGapRmT": -3123.87,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2022-01",
+          "mopsRmT": 3149.38,
+          "pmeRmT": 5531.59,
+          "cpoRmT": 5354.5,
+          "viabilityGapRmT": -2382.21,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2022-02",
+          "mopsRmT": 3536.31,
+          "pmeRmT": 5855.94,
+          "cpoRmT": 5930.5,
+          "viabilityGapRmT": -2319.62,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2022-03",
+          "mopsRmT": 4238.08,
+          "pmeRmT": 6471.64,
+          "cpoRmT": 6867.0,
+          "viabilityGapRmT": -2233.56,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2022-04",
+          "mopsRmT": 3842.57,
+          "pmeRmT": 7430.91,
+          "cpoRmT": 6678.0,
+          "viabilityGapRmT": -3588.34,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2022-05",
+          "mopsRmT": 4280.48,
+          "pmeRmT": 7215.18,
+          "cpoRmT": 6873.0,
+          "viabilityGapRmT": -2934.7,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2022-06",
+          "mopsRmT": 4656.31,
+          "pmeRmT": 7396.64,
+          "cpoRmT": 6106.0,
+          "viabilityGapRmT": -2740.32,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2022-07",
+          "mopsRmT": 4280.59,
+          "pmeRmT": 6593.64,
+          "cpoRmT": 4063.0,
+          "viabilityGapRmT": -2313.06,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2022-08",
+          "mopsRmT": 3814.57,
+          "pmeRmT": 4449.67,
+          "cpoRmT": 4169.0,
+          "viabilityGapRmT": -635.1,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2022-09",
+          "mopsRmT": 3400.96,
+          "pmeRmT": 4552.34,
+          "cpoRmT": 3736.5,
+          "viabilityGapRmT": -1151.37,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2022-10",
+          "mopsRmT": 3618.73,
+          "pmeRmT": 4108.13,
+          "cpoRmT": 3682.0,
+          "viabilityGapRmT": -489.4,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2022-11",
+          "mopsRmT": 3523.59,
+          "pmeRmT": 4067.45,
+          "cpoRmT": 4087.5,
+          "viabilityGapRmT": -543.86,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2022-12",
+          "mopsRmT": 3051.08,
+          "pmeRmT": 4523.1,
+          "cpoRmT": 3960.5,
+          "viabilityGapRmT": -1472.02,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2023-01",
+          "mopsRmT": 3109.87,
+          "pmeRmT": 4399.19,
+          "cpoRmT": 3922.0,
+          "viabilityGapRmT": -1289.32,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2023-02",
+          "mopsRmT": 3165.14,
+          "pmeRmT": 4361.19,
+          "cpoRmT": 3908.0,
+          "viabilityGapRmT": -1196.05,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2023-03",
+          "mopsRmT": 3059.25,
+          "pmeRmT": 4341.11,
+          "cpoRmT": 4159.5,
+          "viabilityGapRmT": -1281.87,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2023-04",
+          "mopsRmT": 3247.31,
+          "pmeRmT": 4618.22,
+          "cpoRmT": 4217.5,
+          "viabilityGapRmT": -1370.91,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2023-05",
+          "mopsRmT": 2986.38,
+          "pmeRmT": 4638.75,
+          "cpoRmT": 3795.5,
+          "viabilityGapRmT": -1652.37,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2023-06",
+          "mopsRmT": 3051.06,
+          "pmeRmT": 4197.74,
+          "cpoRmT": 3525.0,
+          "viabilityGapRmT": -1146.68,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2023-07",
+          "mopsRmT": 3210.16,
+          "pmeRmT": 3881.26,
+          "cpoRmT": 3897.0,
+          "viabilityGapRmT": -671.1,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2023-08",
+          "mopsRmT": 3386.12,
+          "pmeRmT": 4235.18,
+          "cpoRmT": 3805.0,
+          "viabilityGapRmT": -849.06,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2023-09",
+          "mopsRmT": 3656.61,
+          "pmeRmT": 4160.01,
+          "cpoRmT": 3727.0,
+          "viabilityGapRmT": -503.4,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2023-10",
+          "mopsRmT": 3549.92,
+          "pmeRmT": 4085.23,
+          "cpoRmT": 3640.0,
+          "viabilityGapRmT": -535.31,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2023-11",
+          "mopsRmT": 3241.44,
+          "pmeRmT": 4000.95,
+          "cpoRmT": 3700.5,
+          "viabilityGapRmT": -759.51,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2023-12",
+          "mopsRmT": 3092.39,
+          "pmeRmT": 4098.07,
+          "cpoRmT": 3656.5,
+          "viabilityGapRmT": -1005.69,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2024-01",
+          "mopsRmT": 3271.18,
+          "pmeRmT": 4061.4,
+          "cpoRmT": 3783.5,
+          "viabilityGapRmT": -790.23,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2024-02",
+          "mopsRmT": 3486.44,
+          "pmeRmT": 4201.8,
+          "cpoRmT": 3949.5,
+          "viabilityGapRmT": -715.36,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2024-03",
+          "mopsRmT": 3504.64,
+          "pmeRmT": 4367.14,
+          "cpoRmT": 4215.5,
+          "viabilityGapRmT": -862.5,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2024-04",
+          "mopsRmT": 3710.99,
+          "pmeRmT": 4627.71,
+          "cpoRmT": 4257.0,
+          "viabilityGapRmT": -916.72,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2024-05",
+          "mopsRmT": 3362.78,
+          "pmeRmT": 4647.31,
+          "cpoRmT": 3902.5,
+          "viabilityGapRmT": -1284.53,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2024-06",
+          "mopsRmT": 3392.66,
+          "pmeRmT": 4264.23,
+          "cpoRmT": 3957.5,
+          "viabilityGapRmT": -871.57,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2024-07",
+          "mopsRmT": 3465.2,
+          "pmeRmT": 4275.88,
+          "cpoRmT": 4034.0,
+          "viabilityGapRmT": -810.68,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2024-08",
+          "mopsRmT": 3032.65,
+          "pmeRmT": 4343.54,
+          "cpoRmT": 3910.5,
+          "viabilityGapRmT": -1310.89,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2024-09",
+          "mopsRmT": 2630.17,
+          "pmeRmT": 4229.39,
+          "cpoRmT": 4023.5,
+          "viabilityGapRmT": -1599.22,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2024-10",
+          "mopsRmT": 2676.28,
+          "pmeRmT": 4341.91,
+          "cpoRmT": 4387.5,
+          "viabilityGapRmT": -1665.63,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2024-11",
+          "mopsRmT": 2749.13,
+          "pmeRmT": 4756.56,
+          "cpoRmT": 5011.5,
+          "viabilityGapRmT": -2007.43,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2024-12",
+          "mopsRmT": 2820.26,
+          "pmeRmT": 5447.24,
+          "cpoRmT": 5119.5,
+          "viabilityGapRmT": -2626.99,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2025-01",
+          "mopsRmT": 3093.45,
+          "pmeRmT": 5565.65,
+          "cpoRmT": 4672.5,
+          "viabilityGapRmT": -2472.2,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2025-02",
+          "mopsRmT": 2947.01,
+          "pmeRmT": 5091.83,
+          "cpoRmT": 4759.0,
+          "viabilityGapRmT": -2144.82,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2025-03",
+          "mopsRmT": 2827.59,
+          "pmeRmT": 5161.96,
+          "cpoRmT": 4740.0,
+          "viabilityGapRmT": -2334.37,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2025-04",
+          "mopsRmT": 2633.92,
+          "pmeRmT": 5150.73,
+          "cpoRmT": 4319.5,
+          "viabilityGapRmT": -2516.81,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2025-05",
+          "mopsRmT": 2423.2,
+          "pmeRmT": 4674.32,
+          "cpoRmT": 3880.5,
+          "viabilityGapRmT": -2251.12,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2025-06",
+          "mopsRmT": 2673.43,
+          "pmeRmT": 4163.75,
+          "cpoRmT": 3969.0,
+          "viabilityGapRmT": -1490.32,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2025-07",
+          "mopsRmT": 2638.19,
+          "pmeRmT": 4268.34,
+          "cpoRmT": 4112.5,
+          "viabilityGapRmT": -1630.16,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2025-08",
+          "mopsRmT": 2461.18,
+          "pmeRmT": 4385.61,
+          "cpoRmT": 4329.0,
+          "viabilityGapRmT": -1924.43,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2025-09",
+          "mopsRmT": 2387.37,
+          "pmeRmT": 4633.24,
+          "cpoRmT": 4371.5,
+          "viabilityGapRmT": -2245.88,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2025-10",
+          "mopsRmT": 2236.68,
+          "pmeRmT": 4664.32,
+          "cpoRmT": 4412.5,
+          "viabilityGapRmT": -2427.64,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2025-11",
+          "mopsRmT": 2209.94,
+          "pmeRmT": 4735.85,
+          "cpoRmT": 4089.5,
+          "viabilityGapRmT": -2525.92,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2025-12",
+          "mopsRmT": 2200.76,
+          "pmeRmT": 4416.59,
+          "cpoRmT": 4042.5,
+          "viabilityGapRmT": -2215.83,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2026-01",
+          "mopsRmT": 2359.42,
+          "pmeRmT": 4358.3,
+          "cpoRmT": 4018.5,
+          "viabilityGapRmT": -1998.88,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2026-02",
+          "mopsRmT": 2448.61,
+          "pmeRmT": 4351.66,
+          "cpoRmT": 4077.5,
+          "viabilityGapRmT": -1903.05,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2026-03",
+          "mopsRmT": 3521.2,
+          "pmeRmT": 4409.17,
+          "cpoRmT": 4321.0,
+          "viabilityGapRmT": -887.97,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        },
+        {
+          "period": "2026-04",
+          "mopsRmT": 4004.93,
+          "pmeRmT": 4650.94,
+          "cpoRmT": 4567.5,
+          "viabilityGapRmT": -646.01,
+          "zeroGapRmT": 0,
+          "deepStressFloorRmT": -500
+        }
+      ],
+      "source": {
+        "label": "RQ1 monthly price and viability history",
+        "files": [
+          "MPOB_V3_Codex_Master.xlsx"
+        ],
+        "filters": [
+          "Codex V3 authorised refresh"
+        ],
+        "caveats": [
+          "ANALYTICAL SNAPSHOT; no output becomes OFFICIAL through this pipeline."
+        ],
+        "metricDefinitions": []
+      }
+    },
+    "rq1_johansen": {
+      "rows": [
+        {
+          "kArDiff": 1,
+          "nullRank": "r = 0",
+          "statistic": 79.0236,
+          "critical5Pct": 29.796,
+          "rejectAt5Pct": true,
+          "rejectAt5PctLabel": "Reject rank zero",
+          "selectedRank": 2
+        },
+        {
+          "kArDiff": 1,
+          "nullRank": "r <= 1",
+          "statistic": 23.275,
+          "critical5Pct": 15.495,
+          "rejectAt5Pct": true,
+          "rejectAt5PctLabel": "Reject rank <= 1",
+          "selectedRank": 2
+        },
+        {
+          "kArDiff": 2,
+          "nullRank": "r = 0",
+          "statistic": 72.2411,
+          "critical5Pct": 29.796,
+          "rejectAt5Pct": true,
+          "rejectAt5PctLabel": "Reject rank zero",
+          "selectedRank": 2
+        },
+        {
+          "kArDiff": 2,
+          "nullRank": "r <= 1",
+          "statistic": 15.7661,
+          "critical5Pct": 15.495,
+          "rejectAt5Pct": true,
+          "rejectAt5PctLabel": "Reject rank <= 1",
+          "selectedRank": 2
+        },
+        {
+          "kArDiff": 3,
+          "nullRank": "r = 0",
+          "statistic": 64.1338,
+          "critical5Pct": 29.796,
+          "rejectAt5Pct": true,
+          "rejectAt5PctLabel": "Reject rank zero",
+          "selectedRank": 1
+        },
+        {
+          "kArDiff": 3,
+          "nullRank": "r <= 1",
+          "statistic": 14.9229,
+          "critical5Pct": 15.495,
+          "rejectAt5Pct": false,
+          "rejectAt5PctLabel": "Do not reject rank <= 1",
+          "selectedRank": 1
+        },
+        {
+          "kArDiff": 4,
+          "nullRank": "r = 0",
+          "statistic": 52.3293,
+          "critical5Pct": 29.796,
+          "rejectAt5Pct": true,
+          "rejectAt5PctLabel": "Reject rank zero",
+          "selectedRank": 1
+        },
+        {
+          "kArDiff": 4,
+          "nullRank": "r <= 1",
+          "statistic": 13.4367,
+          "critical5Pct": 15.495,
+          "rejectAt5Pct": false,
+          "rejectAt5PctLabel": "Do not reject rank <= 1",
+          "selectedRank": 1
+        },
+        {
+          "kArDiff": 5,
+          "nullRank": "r = 0",
+          "statistic": 40.9971,
+          "critical5Pct": 29.796,
+          "rejectAt5Pct": true,
+          "rejectAt5PctLabel": "Reject rank zero",
+          "selectedRank": 1
+        },
+        {
+          "kArDiff": 5,
+          "nullRank": "r <= 1",
+          "statistic": 13.8421,
+          "critical5Pct": 15.495,
+          "rejectAt5Pct": false,
+          "rejectAt5PctLabel": "Do not reject rank <= 1",
+          "selectedRank": 1
+        },
+        {
+          "kArDiff": 6,
+          "nullRank": "r = 0",
+          "statistic": 30.5802,
+          "critical5Pct": 29.796,
+          "rejectAt5Pct": true,
+          "rejectAt5PctLabel": "Reject rank zero",
+          "selectedRank": 1
+        },
+        {
+          "kArDiff": 6,
+          "nullRank": "r <= 1",
+          "statistic": 13.2086,
+          "critical5Pct": 15.495,
+          "rejectAt5Pct": false,
+          "rejectAt5PctLabel": "Do not reject rank <= 1",
+          "selectedRank": 1
+        },
+        {
+          "kArDiff": 7,
+          "nullRank": "r = 0",
+          "statistic": 31.3291,
+          "critical5Pct": 29.796,
+          "rejectAt5Pct": true,
+          "rejectAt5PctLabel": "Reject rank zero",
+          "selectedRank": 1
+        },
+        {
+          "kArDiff": 7,
+          "nullRank": "r <= 1",
+          "statistic": 12.1377,
+          "critical5Pct": 15.495,
+          "rejectAt5Pct": false,
+          "rejectAt5PctLabel": "Do not reject rank <= 1",
+          "selectedRank": 1
+        },
+        {
+          "kArDiff": 8,
+          "nullRank": "r = 0",
+          "statistic": 31.4612,
+          "critical5Pct": 29.796,
+          "rejectAt5Pct": true,
+          "rejectAt5PctLabel": "Reject rank zero",
+          "selectedRank": 1
+        },
+        {
+          "kArDiff": 8,
+          "nullRank": "r <= 1",
+          "statistic": 13.4362,
+          "critical5Pct": 15.495,
+          "rejectAt5Pct": false,
+          "rejectAt5PctLabel": "Do not reject rank <= 1",
+          "selectedRank": 1
+        }
+      ],
+      "source": {
+        "label": "Real-data PME/CPO/Brent Johansen audit",
+        "files": [
+          "data/real_world_sources/real_pme_cointegration_results.json",
+          "data/real_world_sources/real_pme_cointegration_results.csv",
+          "data/real_world_sources/run_real_pme_cointegration.py"
+        ],
+        "filters": [
+          "2012-01 through 2026-04; 172 consecutive monthly observations",
+          "Log-price Johansen trace test; restricted intercept; k_ar_diff 1–8",
+          "No missing-month filling or interpolation"
+        ],
+        "caveats": [
+          "PME is aggregate Malaysian biodiesel export unit value, not a domestic transaction price or quoted PME FOB price.",
+          "CPO is used instead of MOPS/Platts; this is real proxy-system evidence, not literal confirmation of the proposal H1.",
+          "Brent USD/bbl is converted with BNM MYR/USD monthly averages.",
+          "Eighteen sample months have biodiesel export volume below 1,000 tonnes.",
+          "ANALYTICAL SNAPSHOT; no output becomes OFFICIAL through this pipeline."
+        ],
+        "metricDefinitions": []
+      }
+    },
+    "rq1_apmbio_diagnostic": {
+      "rows": [
+        {
+          "component": "OLS-HAC intercept",
+          "rmTonne": 168.95,
+          "type": "Fitted equation term"
+        },
+        {
+          "component": "Lagged CPO feedstock term (CPO t−1)",
+          "rmTonne": 4554.45,
+          "type": "Fitted equation term"
+        },
+        {
+          "component": "Methanol term",
+          "rmTonne": 184.06,
+          "type": "Fitted equation term"
+        },
+        {
+          "component": "Glycerol term",
+          "rmTonne": -278.9,
+          "type": "Fitted equation term"
+        },
+        {
+          "component": "Fitted PME (sum of OLS-HAC terms)",
+          "rmTonne": 4628.55,
+          "type": "Fitted model output"
+        },
+        {
+          "component": "Master-series PME cost (= MOPS − viability gap)",
+          "rmTonne": 4650.94,
+          "type": "Separate decision-series value"
+        },
+        {
+          "component": "Master-series MOPS Diesel",
+          "rmTonne": 4004.93,
+          "type": "Decision-series reference"
+        },
+        {
+          "component": "Master-series viability gap (= MOPS − PME)",
+          "rmTonne": -646.01,
+          "type": "Decision-series input"
+        }
+      ],
+      "source": {
+        "label": "RQ1 APM-Bio cost diagnostic",
+        "files": [
+          "codex_pipeline/rq1_apm_bio.py"
+        ],
+        "filters": [
+          "Codex V3 authorised refresh"
+        ],
+        "caveats": [
+          "ANALYTICAL SNAPSHOT; no output becomes OFFICIAL through this pipeline."
+        ],
+        "metricDefinitions": []
+      }
+    },
+    "b30_impact": {
+      "rows": [
+        {
+          "dimension": "Fiscal: incremental support if current gap is negative",
+          "value": 1711.93,
+          "unit": "RM mn/year",
+          "interpretation": "Conditional scenario using the latest 12-month average viability gap."
+        },
+        {
+          "dimension": "Industry: additional domestic CPO use",
+          "value": 0.928,
+          "unit": "mn t/year",
+          "interpretation": "Derived from recent diesel consumption and the B20-to-B30 blend increment."
+        },
+        {
+          "dimension": "Green energy: incremental fossil diesel displaced",
+          "value": 1.054,
+          "unit": "bn litres/year",
+          "interpretation": "One-for-one B30 blend displacement based on recent diesel use. CO₂ avoided is not estimated until an approved lifecycle-emission factor is supplied."
+        },
+        {
+          "dimension": "Operations: B30 requirement relative to recent PME output",
+          "value": 1.71,
+          "unit": "times annual output",
+          "interpretation": "A ratio above 1 indicates that recent PME output is below the implied requirement."
+        }
+      ],
+      "source": {
+        "label": "RQ4 B20-to-B30 impact module",
+        "files": [
+          "codex_pipeline/rq4_mandate_rule.py"
+        ],
+        "filters": [
+          "Codex V3 authorised refresh"
+        ],
+        "caveats": [
+          "ANALYTICAL SNAPSHOT; no output becomes OFFICIAL through this pipeline."
+        ],
+        "metricDefinitions": []
+      }
+    },
+    "rq3_competitiveness": {
+      "rows": [
+        {
+          "Instrument": "BSL RM20/t",
+          "Levy (RM/t CPO)": 20.0,
+          "Producer burden (RM/t)": 5.71,
+          "Margin reduction (%)": 0.14,
+          "vs Indonesia levy": "8.8%-2.0% of reference range",
+          "Competitive concern": "No"
+        },
+        {
+          "Instrument": "BSL RM25/t",
+          "Levy (RM/t CPO)": 25.0,
+          "Producer burden (RM/t)": 7.14,
+          "Margin reduction (%)": 0.17,
+          "vs Indonesia levy": "11.0%-2.5% of reference range",
+          "Competitive concern": "No"
+        },
+        {
+          "Instrument": "BSL RM30/t",
+          "Levy (RM/t CPO)": 30.0,
+          "Producer burden (RM/t)": 8.57,
+          "Margin reduction (%)": 0.2,
+          "vs Indonesia levy": "13.2%-3.0% of reference range",
+          "Competitive concern": "No"
+        },
+        {
+          "Instrument": "Indonesia export levy reference",
+          "Levy (RM/t CPO)": "227-990",
+          "Producer burden (RM/t)": null,
+          "Margin reduction (%)": 5.43,
+          "vs Indonesia levy": "Reference",
+          "Competitive concern": "Reference"
+        }
+      ],
+      "source": {
+        "label": "RQ3 competitiveness comparison",
+        "files": [
+          "codex_pipeline/rq3_financing.py"
+        ],
+        "filters": [
+          "Codex V3 authorised refresh"
+        ],
+        "caveats": [
+          "ANALYTICAL SNAPSHOT; no output becomes OFFICIAL through this pipeline."
+        ],
+        "metricDefinitions": []
+      }
+    },
+    "rq3_wpl": {
+      "rows": [
+        {
+          "WPL_BASELINE_RATE": 0.03,
+          "WPL_THRESHOLD_PEN_RM_T": 3150,
+          "WPL_THRESHOLD_EAST_RM_T": 3650,
+          "WPL_SCENARIO_ON": 1,
+          "WPL_SCENARIO_RATE": 0.03,
+          "WPL_RATE_STEP": 0.001,
+          "WPL_RATE_MIN": 0,
+          "WPL_RATE_MAX": 0.06,
+          "WPL_SCENARIO_CPO_RM_T": 4567.5,
+          "WPL_ELIGIBLE_FFB_PEN_T": null,
+          "WPL_ELIGIBLE_FFB_EAST_T": null,
+          "WPL_BSF_ALLOCATION": 0
+        }
+      ],
+      "source": {
+        "label": "WPL current law and scenario controls",
+        "files": [
+          "MPOB_V3_Codex_Master.xlsx / WPL SETTINGS"
+        ],
+        "filters": [
+          "Codex V3 authorised refresh"
+        ],
+        "caveats": [
+          "ANALYTICAL SNAPSHOT; no output becomes OFFICIAL through this pipeline."
+        ],
+        "metricDefinitions": []
+      }
+    }
+  },
+  "releaseFingerprint": "4b6a78ac3f6009bc72857a260f5e44ba384a48b4e183ff9669139c37f1727a5a",
+  "buildStatus": "complete"
+}
