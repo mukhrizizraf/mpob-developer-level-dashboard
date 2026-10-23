@@ -1,29 +1,18 @@
-// Appearance: Automatic / Light / Dark plus finishes inspired by iPhone and iPad.
+// Appearance: six looks (Classic follows the device; the others set their own shapes, controls and type).
 // Shared by the User and Developer levels. The choice is a per-viewer convenience kept in localStorage;
 // the page renders correctly without it. Switching reveals the new theme in a circle from the button.
 
 const THEME = (() => {
   const M = () => (typeof MOTION === 'undefined' ? null : MOTION); // motion.js, when present
-  const GROUPS = [
-    { name: 'Standard', items: [
-      { id: 'system', name: 'Automatic', note: 'Follows the device', sw: ['#f5f5f7', '#1c1c1e'] },
-      { id: 'light', name: 'Light', note: 'Bright and neutral', sw: ['#f5f5f7', '#ffffff'] },
-      { id: 'dark', name: 'Dark', note: 'True black', sw: ['#000000', '#1c1c1e'] },
-    ] },
-    { name: 'Inspired by iPhone', items: [
-      { id: 'starlight', name: 'Starlight', note: 'Warm silver', sw: ['#f3eee6', '#e3d9c9'] },
-      { id: 'midnight', name: 'Midnight', note: 'Deep navy', sw: ['#0d1320', '#232c40'], dark: true },
-      { id: 'titanium', name: 'Natural Titanium', note: 'Brushed grey', sw: ['#e9e8e4', '#bdbab2'] },
-      { id: 'desert', name: 'Desert', note: 'Sand and bronze', sw: ['#f1e8dc', '#c9a989'] },
-      { id: 'ultramarine', name: 'Ultramarine', note: 'Vivid blue', sw: ['#e9edfb', '#7d8ff0'] },
-    ] },
-    { name: 'Inspired by iPad', items: [
-      { id: 'sky', name: 'Sky Blue', note: 'Soft blue', sw: ['#e8f2f9', '#9cc6e4'] },
-      { id: 'blush', name: 'Blush', note: 'Pale pink', sw: ['#f8ecee', '#e7b9c2'] },
-      { id: 'spacegrey', name: 'Space Grey', note: 'Graphite dark', sw: ['#141416', '#3a3a3f'], dark: true },
-    ] },
+  // Six looks. Each changes shapes, controls, icon strokes and type as well as colour (see shared.css "Looks").
+  const ALL = [
+    { id: 'system', name: 'Classic', note: 'Follows the device, light or dark' },
+    { id: 'bloom', name: 'Bloom', note: 'Soft, big and rounded' },
+    { id: 'tonal', name: 'Tonal', note: 'Calm tones, organic shapes' },
+    { id: 'citrus', name: 'Citrus', note: 'Crisp, bright, chunky sliders' },
+    { id: 'volt', name: 'Volt', note: 'Bold, angular, dark', dark: true },
+    { id: 'mono', name: 'Mono', note: 'Dot-matrix minimal, dark', dark: true },
   ];
-  const ALL = GROUPS.flatMap(g => g.items);
   const KEY = 'mpob-theme';
   const root = document.documentElement;
   const darkQuery = window.matchMedia?.('(prefers-color-scheme: dark)');
@@ -66,14 +55,14 @@ const THEME = (() => {
     }
   }
 
-  const swatch = t => `<span class="sw" style="--a:${t.sw[0]};--b:${t.sw[1]}" aria-hidden="true"><i></i></span>`;
+  // The swatch is a small specimen of the look: its icon shape, colours and a mini button.
+  const swatch = t => `<span class="sw" data-look="${t.id}" aria-hidden="true"><i></i></span>`;
   function mount(host) {
     host.innerHTML = `<button type="button" class="theme-btn" id="theme-btn" aria-haspopup="dialog" aria-expanded="false" aria-controls="theme-pop">
         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor"/></svg><span class="theme-name"></span></button>
       <div class="theme-pop" id="theme-pop" role="dialog" aria-label="Appearance" hidden>
         <div class="theme-head"><b>Appearance</b><span>Saved on this device only</span></div>
-        ${GROUPS.map(g => `<div class="theme-group"><span class="theme-group-name" id="tg-${g.name.replace(/\W+/g, '')}">${g.name}</span>
-          <div class="theme-grid" role="radiogroup" aria-labelledby="tg-${g.name.replace(/\W+/g, '')}">${g.items.map(t => `<button type="button" role="radio" class="theme-opt" data-theme-pick="${t.id}" aria-checked="false">${swatch(t)}<span><b>${t.name}</b><small>${t.note}</small></span></button>`).join('')}</div></div>`).join('')}
+        <div class="theme-grid" role="radiogroup" aria-label="Look">${ALL.map(t => `<button type="button" role="radio" class="theme-opt" data-theme-pick="${t.id}" aria-checked="false">${swatch(t)}<span><b>${t.name}</b><small>${t.note}</small></span></button>`).join('')}</div>
       </div>`;
     const btn = host.querySelector('#theme-btn'); const pop = host.querySelector('#theme-pop');
     const opts = () => [...pop.querySelectorAll('[data-theme-pick]')];

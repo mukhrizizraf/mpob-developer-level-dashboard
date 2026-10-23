@@ -63,6 +63,39 @@ const checks = [];
 const expect = (label, actual, wanted) => checks.push(`${actual === wanted ? 'PASS' : 'FAIL'} ${label}: ${JSON.stringify(actual)}${actual === wanted ? '' : ` (wanted ${JSON.stringify(wanted)})`}`);
 const go = async (tab, step) => { await click(`.tab[data-tab="${tab}"]`); await sleep(900); if (step !== undefined) { await click(`.node[data-go="${step}"]`); await sleep(700); } };
 
+// 0 · Home: opens first, the hive keeps moving, forms the blends, pauses, and hands off to the objectives
+expect('Home opens first', await run('S.tab'), 'home');
+expect('The preloader plays on opening', await run(`document.documentElement.classList.contains('hive-intro')`), true);
+await sleep(1100); await shot('home-intro', false);
+await sleep(2600);
+expect('The preloader opens into the page by itself', await run(`document.documentElement.classList.contains('hive-intro')`), false);
+await sleep(1200);
+expect('The swarm layer covers the whole screen', await run(`(() => { const r = document.querySelector('#hive-layer canvas').getBoundingClientRect(); return Math.abs(r.width - document.documentElement.clientWidth) < 1 && Math.abs(r.height - document.documentElement.clientHeight) < 1; })()`), true);
+expect('Hive canvas is painted', await run(`(() => { const c = document.querySelector('#hive-layer canvas'); const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; let n = 0; for (let i = 3; i < d.length; i += 64) if (d[i] > 0) n++; return n > 200; })()`), true);
+await shot('home', false);
+const f0 = await run('HOME.scene.frames'); await sleep(700);
+expect('Hive keeps moving', (await run('HOME.scene.frames')) > f0, true);
+expect('Journey badges B5 to B30', await run(`[...document.querySelectorAll('#page .jb')].map(b => b.textContent.match(/B\\s*\\d+/)?.[0].replace(/\\s/g, '')).join()`), 'B5,B7,B10,B20,B30');
+await click('#page .jb[data-form="7"]'); await sleep(4500);
+expect('A badge sends the swarm to that blend', await run('HOME.scene.form'), 'B30');
+expect('The label follows the swarm', await text('#page [data-hive-label]'), 'B30');
+expect('The chosen badge is marked', await run(`document.querySelector('#page .jb.is-on')?.dataset.form`), '7');
+await shot('home-B30', false);
+await run('window.scrollTo(0, document.body.scrollHeight)'); await sleep(900);
+expect('Scrolled past the hero, the swarm drifts over the page', await run('HOME.scene.roaming'), true);
+await shot('home-scrolled', false);
+await run('window.scrollTo(0, 0)'); await sleep(900);
+expect('Back at the hero, the swarm re-forms', await run('HOME.scene.roaming'), false);
+expect('Sponsors shown in the hero', await run(`document.querySelectorAll('#page .hive-sponsors img, #page .hive-sponsors .sp-word').length`), 2);
+await click('[data-home-pause]'); await sleep(150); const fp = await run('HOME.scene.frames'); await sleep(500);
+expect('Pause stops the hive', await run('HOME.scene.frames'), fp);
+await click('[data-home-pause]'); await sleep(500);
+expect('Play restarts it', (await run('HOME.scene.frames')) > fp, true);
+expect('Home cards cover the objectives', await run(`[...document.querySelectorAll('#page .home-card')].map(c => c.dataset.tab).join()`), 'obj1,obj2,obj3,obj4,decision');
+await click('#page .home-card[data-tab="obj2"]'); await sleep(1200);
+expect('A Home card opens its objective', await run('S.tab'), 'obj2');
+expect('Home stops its loop after leaving', await run('HOME.scene'), null);
+
 // 1 · Tour every step
 const tabs = { obj1: 6, obj2: 6, obj3: 5, obj4: 7, decision: 4 };
 for (const [tab, steps] of Object.entries(tabs)) {
@@ -214,8 +247,20 @@ await go('decision', 0); await click(live('[data-stack-toggle]')); await sleep(5
 expect('Decision detail card icons render', await run("[...document.querySelectorAll('.stage:not(.is-leaving) .dcard-ico')].filter(e => !e.querySelector('svg')).length"), 0);
 
 // 11 · Themes
-for (const t of ['starlight', 'midnight', 'ultramarine', 'spacegrey']) { await run(`THEME.choose('${t}')`); await sleep(700); await shot(`theme-${t}`, false); }
-expect('Theme applied to the root', await run(`document.documentElement.dataset.theme`), 'spacegrey');
+expect('Six looks offered', await run('THEME.themes.map(t => t.id).join()'), 'system,bloom,tonal,citrus,volt,mono');
+expect('No "inspired by" wording in the selector', await run(`/inspired|iphone|ipad/i.test(document.getElementById('theme-pop').textContent)`), false);
+for (const t of ['bloom', 'tonal', 'citrus', 'volt', 'mono']) {
+  await run(`THEME.choose('${t}')`); await sleep(700);
+  await shot(`look-${t}`, false);
+  const looks = await run(`(() => { const g = s => getComputedStyle(document.querySelector(s)); return [g('.stage:not(.is-leaving) .btn-primary').borderRadius, g('#page .node .ring').borderRadius, g('#page .disc svg').strokeWidth].join(' | '); })()`);
+  checks.push(`INFO look ${t}: button radius | ring radius | icon stroke = ${looks}`);
+}
+expect('Looks change shapes, not only colour', await run(`(() => { const r = []; for (const t of ['bloom', 'volt']) { document.documentElement.dataset.theme = t; r.push(getComputedStyle(document.querySelector('#page .node .ring')).borderRadius); } document.documentElement.dataset.theme = 'mono'; return r[0] !== r[1]; })()`), true);
+await run(`THEME.choose('mono')`); await sleep(300);
+expect('Theme applied to the root', await run(`document.documentElement.dataset.theme`), 'mono');
+await go('home'); await sleep(600); await shot('home-mono', false);
+await run(`THEME.choose('volt')`); await sleep(700); await shot('home-volt', false);
+await go('obj1', 0);
 await run(`THEME.choose('system')`); await sleep(500);
 
 // 12 · Phones: status stays readable, no overlap, no horizontal scroll
@@ -227,6 +272,9 @@ for (const width of [375, 320]) {
   expect(`${width}px compare cells do not overflow`, await run(`[...document.querySelectorAll('table.compare tbody td, table.compare tbody th')].filter(el => el.scrollWidth > el.clientWidth + 1).length`), 0);
   expect(`${width}px no horizontal page scroll`, await run('document.documentElement.scrollWidth <= window.innerWidth'), true);
   await go('decision', 3); await sleep(600); await shot(`mobile-${width}-decision`);
+  await go('home'); await sleep(900); await shot(`mobile-${width}-home`);
+  expect(`${width}px home has no horizontal scroll`, await run('document.documentElement.scrollWidth <= window.innerWidth'), true);
+  expect(`${width}px hive sits above the words`, await run(`(() => { const c = document.querySelector('#page .hive-anchor').getBoundingClientRect(), t = document.querySelector('#page .home-title').getBoundingClientRect(); return c.bottom <= t.top + 1; })()`), true);
 }
 await size(812, 375); await go('obj1', 0); await shot('landscape-812-obj1', false);
 await size(1440);
@@ -237,7 +285,7 @@ expect('CR20 reduced motion picked up mid-session', await run('MOTION.reduce'), 
 await media([{ name: 'prefers-color-scheme', value: scheme }]); await sleep(200);
 
 // 14 · A03: dark print uses light ink on white and carries the decision record
-await run(`THEME.choose('dark')`); await sleep(600);
+await run(`THEME.choose('mono')`); await sleep(600);
 await go('decision', 3);
 await run(`window.dispatchEvent(new Event('beforeprint'))`);
 await media([{ name: 'prefers-color-scheme', value: 'dark' }], 'print'); await sleep(300);

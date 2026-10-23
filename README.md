@@ -18,6 +18,7 @@ that open like an iPhone notification stack.
 
 | Tab | Objective | Steps |
 |---|---|---|
+| Home | To decide, each month, whether Malaysia's biodiesel blend stays at B20 or moves to B30. | Living hive: the biodiesel journey B5 to B30 |
 | OBJ1 · Price | To develop an automatic pricing mechanism for biodiesel (APM-Bio). | 6 |
 | OBJ2 · Shock test | To evaluate whether a Biodiesel Stabilisation Fund (BSF) can withstand price shocks. | 6 |
 | OBJ3 · Money sources | To determine the best sources of funding for the BSF. | 5 |
@@ -27,7 +28,7 @@ that open like an iPhone notification stack.
 ## Using it
 
 Everything in the User level (swipe between steps, exact-value boxes that reject bad input, "Your scenario" labelling, reset
-scopes, themes inspired by iPhone and iPad, `#obj4-5` links, print summary), plus:
+scopes, the six looks, `#obj4-5` links, print summary, and the living-hive Home page with the biodiesel journey and the sponsor marks), plus:
 
 - **Detail stacks.** Tap a stack to fan the cards out, then open any card. Collapsed cards cannot be reached with Tab.
 - **Charts.** Hover or tap to read a point, or focus a chart and use the arrow keys (Shift for a year, Home and End for the ends).
@@ -75,7 +76,9 @@ npm run shoot -- shots   # optional: headless Chrome/Edge walk-through + the rev
 | `src/shared.css` | Shared with the User level: mobile baseline, review fixes, motion hooks, themes, print |
 | `src/model.js` | V3 calculation rules and number formats |
 | `src/motion.js` | Shared spring engine, swipe gesture, CSS spring curves |
-| `src/theme.js` | Shared theme selector |
+| `src/theme.js` | Shared look selector (six looks) |
+| `src/home.js` | Shared Home page: the living hive, the biodiesel journey, sponsor marks |
+| `brand/` | Optional sponsor logos `mpob.png` and `ukm.png`, embedded at build time |
 | `src/app.js` | Tabs, steps, detail stacks, charts, source inspector, live bindings |
 | `src/lottie-icons.mjs` | Project-authored Lottie marks (B30 / B20 / B15 results, detail-stack toggle) |
 | `data/master-trace.json` | Master-workbook trace rows (generated) |

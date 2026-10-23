@@ -17,7 +17,8 @@ const MOTION = (() => {
   const dirty = new Set();
   let raf = 0, last = 0;
   function tick(now) {
-    const dt = Math.min(1 / 30, last ? (now - last) / 1000 : 1 / 60);
+    // Real elapsed time (4 ms sub-steps keep it stable), so a slow device or a busy frame never puts motion in slow motion.
+    const dt = Math.min(0.1, last ? (now - last) / 1000 : 1 / 60);
     last = now;
     for (const s of [...active]) s.step(dt);
     for (const f of dirty) f.write();
@@ -132,6 +133,12 @@ const MOTION = (() => {
       const done = g; g = null;
       if (done.axis !== 'x') return;
       done.el.classList.remove('is-dragging');
+      // Slow frames coalesce pointer moves, so the release point itself counts as the last sample.
+      if (event.type === 'pointerup' && Number.isFinite(event.clientX) && event.clientX !== done.hist.at(-1)[1]) {
+        const dx = event.clientX - done.x0;
+        done.offset = can(dx < 0 ? 1 : -1) ? dx : rubberband(dx, done.width);
+        done.hist.push([event.timeStamp, event.clientX]); if (done.hist.length > 6) done.hist.shift();
+      }
       const [t0, x0] = done.hist[0], [t1, x1] = done.hist.at(-1);
       const velocity = t1 > t0 ? (x1 - x0) / (t1 - t0) * 1000 : 0;
       const projected = done.offset + project(velocity, 0.99);

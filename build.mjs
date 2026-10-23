@@ -55,10 +55,25 @@ ${read('src/shared.css')}`)
   .replace('/*__MODEL__*/', () => stripExports(read('src/model.js')))
   .replace('/*__MOTION__*/', () => read('src/motion.js'))
   .replace('/*__THEME__*/', () => read('src/theme.js'))
+  .replace('/*__HOME__*/', () => read('src/home.js'))
+  .replace('__BRAND__', () => JSON.stringify(brandLogos()).replace(/</g, '\\u003c'))
   .replace('/*__APP__*/', () => read('src/app.js'));
 
-for (const token of ['/*__CSS__*/', '__SNAPSHOT__', '__TRACE__', '__LOTTIE_ICONS__', '__LOTTIE_FLOW__', '/*__LOTTIE__*/', '/*__MODEL__*/', '/*__MOTION__*/', '/*__THEME__*/', '/*__APP__*/']) {
+for (const token of ['/*__CSS__*/', '__SNAPSHOT__', '__TRACE__', '__LOTTIE_ICONS__', '__LOTTIE_FLOW__', '/*__LOTTIE__*/', '/*__MODEL__*/', '/*__MOTION__*/', '/*__THEME__*/', '/*__HOME__*/', '__BRAND__', '/*__APP__*/']) {
   if (html.includes(token)) throw new Error(`Unreplaced build token ${token}`);
 }
 writeFileSync(at(output), html);
 console.log(`Built ${relative(process.cwd(), at(output))} (${(html.length / 1024).toFixed(0)} KB) from snapshot ${snapshot.generatedAt}`);
+
+// Sponsor logos for the Home hero: optional files brand/mpob.(svg|png|jpg|webp) and brand/ukm.(…).
+// Inside the project they live in dashboard/brand (shared by both levels); in the repo, in ./brand.
+function brandLogos() {
+  const dirs = [new URL('../brand/', import.meta.url), new URL('./brand/', import.meta.url)];
+  const types = { svg: 'image/svg+xml', png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', webp: 'image/webp' };
+  const out = {};
+  for (const key of ['mpob', 'ukm']) for (const d of dirs) for (const [ext, mime] of Object.entries(types)) {
+    const file = new URL(`${key}.${ext}`, d);
+    if (!out[key] && existsSync(file)) out[key] = `data:${mime};base64,${readFileSync(file).toString('base64')}`;
+  }
+  return out;
+}

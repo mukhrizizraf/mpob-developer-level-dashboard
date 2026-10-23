@@ -51,7 +51,7 @@
     color-scheme: dark;
   }
 }
-:root[data-theme="dark"], :root[data-theme="midnight"], :root[data-theme="spacegrey"] {
+:root[data-theme="volt"], :root[data-theme="mono"] {
   --bg: #000000; --card: #1c1c1e; --card-2: #232326; --ink: #f5f5f7; --ink-2: #d2d2d7; --muted: #a1a1a6;
   --line: #333338; --track: #3a3a3f; --glass: rgba(22,22,24,.78);
   --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 30px rgba(0,0,0,.35); --shadow-lg: 0 24px 60px rgba(0,0,0,.5);
@@ -133,7 +133,7 @@ main { max-width: 1240px; margin: 0 auto; padding: 0 32px 56px; }
 .aurora i:last-child { right: 8%; top: -60px; opacity: .14; background: var(--s3); animation-duration: 24s; animation-direction: alternate-reverse; }
 @keyframes drift { from { transform: translate3d(-4%, 0, 0) scale(1); } to { transform: translate3d(6%, 4%, 0) scale(1.12); } }
 @media (prefers-color-scheme: dark) { :root:not([data-theme]) .aurora i { opacity: .28; } }
-:root[data-theme="dark"] .aurora i, :root[data-theme="midnight"] .aurora i, :root[data-theme="spacegrey"] .aurora i { opacity: .28; }
+:root[data-theme="volt"] .aurora i, :root[data-theme="mono"] .aurora i { opacity: .28; }
 
 .hero { padding: 56px 0 8px; text-align: center; }
 .hero-kicker {
