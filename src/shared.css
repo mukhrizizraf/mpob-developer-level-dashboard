@@ -1,0 +1,252 @@
+/* ── Shared by the User and Developer levels (appended after styles.css at build time) ──
+   Mobile baseline, review fixes (status, states, tables, errors, print), fluid motion hooks and themes. */
+
+/* ── Mobile baseline: feel installed, not embedded ───── */
+html { -webkit-tap-highlight-color: transparent; overscroll-behavior: none; }
+button, [role="button"], [role="tab"], .chip, .choice, .node, .sum, .mini-case, summary {
+  touch-action: manipulation; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+}
+.topbar { padding-top: env(safe-area-inset-top, 0px); }
+footer.foot { padding-bottom: calc(40px + env(safe-area-inset-bottom, 0px)); }
+@media (pointer: coarse) { .control-value { font-size: max(16px, 1em); } }
+/* Hover effects only where a precise pointer can hover; touch keeps press feedback. */
+@media (hover: none), (pointer: coarse) {
+  .choice:hover, .sum:hover { transform: none; box-shadow: none; }
+  .btn-primary:hover svg, .btn-ghost:hover:not(:disabled) svg { transform: none; }
+  .node:hover .ring { filter: none; }
+}
+.sr-only { position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+/* ── Press feedback on pointer-down (the individual `scale` property composes with any transform) ── */
+.btn, .chip, .choice, .seg button, .mini-case, .sum, .tab, .switch, .theme-btn, .theme-opt, .btn-link, .reset, .node .ring {
+  transition-property: scale, transform, background-color, border-color, color, box-shadow, filter, opacity;
+  transition-duration: var(--spring-ui-ms, 220ms); transition-timing-function: var(--spring-ui, cubic-bezier(.23, 1, .32, 1));
+}
+.btn:active, .chip:active, .choice:active, .seg button:active, .mini-case:active, .sum:active, .tab:active, .theme-opt:active { scale: .97; transition-duration: 90ms; transition-timing-function: ease-out; }
+.switch:active { scale: .95; transition-duration: 90ms; }
+.node:active .ring { scale: .95; transition-duration: 90ms; }
+.btn-link:active, .reset:active { scale: .96; transition-duration: 90ms; }
+.btn:focus-visible, .chip:focus-visible, .choice:focus-visible, .seg button:focus-visible, .mini-case:focus-visible, .sum:focus-visible,
+.tab:focus-visible, .switch:focus-visible, .btn-link:focus-visible, .reset:focus-visible, .theme-btn:focus-visible, .theme-opt:focus-visible, summary:focus-visible, .stage h2:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--c, var(--s1)) 60%, transparent); outline-offset: 2px;
+}
+.stage h2:focus { outline: none; }
+.stage h2:focus-visible { border-radius: 8px; }
+
+/* Selected states settle on a spring with a little life (light elements may overshoot slightly). */
+.choice[aria-pressed="true"]::after { animation: tick var(--spring-bounce-ms, 420ms) var(--spring-bounce, cubic-bezier(.34, 1.4, .64, 1)) both; }
+@keyframes tick { from { transform: scale(.55); opacity: 0; } to { transform: none; opacity: 1; } }
+.switch::after { transition: transform var(--spring-bounce-ms, 400ms) var(--spring-bounce, cubic-bezier(.34, 1.4, .64, 1)); }
+.ring, .check { transition-timing-function: var(--spring-bounce, cubic-bezier(.34, 1.4, .64, 1)); transition-duration: var(--spring-bounce-ms, 450ms); }
+.tab-pill { transition: none; }
+
+/* Slider: the thumb swells under the finger and the exact value lifts while you drag. */
+input[type=range]::-webkit-slider-thumb { transition: transform var(--spring-bounce-ms, 300ms) var(--spring-bounce, ease-out), box-shadow .2s ease; }
+input[type=range]:active::-webkit-slider-thumb { transform: scale(1.22); box-shadow: 0 2px 10px rgba(0,0,0,.28), 0 0 0 6px color-mix(in srgb, var(--c) 22%, transparent); }
+input[type=range]:active::-moz-range-thumb { transform: scale(1.22); }
+.control-value { transition: scale var(--spring-ui-ms, 220ms) var(--spring-ui, ease-out), color .2s ease, border-color .2s ease, background-color .2s ease; transform-origin: right center; }
+.control:has(input[type=range]:active) .control-value { scale: 1.06; color: var(--c-ink); }
+
+/* Bars, gauges and markers are driven by springs from motion.js: no CSS transition to fight them. */
+.bar > i, .mini-case .col i, .meter .marker, .stack > i, .gb-plot i { transition-property: background-color; transition-duration: .25s; }
+.out, .light { transition: background-color .25s ease, border-color .25s ease; }
+.verdict { transition: background-color .3s ease; will-change: transform; }
+.verdict.pop { animation: none; }
+
+/* ── Page and step transitions (springs in motion.js) ── */
+#page { perspective: 1600px; position: relative; }
+.fold-layer { position: fixed; inset: 0; pointer-events: none; z-index: 15; perspective: 1600px; overflow: hidden; }
+.fold-layer .page { position: absolute; will-change: transform, opacity, filter; }
+.aurora { position: fixed; inset: 0 0 auto; height: 680px; z-index: -1; will-change: transform; }
+.aurora i { animation: none; }
+.page { --accent: var(--s1); }
+.stage-shell { position: relative; }
+.stage { touch-action: pan-y; will-change: transform; }
+.stage.is-dragging { cursor: grabbing; user-select: none; -webkit-user-select: none; }
+.stage.is-leaving { z-index: 0; }
+.stage:not(.is-leaving) { position: relative; z-index: 1; }
+.node { animation-duration: .5s; animation-timing-function: var(--spring-soft, cubic-bezier(.23, 1, .32, 1)); animation-delay: calc(var(--i, 0) * 40ms + 60ms); }
+.node.is-active .ring .disc::before { animation-iteration-count: 2; }
+.cyc.on { animation: none; }
+/* The fund cycle explains the accounting identity once; Replay runs it again (a new name restarts it). */
+.cycle .cyc { animation: cycPulse 2.4s var(--ease) 1 both; }
+.cycle.again .cyc { animation-name: cycPulseAgain; }
+@keyframes cycPulseAgain { 0%, 22%, 100% { transform: none; box-shadow: none; } 8% { transform: translateY(-6px); box-shadow: 0 14px 30px color-mix(in srgb, var(--k) 35%, transparent); } }
+.cycle .cyc:nth-of-type(2) { animation-delay: .5s; } .cycle .cyc:nth-of-type(3) { animation-delay: 1s; } .cycle .cyc:nth-of-type(4) { animation-delay: 1.5s; }
+.replay { display: inline-flex; align-items: center; gap: 4px; margin-left: 8px; font-size: 13px; vertical-align: middle; }
+.replay svg { width: 15px; height: 15px; stroke-width: 2.2; }
+
+/* ── Top bar: status always readable, scenario pill, theme selector ── */
+.status .status-short { display: none; }
+.status { white-space: nowrap; }
+.scenario { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; color: var(--hold);
+  background: var(--hold-bg); border-radius: 999px; padding: 4px 6px 4px 12px; }
+.scenario .btn-link { font-size: 12px; background: var(--card); border-radius: 999px; padding: 3px 10px; color: var(--ink); }
+.scenario[hidden] { display: none; }
+.theme { position: relative; flex: 0 0 auto; }
+.theme-btn { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: var(--card); color: var(--ink-2);
+  border-radius: 999px; padding: 5px 10px 5px 7px; font-size: 12px; font-weight: 600; cursor: pointer; }
+.theme-btn svg { width: 16px; height: 16px; }
+.theme-pop { position: absolute; right: 0; top: calc(100% + 10px); width: min(360px, calc(100vw - 24px)); z-index: 40; transform-origin: top right;
+  background: color-mix(in srgb, var(--card) 86%, transparent); backdrop-filter: blur(28px) saturate(180%); -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid color-mix(in srgb, var(--line) 80%, transparent); border-radius: 22px; padding: 14px; box-shadow: 0 2px 8px rgba(0,0,0,.08), 0 30px 70px rgba(0,0,0,.22); }
+.theme-head { display: flex; justify-content: space-between; align-items: baseline; padding: 2px 4px 8px; }
+.theme-head b { font-size: 15px; letter-spacing: -.01em; }
+.theme-head span { font-size: 11px; color: var(--muted); }
+.theme-group + .theme-group { margin-top: 10px; }
+.theme-group-name { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); padding: 0 4px 6px; }
+.theme-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.theme-opt { display: flex; align-items: center; gap: 10px; text-align: left; border: 1px solid transparent; background: var(--card-2); border-radius: 14px; padding: 8px; cursor: pointer; color: var(--ink); }
+.theme-opt b { display: block; font-size: 13px; }
+.theme-opt small { display: block; font-size: 11px; color: var(--muted); }
+.theme-opt[aria-checked="true"] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+.sw { width: 30px; height: 30px; border-radius: 50%; flex: 0 0 auto; position: relative; background: linear-gradient(135deg, var(--a) 50%, var(--b) 50%);
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.12), 0 1px 3px rgba(0,0,0,.15); }
+.sw i { position: absolute; inset: 9px; border-radius: 50%; background: rgba(255,255,255,.55); scale: 0; transition: scale var(--spring-bounce-ms, 400ms) var(--spring-bounce, ease-out); }
+.theme-opt[aria-checked="true"] .sw i { scale: 1; }
+@media (hover: hover) and (pointer: fine) { .theme-opt:hover { border-color: var(--line); } .theme-btn:hover { color: var(--ink); } }
+/* Theme switch: a circle reveal from the chosen swatch, or a gentle colour cross-fade. */
+::view-transition-old(root), ::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+.theme-vt::view-transition-new(root) { animation: vt-reveal 560ms cubic-bezier(.23, 1, .32, 1) both; }
+@keyframes vt-reveal { from { clip-path: circle(0 at var(--vt-x) var(--vt-y)); } to { clip-path: circle(var(--vt-r) at var(--vt-x) var(--vt-y)); } }
+.theme-fade, .theme-fade * { transition: background-color .35s ease, color .35s ease, border-color .35s ease !important; }
+
+/* ── Snapshot and scenario labelling ─────────────────── */
+.basis { font-size: 13px; color: var(--muted); margin-top: 12px; font-weight: 500; }
+.basis::before { content: ""; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--hold); margin-right: 7px; vertical-align: 1px; }
+.run-badge { display: inline-block; font-size: 12px; font-weight: 600; color: var(--ink-2); background: var(--track); border-radius: 999px; padding: 5px 12px; margin-bottom: 4px; }
+.limit { font-size: 13px; line-height: 1.45; color: var(--ink-2); background: var(--hold-bg); border-radius: 14px; padding: 10px 14px; margin-top: 14px; }
+.term { font-size: 13px; color: var(--muted); margin-top: 12px; }
+.term b { display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: .04em; color: var(--c-ink); background: color-mix(in srgb, var(--c) 14%, transparent); border-radius: 6px; padding: 1px 6px; margin-right: 6px; }
+.reset-row { display: flex; flex-wrap: wrap; gap: 10px 24px; margin-top: 18px; align-items: baseline; }
+.reset-row > span { display: inline-flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.reset-row small { font-size: 12px; color: var(--muted); }
+.reset-row .btn-link { display: inline-flex; align-items: center; gap: 6px; }
+.reset-row .btn-link svg { width: 16px; height: 16px; stroke-width: 2; }
+.field-error { font-size: 13px; font-weight: 600; color: var(--bad); margin: 6px 0 0; }
+.control-value[aria-invalid="true"] { border-color: var(--bad); background: var(--bad-bg); }
+.control-top .label { font-size: 15px; font-weight: 600; color: var(--ink-2); }
+.eq-term.result span { color: inherit; opacity: .85; }
+.failure { max-width: 640px; margin: 80px auto; padding: 32px; border-radius: 24px; background: var(--bad-bg); color: var(--ink); }
+.failure h1 { margin: 0 0 8px; font-size: 26px; }
+
+/* "Not tested" is neither zero nor a failure. */
+[data-state="na"].out { background: var(--na-bg); border-color: transparent; }
+[data-state="na"].out .out-big { color: var(--na); }
+.bar > i[data-state="na"], .mini-case .col i[data-state="na"] { background: transparent; }
+.mini-case .col { border-bottom: 2px solid var(--line); }
+.mini-case .col i { min-height: 0; }
+.mini-case:has(i[data-state="na"]) strong { color: var(--na); font-size: 12px; }
+
+/* ── Price map: a real table ─────────────────────────── */
+.map-wrap { overflow-x: auto; margin-top: 16px; }
+table.map { width: 100%; border-collapse: separate; border-spacing: 6px; font-size: 13px; display: table; margin: 0; }
+table.map caption { caption-side: bottom; text-align: left; font-size: 12px; color: var(--muted); padding: 4px 6px; }
+table.map th { color: var(--muted); font-weight: 700; padding: 4px; text-align: center; }
+table.map td.cell { border-radius: 10px; padding: 8px 4px; text-align: center; color: #fff; font-weight: 800; }
+table.map td.cell.B30 { background: var(--b30); } table.map td.cell.B20 { background: var(--b20); } table.map td.cell.B15 { background: var(--b15); }
+table.map td.cell.none { background: var(--track); color: var(--muted); font-weight: 600; }
+
+/* ── Funding comparison: a semantic table that becomes one card per option on a phone ── */
+.compare-wrap { width: 100%; }
+table.compare { display: table; width: 100%; border-collapse: separate; border-spacing: 0 10px; margin: -10px 0; }
+table.compare thead th { font-size: 13px; font-weight: 600; color: var(--muted); text-align: left; padding: 0 16px; }
+table.compare tbody th, table.compare tbody td { background: var(--card-2); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 14px 16px; text-align: left; vertical-align: middle; }
+table.compare tbody th { border-left: 1px solid var(--line); border-radius: 18px 0 0 18px; font-weight: 400; }
+table.compare tbody td:last-child { border-right: 1px solid var(--line); border-radius: 0 18px 18px 0; }
+table.compare b { font-size: 16px; }
+table.compare small { display: block; font-size: 12px; color: var(--muted); font-weight: 500; }
+table.compare td strong { font-size: 18px; font-variant-numeric: tabular-nums; display: block; }
+table.compare .mini { display: block; height: 6px; background: var(--track); border-radius: 999px; margin-top: 6px; overflow: hidden; }
+table.compare .mini i { display: block; height: 100%; border-radius: 999px; background: var(--c, var(--s1)); }
+table.compare .best { color: var(--good); }
+table.compare tr.is-ref > * { color: var(--muted); }
+.ref-tag { margin-left: 8px; font-size: 11px; font-weight: 700; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 1px 7px; vertical-align: 2px; }
+@media (max-width: 640px) {
+  table.compare, table.compare tbody, table.compare tr, table.compare th, table.compare td { display: block; }
+  table.compare { border-spacing: 0; margin: 0; }
+  table.compare thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  table.compare tbody tr { background: var(--card-2); border: 1px solid var(--line); border-radius: 18px; padding: 12px 14px; margin-bottom: 10px; }
+  table.compare tbody th, table.compare tbody td { background: none; border: 0 !important; border-radius: 0 !important; padding: 0; }
+  table.compare tbody th { padding-bottom: 8px; }
+  table.compare tbody td { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 12px; align-items: baseline; padding: 7px 0; border-top: 1px solid var(--line) !important; }
+  table.compare tbody td::before { content: attr(data-label); font-size: 13px; color: var(--muted); font-weight: 600; grid-row: span 2; }
+  table.compare td strong { font-size: 16px; text-align: right; }
+  table.compare td small, table.compare td .mini { grid-column: 2; text-align: right; }
+  table.compare td .mini { width: 90px; justify-self: end; }
+}
+
+/* Funding mix: values live in the legend; a segment shows its label only when it fits. */
+.stack > i.tight { color: transparent; }
+.legend-values { display: grid; gap: 6px; font-size: 13px; color: var(--ink-2); }
+.legend-values span::before { margin-right: 8px; }
+
+/* Crowded top bar: shorten the status and the theme label before the tabs run out of room. */
+@media (max-width: 1480px) { .status .status-long { display: none; } .status .status-short { display: inline; } .theme-btn .theme-name { display: none; } .theme-btn { padding: 6px; } }
+
+/* ── Phones ──────────────────────────────────────────── */
+@media (max-width: 860px) {
+  .status { margin-left: 0; font-size: 11px; }
+  .status .status-long { display: none; }
+  .status .status-short { display: inline; }
+  .topbar-inner { row-gap: 8px; }
+  .scenario { order: 4; }
+  .theme { margin-left: auto; }
+  .theme-btn .theme-name { display: none; }
+}
+@media (max-width: 420px) {
+  .brand small { display: none; }
+  .stage { padding: 20px 16px 16px; }
+  .out { padding: 20px; }
+  .out-big { font-size: 34px; }
+  .legend-values { font-size: 12px; }
+}
+
+/* ── Reduced motion, transparency and contrast ───────── */
+@media (prefers-reduced-motion: reduce) {
+  .aurora { display: none; }
+  .control:has(input[type=range]:active) .control-value { scale: 1; }
+  .btn:active, .chip:active, .choice:active, .seg button:active, .mini-case:active, .sum:active, .tab:active { scale: 1; }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .topbar, .theme-pop { background: var(--card); backdrop-filter: none; -webkit-backdrop-filter: none; }
+}
+@media (prefers-contrast: more) {
+  :root { --line: #8e8e93; --muted: #4a4a4f; }
+  .topbar, .theme-pop { background: var(--card); backdrop-filter: none; -webkit-backdrop-filter: none; border-color: var(--ink); }
+}
+
+/* ── Themes: surfaces only; meaning colours stay fixed so Pass/Fail never changes hue ── */
+:root[data-theme="starlight"] { --bg: #f4efe7; --card: #fffdf9; --card-2: #faf6f0; --ink: #231d16; --ink-2: #463d33; --muted: #675d52; --line: #e6ddd0; --track: #ebe3d7; --glass: rgba(250,246,240,.8); }
+:root[data-theme="titanium"] { --bg: #ebeae6; --card: #fbfbf9; --card-2: #f4f3f0; --ink: #1c1c1a; --ink-2: #3f3e3a; --muted: #605f59; --line: #dad8d2; --track: #e0ded8; --glass: rgba(244,243,240,.8); --good: #0f7240; }
+:root[data-theme="desert"] { --bg: #f2e9dd; --card: #fffaf3; --card-2: #f9f1e6; --ink: #2a1f15; --ink-2: #4d3d2e; --muted: #6a5846; --line: #e5d6c3; --track: #eadcca; --glass: rgba(249,241,230,.8); --good: #0f7240; }
+:root[data-theme="ultramarine"] { --bg: #ebeffc; --card: #ffffff; --card-2: #f5f7fe; --ink: #121735; --ink-2: #343b63; --muted: #575d82; --line: #dde2f5; --track: #e1e6f7; --glass: rgba(245,247,254,.8); }
+:root[data-theme="sky"] { --bg: #e9f3fa; --card: #ffffff; --card-2: #f4f9fd; --ink: #0f2233; --ink-2: #2f4a60; --muted: #506678; --line: #d6e6f1; --track: #dceaf4; --glass: rgba(244,249,253,.8); }
+:root[data-theme="blush"] { --bg: #f9eef0; --card: #fffbfc; --card-2: #fcf4f6; --ink: #2e1a1f; --ink-2: #553a42; --muted: #71575e; --line: #efdbe0; --track: #f1e0e4; --glass: rgba(252,244,246,.8); }
+:root[data-theme="midnight"] { --bg: #0b101b; --card: #151c2b; --card-2: #1b2334; --ink: #eef2fa; --ink-2: #c9d1e3; --muted: #98a2b8; --line: #2a3449; --track: #2c364b; --glass: rgba(14,20,32,.78); }
+:root[data-theme="spacegrey"] { --bg: #121214; --card: #1e1e22; --card-2: #25252a; --ink: #f2f2f4; --ink-2: #d0d0d5; --muted: #a0a0a8; --line: #34343a; --track: #38383e; --glass: rgba(24,24,27,.78); }
+:root[data-theme="ultramarine"] .aurora i:last-child { background: #7d8ff0; }
+:root[data-theme="sky"] .aurora i:last-child { background: #7fb6de; }
+:root[data-theme="blush"] .aurora i:last-child { background: #e7a5b3; }
+:root[data-theme="desert"] .aurora i:last-child { background: #c9a989; }
+:root[data-theme="midnight"] .aurora i:last-child { background: #3c5cc8; }
+
+/* ── Print: light ink on white whatever the theme, with the decision record ── */
+.print-only { display: none; }
+@media print {
+  :root, :root:not([data-theme]), :root[data-theme] {
+    --bg: #fff; --card: #fff; --card-2: #fff; --ink: #000; --ink-2: #222; --muted: #444; --line: #bbb; --track: #e5e5e5;
+    --good-bg: #eef7f1; --bad-bg: #fbeeee; --hold-bg: #faf4e8; --na-bg: #f2f2f2; color-scheme: light;
+  }
+  body { background: #fff !important; color: #000; }
+  .topbar { position: static; background: none !important; backdrop-filter: none !important; border: 0; }
+  .topbar .tabs, .theme, .scenario .btn-link, .aurora, .fold-layer, .replay, .reset-row, .stage-foot, .flow-wrap { display: none !important; }
+  .topbar { display: block !important; }
+  .stage { box-shadow: none; border: 1px solid #bbb; break-inside: avoid; }
+  .print-only { display: block; }
+  #print-summary { margin: 24px 0; font-size: 12px; color: #000; }
+  #print-summary h1 { font-size: 18px; margin: 0 0 6px; }
+  #print-summary table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+  #print-summary th, #print-summary td { border: 1px solid #bbb; padding: 4px 6px; text-align: left; }
+  #print-summary .ps-result { font-size: 14px; }
+}

@@ -52,15 +52,12 @@ test('fund-survival selection matches V3 for every whole-percent share', () => {
   assert.deepEqual(user.rq2CaptureChoices(q, '9'), [1]);
   assert.deepEqual(user.rq2CaptureChoices(q, '60'), [0.25, 0.5, 0.75, 1]);
 });
-test('fitted APM-Bio cost reproduces the saved diagnostic within rounding', () => {
-  const coef = key => q.rq1_coefficients.rows.find(r => r.Variable === key).Coefficient;
-  const term = prefix => q.rq1_apmbio_diagnostic.rows.find(r => r.component.startsWith(prefix)).rmTonne;
-  const fitted = user.fittedPme(q.rq1_coefficients.rows, {
-    cpoLag: q.rq1_monthly.rows.at(-2).cpoRmT,
-    methanol: Math.round(term('Methanol') / coef('meoh_rm')),
-    glycerol: Math.round(term('Glycerol') / coef('gly_rm')),
-  });
-  const saved = term('Fitted PME');
+test('fitted cost from the reviewed master inputs reproduces the saved diagnostic within coefficient rounding', () => {
+  const trace = JSON.parse(readFileSync(new URL('./data/master-trace.json', import.meta.url), 'utf8'));
+  const last = trace.rows.at(-1);
+  assert.equal(last.period, base.period);
+  const fitted = user.fittedPme(q.rq1_coefficients.rows, { cpoLag: q.rq1_monthly.rows.at(-2).cpoRmT, methanol: last.E, glycerol: last.F });
+  const saved = q.rq1_apmbio_diagnostic.rows.find(r => r.component.startsWith('Fitted PME')).rmTonne;
   assert.ok(Math.abs(fitted - saved) < 0.5, `fitted ${fitted} vs saved ${saved}`);
 });
 test('WPL baseline arithmetic matches V3', () => {
@@ -80,6 +77,22 @@ test('master-data trace matches the snapshot series', () => {
 test('built page embeds the same snapshot queries', () => {
   const html = readFileSync(new URL(page, import.meta.url), 'utf8');
   const json = html.match(/<script type="application\/json" id="mpob-snapshot">([\s\S]*?)<\/script>/)[1];
-  assert.deepEqual(JSON.parse(json).queries, q);
+  const embedded = JSON.parse(json);
+  assert.deepEqual(embedded.queries, q);
+  assert.match(embedded.snapshotSha256, /^[0-9a-f]{64}$/);
+  assert.equal(embedded.releaseFingerprint, snapshot.releaseFingerprint);
   assert.ok(!/<script[^>]+src=|<link[^>]+rel="stylesheet"/.test(html), 'page must load nothing from the network');
+});
+test('the snapshot check accepts the reviewed snapshot and rejects a broken one', () => {
+  const app = readFileSync(new URL('./src/app.js', import.meta.url), 'utf8');
+  const block = app.slice(app.indexOf('const REQUIRED = {'), app.indexOf('const PROBLEMS'));
+  const snapshotProblems = new Function(`${block}; return snapshotProblems;`)();
+  assert.deepEqual(snapshotProblems(snapshot), []);
+  const broken = structuredClone(snapshot);
+  delete broken.queries.rq4_matrix; broken.queries.decision_snapshot.rows[0].mopsRmT = 'n/a';
+  assert.ok(snapshotProblems(broken).length >= 2);
+});
+test('equality is not a pass: gap 0 and fund at the limit both fail B30', () => {
+  const r = user.policyState({ mops: 4000, pme: 4000, fund: 3 * 213.9611, b30Auth: true }, a);
+  assert.equal(r.pricePass, false); assert.equal(r.fundSafe, false); assert.equal(r.mandate, 'B20');
 });

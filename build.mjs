@@ -6,6 +6,7 @@
 // repo copy (with data/ and vendor/ beside this file) builds identically.
 // Lottie player: the unmodified lottie-web 5.13.0 light build bundled with V3 (MIT).
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { dirname, join, relative } from 'node:path';
 import { lottieIcons, lottieStack } from './src/lottie-icons.mjs';
@@ -34,23 +35,29 @@ if (inProject) {
 }
 const trace = JSON.parse(read('data/master-trace.json'));
 
-const snapshot = JSON.parse(read(snapshotPath));
+const snapshotText = read(snapshotPath);
+const snapshot = JSON.parse(snapshotText);
+if (trace.rows.at(-1).period !== snapshot.queries.decision_snapshot.rows[0].period) throw new Error('Master trace month does not match the snapshot month.');
 const inlineJson = value => JSON.stringify(value).replace(/</g, '\\u003c');
 const stripExports = source => source.replace(/^export\s+/gm, '');
 const lottiePlayer = read(`${lottieDir}/lottie-light-5.13.0.mjs`).replace(/^export \{ lottie as default \};\s*$/m, 'window.lottie = lottie;');
 if (!lottiePlayer.includes('window.lottie = lottie;')) throw new Error('Lottie export line not found; the player build changed.');
 
 const html = read('src/index.html')
-  .replace('/*__CSS__*/', () => read('src/styles.css'))
-  .replace('__SNAPSHOT__', () => inlineJson({ generatedAt: snapshot.generatedAt, status: snapshot.status, queries: snapshot.queries }))
+  .replace('/*__CSS__*/', () => `${read('src/styles.css')}
+${read('src/shared.css')}`)
+  .replace('__SNAPSHOT__', () => inlineJson({ generatedAt: snapshot.generatedAt, status: snapshot.status, releaseFingerprint: snapshot.releaseFingerprint,
+    snapshotSha256: createHash('sha256').update(snapshotText).digest('hex'), builtAt: new Date().toISOString(), queries: snapshot.queries }))
   .replace('__TRACE__', () => inlineJson(trace))
   .replace('__LOTTIE_ICONS__', () => inlineJson({ ...lottieIcons, stack: lottieStack }))
   .replace('__LOTTIE_FLOW__', () => inlineJson(JSON.parse(read(`${lottieDir}/fund-flow-arrow.json`))))
   .replace('/*__LOTTIE__*/', () => `(function(){\n${lottiePlayer}\n})();`)
   .replace('/*__MODEL__*/', () => stripExports(read('src/model.js')))
+  .replace('/*__MOTION__*/', () => read('src/motion.js'))
+  .replace('/*__THEME__*/', () => read('src/theme.js'))
   .replace('/*__APP__*/', () => read('src/app.js'));
 
-for (const token of ['/*__CSS__*/', '__SNAPSHOT__', '__TRACE__', '__LOTTIE_ICONS__', '__LOTTIE_FLOW__', '/*__LOTTIE__*/', '/*__MODEL__*/', '/*__APP__*/']) {
+for (const token of ['/*__CSS__*/', '__SNAPSHOT__', '__TRACE__', '__LOTTIE_ICONS__', '__LOTTIE_FLOW__', '/*__LOTTIE__*/', '/*__MODEL__*/', '/*__MOTION__*/', '/*__THEME__*/', '/*__APP__*/']) {
   if (html.includes(token)) throw new Error(`Unreplaced build token ${token}`);
 }
 writeFileSync(at(output), html);

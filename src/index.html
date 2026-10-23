@@ -2,7 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#f5f5f7">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000000">
 <title>Mandate Studio Developer</title>
 <meta name="description" content="MPOB-UKM Biodiesel Mandate Decision Studio, developer level: the four objectives step by step, with the equations, tests, tables and saved model results behind each step.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%233d4a8f'/%3E%3Crect x='9' y='10' width='14' height='3' rx='1.5' fill='white'/%3E%3Crect x='9' y='15' width='14' height='3' rx='1.5' fill='white' opacity='.75'/%3E%3Crect x='9' y='20' width='14' height='3' rx='1.5' fill='white' opacity='.5'/%3E%3C/svg%3E">
@@ -11,6 +14,7 @@
 </style>
 </head>
 <body>
+<div class="aurora" id="aurora" aria-hidden="true"><i></i><i></i></div>
 <header class="topbar">
   <div class="topbar-inner">
     <div class="brand">
@@ -19,13 +23,22 @@
     </div>
     <nav class="tabs" id="tabs" aria-label="Objectives"></nav>
     <div class="status" id="status"></div>
+    <div class="scenario" id="scenario" role="status" hidden></div>
+    <div class="theme" id="theme"></div>
   </div>
 </header>
-<main id="page"></main>
+<main id="page" role="tabpanel"></main>
+<div class="fold-layer" id="fold-layer" aria-hidden="true"></div>
+<section class="print-only" id="print-summary" aria-hidden="true"></section>
+<div class="sr-only" id="announce" aria-live="polite" aria-atomic="true"></div>
 <footer class="foot">
-  <span>Values from the reviewed V3 snapshot. Simulated, not official MPOB figures.</span><span>Controls do not rerun the research models.</span><span>B15 is a proposed safeguard only.</span><span>WPL is a baseline reference only.</span>
+  <span>Values from the reviewed V3 snapshot. Simulated, not official MPOB figures.</span><span>Controls do not rerun the research models.</span><span>B15 is a proposed safeguard only.</span><span>WPL is a baseline reference only.</span><span>Settings reset when the page reloads; the link keeps your place.</span><span><button type="button" class="btn-link" data-prov-open>Sources and provenance</button></span>
 </footer>
 <div class="tip" id="tip" role="status" aria-live="off" hidden></div>
+<dialog class="prov" id="prov" aria-labelledby="prov-title">
+  <div class="prov-head"><h2 id="prov-title">Sources and provenance</h2><button type="button" class="btn btn-ghost" id="prov-close">Close</button></div>
+  <div class="prov-body" id="prov-body"></div>
+</dialog>
 <script type="application/json" id="mpob-snapshot">__SNAPSHOT__</script>
 <script type="application/json" id="mpob-trace">__TRACE__</script>
 <script type="application/json" id="lottie-icons">__LOTTIE_ICONS__</script>
@@ -35,7 +48,10 @@
 </script>
 <script>
 /*__MODEL__*/
+/*__MOTION__*/
+/*__THEME__*/
 /*__APP__*/
+THEME.mount(document.getElementById('theme'));
 </script>
 </body>
 </html>
