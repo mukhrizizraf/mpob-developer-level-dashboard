@@ -258,19 +258,19 @@ await go('decision', 0); await click(live('[data-stack-toggle]')); await sleep(5
 expect('Decision detail card icons render', await run("[...document.querySelectorAll('.stage:not(.is-leaving) .dcard-ico')].filter(e => !e.querySelector('svg')).length"), 0);
 
 // 11 · Themes
-expect('Six looks offered', await run('THEME.themes.map(t => t.id).join()'), 'system,bloom,tonal,citrus,volt,mono');
+expect('Six looks offered', await run('THEME.themes.map(t => t.id).join()'), 'system,dark,bloom,tonal,citrus,mono');
 expect('No "inspired by" wording in the selector', await run(`/inspired|iphone|ipad/i.test(document.getElementById('theme-pop').textContent)`), false);
-for (const t of ['bloom', 'tonal', 'citrus', 'volt', 'mono']) {
+for (const t of ['dark', 'bloom', 'tonal', 'citrus', 'mono']) {
   await run(`THEME.choose('${t}')`); await sleep(700);
   await shot(`look-${t}`, false);
   const looks = await run(`(() => { const g = s => getComputedStyle(document.querySelector(s)); return [g('.stage:not(.is-leaving) .btn-primary').borderRadius, g('#page .node .ring').borderRadius, g('#page .disc svg').strokeWidth].join(' | '); })()`);
   checks.push(`INFO look ${t}: button radius | ring radius | icon stroke = ${looks}`);
 }
-expect('Looks change shapes, not only colour', await run(`(() => { const r = []; for (const t of ['bloom', 'volt']) { document.documentElement.dataset.theme = t; r.push(getComputedStyle(document.querySelector('#page .node .ring')).borderRadius); } document.documentElement.dataset.theme = 'mono'; return r[0] !== r[1]; })()`), true);
+expect('Looks change shapes, not only colour', await run(`(() => { const r = []; for (const t of ['bloom', 'citrus']) { document.documentElement.dataset.theme = t; r.push(getComputedStyle(document.querySelector('#page .node .ring')).borderRadius); } document.documentElement.dataset.theme = 'mono'; return r[0] !== r[1]; })()`), true);
 await run(`THEME.choose('mono')`); await sleep(300);
 expect('Theme applied to the root', await run(`document.documentElement.dataset.theme`), 'mono');
 await go('home'); await sleep(600); await shot('home-mono', false);
-await run(`THEME.choose('volt')`); await sleep(700); await shot('home-volt', false);
+await run(`THEME.choose('dark')`); await sleep(700); await shot('home-dark', false);
 await go('obj1', 0);
 await run(`THEME.choose('system')`); await sleep(500);
 

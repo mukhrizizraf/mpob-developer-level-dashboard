@@ -1,4 +1,4 @@
-// Appearance: six looks (Classic follows the device; the others set their own shapes, controls and type).
+// Appearance: six looks (Classic follows the device, Classic dark is always dark; the others set their own shapes, controls and type).
 // Shared by the User and Developer levels. The choice is a per-viewer convenience kept in localStorage;
 // the page renders correctly without it. Switching reveals the new theme in a circle from the button.
 
@@ -7,10 +7,10 @@ const THEME = (() => {
   // Six looks. Each changes shapes, controls, icon strokes and type as well as colour (see shared.css "Looks").
   const ALL = [
     { id: 'system', name: 'Classic', note: 'Follows the device, light or dark' },
+    { id: 'dark', name: 'Classic dark', note: 'The classic look, always dark', dark: true },
     { id: 'bloom', name: 'Bloom', note: 'Soft, big and rounded' },
     { id: 'tonal', name: 'Tonal', note: 'Calm tones, organic shapes' },
     { id: 'citrus', name: 'Citrus', note: 'Crisp, bright, chunky sliders' },
-    { id: 'volt', name: 'Volt', note: 'Bold, angular, dark', dark: true },
     { id: 'mono', name: 'Mono', note: 'Dot-matrix minimal, dark', dark: true },
   ];
   const KEY = 'mpob-theme';
