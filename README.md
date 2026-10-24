@@ -18,7 +18,7 @@ that open like an iPhone notification stack.
 
 | Tab | Objective | Steps |
 |---|---|---|
-| Home | To decide, each month, whether Malaysia's biodiesel blend stays at B20 or moves to B30. | Living hive and vortex, then the biodiesel journey: one long camera move from B5 to the B30 decision, with Play and clickable chapters |
+| Home | To decide, each month, whether Malaysia's biodiesel blend stays at B20 or moves to B30. | The biodiesel journey only: one long camera move from B5 to the B30 decision, with Play and clickable chapters |
 | OBJ1 · Price | To develop an automatic pricing mechanism for biodiesel (APM-Bio). | 6 |
 | OBJ2 · Shock test | To evaluate whether a Biodiesel Stabilisation Fund (BSF) can withstand price shocks. | 6 |
 | OBJ3 · Money sources | To determine the best sources of funding for the BSF. | 5 |
@@ -28,7 +28,7 @@ that open like an iPhone notification stack.
 ## Using it
 
 Everything in the User level (swipe between steps, exact-value boxes that reject bad input, "Your scenario" labelling, reset
-scopes, the six looks, `#obj4-5` links, print summary, and the living-hive Home page with the biodiesel journey (scroll, swipe or Play) and the sponsor marks, the app tab bar with icons, which moves to the bottom on a phone), plus:
+scopes, the six looks, `#obj4-5` links, print summary, the Home journey (scroll, swipe or Play) with the sponsor marks, the living hive behind every page that writes the step in hand, the Mirror Hall of liquid step cards, and the tabs at the top), plus:
 
 - **Detail stacks.** Tap a stack to fan the cards out, then open any card. Collapsed cards cannot be reached with Tab.
 - **Charts.** Hover or tap to read a point, or focus a chart and use the arrow keys (Shift for a year, Home and End for the ends).
@@ -77,8 +77,9 @@ npm run shoot -- shots   # optional: headless Chrome/Edge walk-through + the rev
 | `src/model.js` | V3 calculation rules and number formats |
 | `src/motion.js` | Shared spring engine, swipe gesture, CSS spring curves |
 | `src/theme.js` | Shared look selector (six looks) |
-| `src/home.js` | Shared Home page: the living hive, the biodiesel journey (one long camera move), sponsor marks |
-| `brand/` | Sponsor logos `mpob.svg` and `ukm.png`, embedded small in the Home hero at build time. The MPOB and UKM logos are the trademarks of the Malaysian Palm Oil Board and Universiti Kebangsaan Malaysia, shown only to credit their support of this study. |
+| `src/home.js` | Shared: the biodiesel journey on Home (one long camera move, sponsor marks) and the living hive behind every page, which writes the step in hand |
+| `src/hall.js` | Shared: the Mirror Hall step cards (marbled liquid and reflections, WebGL) |
+| `brand/` | Sponsor logos `mpob.svg` and `ukm.png`, embedded small on the journey's last screen at build time. The MPOB and UKM logos are the trademarks of the Malaysian Palm Oil Board and Universiti Kebangsaan Malaysia, shown only to credit their support of this study. |
 | `src/app.js` | Tabs, steps, detail stacks, charts, source inspector, live bindings |
 | `src/lottie-icons.mjs` | Project-authored Lottie marks (B30 / B20 / B15 results, detail-stack toggle) |
 | `data/master-trace.json` | Master-workbook trace rows (generated) |
@@ -86,7 +87,8 @@ npm run shoot -- shots   # optional: headless Chrome/Edge walk-through + the rev
 
 ## Design rules to keep
 
-- Every tab: one 36px objective statement starting with "To ...", then the same ring-step infographic.
+- Every objective and Decision tab: one 36px objective statement starting with "To ...", then the same Mirror Hall of steps.
+  Home is the journey only; its objective statement is kept for screen readers.
 - Every step title starts with "To ...". Step colours follow the same order on every tab.
 - The step itself stays as short as the User level. Evidence goes into that step's Detail stack, one card
   per table, chart or equation, each labelled with its source table.

@@ -56,10 +56,11 @@ ${read('src/shared.css')}`)
   .replace('/*__MOTION__*/', () => read('src/motion.js'))
   .replace('/*__THEME__*/', () => read('src/theme.js'))
   .replace('/*__HOME__*/', () => read('src/home.js'))
+  .replace('/*__HALL__*/', () => read('src/hall.js'))
   .replace('__BRAND__', () => JSON.stringify(brandLogos()).replace(/</g, '\\u003c'))
   .replace('/*__APP__*/', () => read('src/app.js'));
 
-for (const token of ['/*__CSS__*/', '__SNAPSHOT__', '__TRACE__', '__LOTTIE_ICONS__', '__LOTTIE_FLOW__', '/*__LOTTIE__*/', '/*__MODEL__*/', '/*__MOTION__*/', '/*__THEME__*/', '/*__HOME__*/', '__BRAND__', '/*__APP__*/']) {
+for (const token of ['/*__CSS__*/', '__SNAPSHOT__', '__TRACE__', '__LOTTIE_ICONS__', '__LOTTIE_FLOW__', '/*__LOTTIE__*/', '/*__MODEL__*/', '/*__MOTION__*/', '/*__THEME__*/', '/*__HOME__*/', '/*__HALL__*/', '__BRAND__', '/*__APP__*/']) {
   if (html.includes(token)) throw new Error(`Unreplaced build token ${token}`);
 }
 writeFileSync(at(output), html);

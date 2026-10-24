@@ -436,68 +436,61 @@ table.compare tbody td:last-child { border-radius: 0 calc(18px * var(--rk)) calc
 /* Keyboard focus on a step ring wins over every look's ring shadow. */
 :root .node:focus-visible .ring.ring { box-shadow: 0 0 0 4px var(--bg), 0 0 0 7px var(--c); }
 
-/* ── App tab bar: an icon over each label, sized for a finger. On a phone the tabs move to a bottom bar within thumb reach. ── */
-.tab[data-tab="home"] { --ti: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%20fill%3D'none'%20stroke%3D'black'%20stroke-width%3D'1.9'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M3.5%2010.5%2012%204l8.5%206.5V19a1.5%201.5%200%200%201-1.5%201.5h-4.5v-6h-5v6H5A1.5%201.5%200%200%201%203.5%2019z'%2F%3E%3C%2Fsvg%3E"); }
-.tab[data-tab="obj1"] { --ti: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%20fill%3D'none'%20stroke%3D'black'%20stroke-width%3D'1.9'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M20.3%2013.3%2013.3%2020.3a1.7%201.7%200%200%201-2.4%200L3.5%2012.9V3.5h9.4l7.4%207.4a1.7%201.7%200%200%201%200%202.4z'%2F%3E%3Ccircle%20cx%3D'8'%20cy%3D'8'%20r%3D'1.6'%2F%3E%3C%2Fsvg%3E"); }
-.tab[data-tab="obj2"] { --ti: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%20fill%3D'none'%20stroke%3D'black'%20stroke-width%3D'1.9'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M12%203.2%2019.5%206v5.6c0%204.6-3.2%207.8-7.5%209.2-4.3-1.4-7.5-4.6-7.5-9.2V6z'%2F%3E%3Cpath%20d%3D'M8%2012.2h2l1.4-2.8%202%205.4%201.4-2.6H16'%2F%3E%3C%2Fsvg%3E"); }
-.tab[data-tab="obj3"] { --ti: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%20fill%3D'none'%20stroke%3D'black'%20stroke-width%3D'1.9'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cellipse%20cx%3D'12'%20cy%3D'6'%20rx%3D'7'%20ry%3D'2.8'%2F%3E%3Cpath%20d%3D'M5%206v5.8c0%201.6%203.1%202.8%207%202.8s7-1.2%207-2.8V6M5%2011.8v5.9c0%201.6%203.1%202.8%207%202.8s7-1.2%207-2.8v-5.9'%2F%3E%3C%2Fsvg%3E"); }
-.tab[data-tab="obj4"] { --ti: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%20fill%3D'none'%20stroke%3D'black'%20stroke-width%3D'1.9'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Cpath%20d%3D'M4%208.5h14.5L15%205M20%2015.5H5.5L9%2019'%2F%3E%3C%2Fsvg%3E"); }
-.tab[data-tab="decision"] { --ti: url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%20fill%3D'none'%20stroke%3D'black'%20stroke-width%3D'1.9'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%3E%3Ccircle%20cx%3D'12'%20cy%3D'12'%20r%3D'8.6'%2F%3E%3Cpath%20d%3D'm8.2%2012.4%202.6%202.6%205-5.4'%2F%3E%3C%2Fsvg%3E"); }
-.tabs-track { padding: 4px; }
-.tabs-track, .tab, .tab-pill { border-radius: min(var(--r-pill), calc(18px * var(--rk, 1))); }
-.tab-pill { top: 4px; bottom: 4px; }
-.tab { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-width: 78px; padding: 8px 14px 7px; font-size: 13.5px; line-height: 1.15; }
-.tab::before { content: ""; flex: 0 0 auto; width: 22px; height: 22px; background: currentColor; -webkit-mask: var(--ti) center / contain no-repeat; mask: var(--ti) center / contain no-repeat;
-  transition: transform var(--spring-bounce-ms, 400ms) var(--spring-bounce, ease-out); }
-.tab small { display: block; margin: 0; font-size: 11px; line-height: 1.1; }
-.tab[aria-selected="true"]::before { transform: translateY(-1px) scale(1.08); }
-@media (max-width: 1100px) { .tab { min-width: 0; padding: 8px 10px 7px; } }
+/* ── Mirror Hall steps (hall.js): tall cards of living marbled liquid in each step colour, standing on a glossy floor
+   that reflects them. The liquid is drawn on one canvas behind the row; the cards are the real buttons on top. ── */
+.hall-gl { position: absolute; z-index: 0; pointer-events: none; }
+.flow-wrap.has-hall { position: relative; z-index: 1; padding-top: 10px; padding-bottom: 4px; }
+.has-hall .flow { gap: 16px; }
+.has-hall .node { --cw: 134px; --ch: 178px; width: calc(var(--cw) + 20px); padding: 0; }
+:root .has-hall .ring { width: var(--cw); height: var(--ch); border-radius: calc(20px * var(--rk, 1)); padding: 14px; place-items: end start; transform-origin: 50% 100%;
+  background: transparent; box-shadow: 0 24px 46px -20px color-mix(in srgb, var(--c) 80%, transparent), inset 0 0 0 1px rgba(255,255,255,.16); }
+:root .has-hall .ring::after { display: none; }
+:root .has-hall .disc { width: auto; height: auto; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; background: none; box-shadow: none; clip-path: none; border-radius: 0; }
+:root .has-hall .disc svg { width: 24px; height: 24px; color: #fff; filter: drop-shadow(0 1px 6px rgba(0,0,0,.55)); }
+:root .has-hall .disc .n { font-size: 30px; font-weight: 300; line-height: 1; letter-spacing: -.02em; color: #fff; text-shadow: 0 2px 14px rgba(0,0,0,.6); }
+:root .has-hall .disc svg path { stroke-dasharray: none; }
+.has-hall .node.is-active .ring .disc::before { display: none; }
+.has-hall .check { top: 10px; right: 10px; width: 26px; height: 26px; background: rgba(255,255,255,.92); color: #111; }
+/* The name sits above each card in small capitals, as in a gallery; the number is on the card, the value on the floor. */
+.has-hall .node-label { display: none; }
+.has-hall .node-title { order: -1; margin: 0 0 22px; min-height: 2.5em; max-width: 100%; display: flex; align-items: flex-end; justify-content: center;
+  font-size: 10.5px; font-weight: 700; line-height: 1.25; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.has-hall .node.is-active .node-title { color: var(--ink); }
+.has-hall .node-value { margin-top: 18px; font-size: 12.5px; padding: 3px 11px; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); background: color-mix(in srgb, var(--card) 70%, transparent); }
+:root .has-hall .node.is-active .ring { transform: translateY(-6px) scale(1.07); box-shadow: 0 30px 56px -18px color-mix(in srgb, var(--c) 90%, transparent), inset 0 0 0 1px rgba(255,255,255,.3); }
+:root .has-hall .node.is-future .ring { filter: none; opacity: 1; transform: scale(.94); }
+.has-hall .node.is-future .disc { opacity: .72; }
+.has-hall .node:hover .ring { transform: translateY(-4px) scale(1.02); }
+:root .has-hall .node.is-active:hover .ring { transform: translateY(-8px) scale(1.08); }
+:root .has-hall .node:focus-visible .ring.ring { box-shadow: 0 0 0 3px var(--bg), 0 0 0 6px var(--c); }
 @media (max-width: 860px) {
-  /* The glass moves to a layer behind the top bar, so the fixed tab bar inside it is placed against the screen, not the bar. */
-  .topbar { -webkit-backdrop-filter: none; backdrop-filter: none; background: transparent; }
-  .topbar-inner { flex-wrap: nowrap; gap: 8px; } /* with the tabs at the bottom, the top bar is one slim row */
-  .brand { flex: 1 1 auto; min-width: 0; }
+  .has-hall .node { --cw: 104px; --ch: 140px; }
+  .has-hall .flow { gap: 10px; }
+  :root .has-hall .ring { padding: 11px; }
+  :root .has-hall .disc .n { font-size: 24px; }
+  :root .has-hall .disc svg { width: 20px; height: 20px; }
+}
+@media print { .hall-gl { display: none; } }
+/* ── Top bar on a phone: one slim row for the brand and controls, then the tabs (original pills) in their own row. ── */
+@media (max-width: 860px) {
+  .topbar-inner { column-gap: 8px; }
+  .brand { flex: 1 1 0; min-width: 0; }
   .brand > span:last-child, .brand b { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .brand b { font-size: 14.5px; }
-  .status { flex: 0 0 auto; margin-left: 0; font-size: 11.5px; }
-  .topbar::before { content: ""; position: absolute; inset: 0; z-index: -1; background: var(--glass); -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px); }
-  .tabs { position: fixed; z-index: 30; left: 0; right: 0; bottom: 0; order: 0; flex-basis: auto; display: block;
-    padding: 6px max(8px, env(safe-area-inset-right)) calc(6px + env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
-    background: var(--glass); -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px); border-top: 1px solid var(--line); }
-  :root .tabs .tabs-track { display: flex; width: 100%; max-width: 560px; margin: 0 auto; padding: 0; gap: 0; background: transparent; box-shadow: none; overflow: visible; }
-  :root .tabs .tab { flex: 1 1 0; min-width: 0; padding: 6px 2px 5px; gap: 3px; font-size: 10.5px; letter-spacing: 0; white-space: normal; text-align: center; }
-  :root[data-theme="mono"] .tabs .tab { font-size: 9.5px; letter-spacing: .04em; }
-  .tabs .tab small { display: none; }
-  .tabs .tab::before { width: 24px; height: 24px; }
-  .tabs .tab-pill { top: 0; bottom: 0; }
-  footer.foot { padding-bottom: calc(40px + 66px + env(safe-area-inset-bottom)); } /* room above the tab bar, inside the footer so no seam shows */
+  .brand small { display: none; }
+  .status { font-size: 11.5px; }
+  .hive-toggle { width: 32px; height: 32px; }
 }
 @media print { .tabs { display: none !important; } }
 
-/* ── Home: a living hive. One full-screen layer (home.js) carries fog, honeycomb and the swarm behind the whole page ── */
-:root { --hive-a: #eef7f0; }
-:root[data-theme="dark"], :root[data-theme="mono"] { --hive-a: #04110a; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme]) { --hive-a: #04110a; } }
+/* ── The living hive: one full-screen layer (home.js) carries fog, honeycomb and the swarm behind every page ── */
 .hive-layer { position: fixed; inset: 0; z-index: -1; opacity: 0; transition: opacity .6s ease; pointer-events: none; }
 .hive-layer.is-on { opacity: 1; }
 .hive-layer canvas { display: block; width: 100%; height: 100%; }
-.home-on .aurora { display: none; }
-/* The hero runs edge to edge and nearly the full screen high, so the swarm has room to form big; the words keep the page column. */
-.hive { --edge: max(32px, calc((100vw - var(--sbw, 0px) - 1240px) / 2 + 32px));
-  position: relative; margin: 0 calc(50% - (100vw - var(--sbw, 0px)) / 2); min-height: max(640px, calc(100vh - 64px)); min-height: max(640px, calc(100svh - 64px)); display: flex; align-items: center; }
-.hive-anchor { position: absolute; top: 3%; bottom: 6%; right: 0; width: 64%; pointer-events: none; }
-.hive-copy { position: relative; z-index: 1; width: calc(min(560px, 40vw) + var(--edge)); padding: 40px 0 40px var(--edge); text-align: left; }
-.hive-copy::before { /* a soft scrim keeps the words readable over the swarm */
-  content: ""; position: absolute; z-index: -1; inset: -14% -34% -14% -30%; background: radial-gradient(closest-side, var(--hive-a) 52%, transparent); opacity: .92; pointer-events: none; }
-.hive-copy .hero-kicker { box-shadow: none; background: color-mix(in srgb, var(--card) 70%, transparent); }
-.hive-copy .home-title { font-size: 36px; line-height: 1.15; font-weight: 700; letter-spacing: -.022em; margin: 14px 0 0; text-wrap: balance; }
-.home-title .hw { display: inline-block; animation: hwIn .8s var(--spring-soft, cubic-bezier(.23, 1, .32, 1)) both; animation-delay: calc(var(--w) * 32ms + 120ms); }
-@keyframes hwIn { from { opacity: 0; transform: translateY(.55em) rotate(2deg); filter: blur(6px); } to { opacity: 1; transform: none; filter: none; } }
-.home-lead { margin: 14px 0 0; font-size: 17px; color: var(--ink-2); text-wrap: pretty; animation: homeRise .7s var(--spring-soft, ease-out) .5s both; }
-.home-cta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; animation: homeRise .7s var(--spring-soft, ease-out) .6s both; }
-@keyframes homeRise { from { opacity: 0; transform: translateY(18px) scale(.98); } to { opacity: 1; transform: none; } }
+.hive-on .aurora { display: none; } /* the swarm takes over the ambient glow, in the step colour */
+:root:not(.home-on) .hive-layer.is-on { opacity: .82; } /* a quieter background behind the working pages */
 /* Sponsors: small and quiet, on a light plate so the full-colour marks read on any look. */
-.hive-sponsors { display: flex; align-items: center; gap: 12px; margin-top: 28px; animation: homeRise .7s var(--spring-soft, ease-out) .75s both; }
+.hive-sponsors { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; margin-top: 26px; }
+.ss .sp-k { color: rgba(238,244,241,.6); }
 .sp-k { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
 .sp-marks { display: inline-flex; align-items: center; gap: 12px; padding: 6px 12px; border-radius: calc(12px * var(--rk)); background: rgba(255,255,255,.82);
   box-shadow: 0 1px 2px rgba(0,0,0,.06); }
@@ -506,27 +499,33 @@ table.compare tbody td:last-child { border-radius: 0 calc(18px * var(--rk)) calc
 .sp-word { display: inline-flex; align-items: baseline; gap: 6px; color: #1d3b2a; }
 .sp-word b { font-size: 14px; letter-spacing: .06em; }
 .sp-word small { font-size: 11px; color: #4a5a50; }
-.hive-hud { position: absolute; z-index: 1; right: var(--edge, 24px); bottom: 20px; display: flex; align-items: center; gap: 10px; }
-.hive-label { display: inline-flex; flex-direction: column; align-items: flex-end; text-align: right; padding: 6px 12px; border-radius: calc(12px * var(--rk));
-  background: color-mix(in srgb, var(--card) 72%, transparent); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
-.hive-label b { font-size: 15px; letter-spacing: -.01em; }
-.hive-label small { font-size: 12px; color: var(--muted); }
-.home-pause { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: color-mix(in srgb, var(--card) 80%, transparent); color: var(--ink-2);
-  border-radius: var(--r-pill); padding: 6px 12px 6px 9px; font-size: 13px; font-weight: 600; cursor: pointer; }
-.home-pause svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
-.home-pause .i-play, .home-pause[aria-pressed="true"] .i-pause { display: none; }
-.home-pause[aria-pressed="true"] .i-play { display: inline; fill: currentColor; }
-.home-pause:active { scale: .96; }
-.home-pause:focus-visible { outline: 3px solid color-mix(in srgb, var(--s1) 60%, transparent); outline-offset: 2px; }
+/* Pause for the swarm, in the top bar on every page. */
+.hive-toggle { flex: 0 0 auto; display: inline-grid; place-items: center; width: 34px; height: 34px; padding: 0; border: 1px solid var(--line); border-radius: var(--r-pill, 999px);
+  background: var(--card); color: var(--ink-2); cursor: pointer; }
+.hive-toggle svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.hive-toggle .i-play, .hive-toggle[aria-pressed="true"] .i-pause { display: none; }
+.hive-toggle[aria-pressed="true"] .i-play { display: inline; fill: currentColor; }
+.hive-toggle:active { scale: .94; }
+.hive-toggle:focus-visible { outline: 3px solid color-mix(in srgb, var(--s1) 60%, transparent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .hive-toggle { display: none; } }
+@media (max-width: 420px) { .sp-marks img { height: 26px; } }
+@media print { .hive-toggle { display: none !important; } }
+/* On Home the top bar floats over the journey, which starts at the very top of the screen. */
+.home-on .topbar { position: fixed; top: 0; left: 0; right: 0; }
+/* While the journey runs under it, the top bar turns to night glass. */
+.story-under-bar .topbar { --glass: rgba(3, 9, 14, .62); --bg: #000; --card: #23282c; --ink: #f5f5f7; --ink-2: #d2d6d9; --muted: #9aa3a8; --line: rgba(255,255,255,.12); --track: rgba(255,255,255,.1);
+  color-scheme: dark; color: var(--ink); border-bottom-color: rgba(255,255,255,.08); }
+.topbar { transition: background-color .5s ease, border-color .5s ease; }
 
 /* The journey: one long camera move (home.js storyField). A tall section whose stage stays pinned while six screens of
    copy take turns; the scene is drawn on the canvas, the words and buttons are real. A night scene on every look. */
 .story { --st-ink: #eef4f1; --st-gold: #f5d68a; --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, "Times New Roman", serif;
   --script: "Snell Roundhand", "Segoe Script", "Apple Chancery", "Lucida Handwriting", "Brush Script MT", cursive;
-  position: relative; height: 720vh; margin: 26px calc(50% - (100vw - var(--sbw, 0px)) / 2) 0; background: #01050a; color: var(--st-ink); }
+  position: relative; height: 720vh; margin: 0 calc(50% - (100vw - var(--sbw, 0px)) / 2); background: #01050a; color: var(--st-ink); }
 .story-stage { position: sticky; top: 0; height: 100vh; height: 100svh; overflow: hidden; isolation: isolate; }
 .story-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: pan-y; }
-.story-stage::after { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; background: radial-gradient(120% 90% at 50% 50%, transparent 55%, rgba(0,0,0,.5)); }
+.story-stage::after { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; /* a vignette, and a floor of pure night that the space below continues */
+  background: linear-gradient(rgba(1,5,10,0) 78%, #01050a), radial-gradient(120% 90% at 50% 50%, transparent 55%, rgba(0,0,0,.5)); }
 .story-top { position: absolute; z-index: 3; top: calc(var(--bar-h, 60px) + 18px); left: max(32px, 5vw); right: max(32px, 5vw); display: flex; justify-content: space-between; gap: 16px;
   font-size: 12px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; opacity: .8; }
 .st-right { display: inline-flex; align-items: center; gap: 14px; flex: 0 0 auto; }
@@ -541,7 +540,6 @@ table.compare tbody td:last-child { border-radius: 0 calc(18px * var(--rk)) calc
 .st-play:active { scale: .95; }
 .st-play:focus-visible { outline: 2px solid var(--st-gold); outline-offset: 2px; }
 .story-top { pointer-events: none; } .story-top button { pointer-events: auto; }
-.home-watch svg { width: 12px; height: 12px; fill: currentColor; margin-right: 2px; }
 .st-count b { color: var(--st-gold); font-weight: 600; }
 .story-rail { position: absolute; z-index: 3; top: calc(var(--bar-h, 60px) + 40px); left: max(32px, 5vw); right: max(32px, 5vw); display: grid; grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 8px; list-style: none; margin: 0; padding: 0; }
@@ -578,7 +576,7 @@ table.compare tbody td:last-child { border-radius: 0 calc(18px * var(--rk)) calc
 .story-hint i { width: 1px; height: 34px; background: linear-gradient(transparent, var(--st-gold)); animation: stHint 1.8s cubic-bezier(.4, 0, .2, 1) infinite; }
 @keyframes stHint { 0% { transform: translateY(-10px); opacity: 0; } 40% { opacity: 1; } 100% { transform: translateY(10px); opacity: 0; } }
 @media (max-width: 860px) {
-  .story { height: 640vh; margin-top: 18px; }
+  .story { height: 640vh; }
   .story-stage::before { content: ""; position: absolute; inset: auto 0 0; height: 60%; z-index: 1; pointer-events: none; background: linear-gradient(transparent, rgba(1,5,10,.92) 52%); }
   .story-top { top: calc(var(--bar-h, 100px) + 8px); left: 20px; right: 20px; align-items: center; font-size: 11px; letter-spacing: .12em; }
   .st-right { gap: 10px; }
@@ -586,21 +584,19 @@ table.compare tbody td:last-child { border-radius: 0 calc(18px * var(--rk)) calc
   .story-rail { top: calc(var(--bar-h, 100px) + 40px); left: 20px; right: 20px; gap: 5px; }
   .story-rail span { display: none; }
   .story-rail button { padding: 12px 0; }
-  .ss, .ss-l, .ss-r, .ss[data-ss="5"] { left: 20px; right: 20px; width: auto; top: auto; bottom: calc(84px + env(safe-area-inset-bottom)); translate: none; } /* above the tab bar */
+  .ss, .ss-l, .ss-r, .ss[data-ss="5"] { left: 20px; right: 20px; width: auto; top: auto; bottom: calc(28px + env(safe-area-inset-bottom)); translate: none; }
   .ss-h { font-size: clamp(36px, 10vw, 46px); margin-top: 12px; }
   .ss-p { font-size: 15px; margin-top: 12px; }
   .ss-links { margin-top: 16px; }
   .ss-links button { padding: 9px 15px; font-size: 13.5px; }
   .story-hint { display: none; }
 }
-/* No seams: the hive fades into the night above the journey, and when the journey is the last thing on Home the
-   footer carries the same night to the edge of the page, so the page ends in one piece. */
-.story::before { content: ""; position: absolute; left: 0; right: 0; bottom: 100%; height: 180px; pointer-events: none; background: linear-gradient(rgba(1,5,10,0), #01050a); }
+/* No seams: Home ends in the journey, and the footer carries the same night to the edge of the page, so it ends in one piece. */
 .home-night-end main { padding-bottom: 0; }
 .home-night-end footer.foot { position: relative; background: #01050a; color: rgba(238,244,241,.58); box-shadow: 0 0 0 100vmax #01050a; clip-path: inset(0 -100vmax -100vmax); }
 /* Reduce motion: no pinned camera move; one still picture, then the six screens as a plain column. */
 .story.is-still { height: auto; }
-.story.is-still .story-stage { position: relative; height: auto; overflow: visible; padding: 28px 0 44px; }
+.story.is-still .story-stage { position: relative; height: auto; overflow: visible; padding: calc(var(--bar-h, 64px) + 28px) 0 44px; }
 .story.is-still .story-canvas { position: relative; height: min(70vh, 640px); }
 .story.is-still .story-top { position: relative; inset: auto; padding: 0 max(20px, 5vw) 16px; }
 .story.is-still .story-rail, .story.is-still .story-hint, .story.is-still .st-play, .story.is-still .story-stage::before, .story.is-still .story-stage::after { display: none; }
@@ -609,47 +605,11 @@ table.compare tbody td:last-child { border-radius: 0 calc(18px * var(--rk)) calc
 :root[data-theme="mono"] .ss-h { font-family: var(--dot-font); letter-spacing: -.03em; }
 @media print { .story { display: none; } }
 
-@media (max-width: 860px) {
-  .hive { --edge: 16px; flex-direction: column; align-items: stretch; min-height: 0; }
-  .hive-anchor { position: relative; inset: auto; width: 100%; height: 84vw; max-height: 460px; min-height: 280px; }
-  .hive-hud { top: calc(clamp(280px, 84vw, 460px) - 50px); bottom: auto; right: 12px; }
-  .hive-copy { width: auto; margin: 0 8px; padding: 20px 18px 24px; border-radius: calc(22px * var(--rk));
-    background: color-mix(in srgb, var(--card) 62%, transparent); backdrop-filter: blur(14px) saturate(140%); -webkit-backdrop-filter: blur(14px) saturate(140%); }
-  .hive-copy::before { display: none; }
-  .hive-copy .home-title { font-size: clamp(26px, 6.4vw, 36px); }
-  .home-lead { font-size: 16px; }
-}
-@media (max-width: 420px) { .hive-sponsors { flex-wrap: wrap; gap: 8px; } .sp-marks img { height: 26px; } }
-@media (prefers-reduced-motion: reduce) { .home-title .hw { animation: none; } }
-
-/* Home in each look */
-:root[data-theme="mono"] .hive-copy .home-title { font-family: var(--dot-font); font-weight: 400; letter-spacing: -.03em; }
-:root[data-theme="tonal"] .hive-copy .home-title { font-weight: 400; letter-spacing: -.01em; }
-:root[data-theme="bloom"] .hive-copy .home-title { font-weight: 800; letter-spacing: -.035em; }
-/* Atmospheric preloader: the page waits behind the fog while the count runs, then opens from the centre. */
-.hive-intro, .hive-intro body { overflow: hidden; }
-.hive-intro .topbar, .hive-intro #page, .hive-intro footer.foot { opacity: 0; pointer-events: none; }
-.hive-intro #page *, .hive-intro #page *::before, .hive-intro #page *::after { animation-play-state: paused !important; }
-.home-on .topbar, .home-on footer.foot { transition: opacity .8s ease .2s; }
-.hive-intro-ui { position: fixed; inset: 0; z-index: 70; display: grid; grid-template-rows: auto 1fr auto; color: #eaf6ee; pointer-events: none;
-  padding: max(24px, env(safe-area-inset-top)) max(28px, env(safe-area-inset-right)) max(26px, env(safe-area-inset-bottom)) max(28px, env(safe-area-inset-left));
-  transition: opacity .6s ease, transform .8s cubic-bezier(.23, 1, .32, 1), filter .6s ease; }
-.hive-intro-ui.is-out { opacity: 0; transform: scale(1.06); filter: blur(8px); }
-.hi-top { display: flex; justify-content: space-between; gap: 16px; font-size: 12px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; opacity: .85; animation: hiIn .8s ease both .1s; }
-.hi-top i { font-style: normal; color: #f5b81c; }
-.hi-mid { align-self: end; justify-self: center; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px 22px; margin-bottom: 9vh; font-size: 12px; font-weight: 600; letter-spacing: .22em; text-transform: uppercase; }
-.hi-mid span { opacity: 0; animation: hiWord 2.2s ease both; }
-.hi-mid span:nth-child(2) { animation-delay: .3s; } .hi-mid span:nth-child(3) { animation-delay: .6s; } .hi-mid span:nth-child(4) { animation-delay: .9s; }
-.hi-mid span:nth-child(5) { animation-delay: 1.2s; color: #9be15d; } .hi-mid span:nth-child(6) { animation-delay: 1.5s; color: #f5b81c; }
-@keyframes hiWord { 0% { opacity: 0; transform: translateY(8px); filter: blur(4px); } 30%, 100% { opacity: .75; transform: none; filter: none; } }
-@keyframes hiIn { from { opacity: 0; transform: translateY(-8px); } }
-.hi-bottom { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; }
-.hi-num { font-size: clamp(88px, 17vw, 230px); font-weight: 200; line-height: .78; letter-spacing: -.06em; font-variant-numeric: tabular-nums; }
-.hi-num::after { content: "%"; font-size: .22em; font-weight: 400; letter-spacing: 0; margin-left: .1em; vertical-align: top; opacity: .7; }
-.hi-skip { pointer-events: auto; border: 1px solid rgba(255,255,255,.28); background: rgba(255,255,255,.08); color: inherit; border-radius: 999px; padding: 8px 16px;
-  font: 600 13px/1 var(--font); cursor: pointer; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
-@media (prefers-reduced-motion: reduce) { .hive-intro-ui { display: none; } }
-@media print { .hive-layer, .hive-intro-ui, .hive-hud, .home-cta { display: none !important; } .hive { min-height: 0; } }
+/* The band under the step cards where the swarm writes the step in hand ("Set diesel price"); the words are drawn on the
+   swarm's layer behind the page, so the band itself is empty space. */
+.hive-say { height: clamp(88px, 9vw, 124px); max-width: 1000px; margin: 6px auto -10px; pointer-events: none; }
+@media (max-width: 860px) { .hive-say { height: 84px; margin: 4px -4px -8px; } }
+@media print { .hive-layer, .hive-say { display: none !important; } }
 
 /* ── Print: light ink on white whatever the theme, with the decision record ── */
 .print-only { display: none; }

@@ -1,118 +1,15 @@
-// Home: a living hive. Shared by the User and Developer levels.
-// On opening, an atmospheric preloader: fog gathers into one drop of palm oil while a count runs to 100, then it bursts
-// open into the page. A swarm of glowing particles then fills the whole screen behind Home (fog, honeycomb, depth) and
-// flows together into the story of Malaysia's biodiesel mandate: oil palm fruit, palm oil, biodiesel at the pump, B5, B7,
-// B10, B20, B30 and MPOB × UKM. Below it, the journey is told as one long camera move through a fruit bunch drawn in
-// light, from B5 to the B30 decision. Every form is drawn in code.
-// One requestAnimationFrame loop; it rests when the tab is hidden, stops when Home is left, and becomes a still picture
-// under Reduce motion. Pause is always available; the preloader shows once per browser session and any input skips it.
+// Home and the living hive. Shared by the User and Developer levels.
+// Home is the journey, told as one long camera move through a fruit bunch drawn in light, from B5 to the B30 decision,
+// with the MPOB and UKM marks on its last screen. Every other page has a swarm of glowing particles (fog, honeycomb,
+// depth) as its moving background, a vortex in the colour of the step on show, and the swarm writes the step in hand
+// ("Set diesel price") in a band under the objective; a new step scatters the words and it writes the next ones.
+// One requestAnimationFrame loop for the swarm; it rests when the tab is hidden or the journey fills the screen, and
+// becomes a still picture under Reduce motion. Pause sits in the top bar. Everything is drawn in code.
 
 const HOME = (() => {
   const M = () => (typeof MOTION === 'undefined' ? null : MOTION);
   const esc = s => String(s).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
-  const FW = 560, FH = 440; // form canvas (logical px)
   const FONT = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI Variable Display", "Segoe UI", Roboto, Arial, sans-serif';
-
-  // What the swarm forms. Years are when each blend was introduced; roll-out was phased by region and sector.
-  const FORMS = [
-    { id: 'fruit', label: 'Oil palm fruit', note: 'Where it starts' },
-    { id: 'drop', label: 'Palm oil', note: 'Crude palm oil becomes palm methyl ester (PME)' },
-    { id: 'pump', label: 'Biodiesel at the pump', note: 'PME blended into diesel' },
-    { id: 'B5', label: 'B5', note: '2011' },
-    { id: 'B7', label: 'B7', note: '2014' },
-    { id: 'B10', label: 'B10', note: '2019' },
-    { id: 'B20', label: 'B20', note: 'From 2020, phased' },
-    { id: 'B30', label: 'B30', note: 'The next step this studio tests' },
-    { id: 'partners', label: 'MPOB × UKM', note: 'Malaysian Palm Oil Board and Universiti Kebangsaan Malaysia' },
-  ];
-  const HOLD = 2.9, MOVE = 1.25; // seconds holding a form, seconds of swarming between forms
-
-  /* ── Drawing the forms (original artwork, drawn in code) ── */
-  function lin(ctx, x0, y0, x1, y1, stops) { const g = ctx.createLinearGradient(x0, y0, x1, y1); stops.forEach(([o, c]) => g.addColorStop(o, c)); return g; }
-  function swoosh(ctx, cx, cy, w) {
-    ctx.save(); ctx.translate(cx, cy);
-    ctx.beginPath(); ctx.moveTo(-w / 2, 8); ctx.bezierCurveTo(-w / 4, 44, w / 4, 40, w / 2, -22); ctx.bezierCurveTo(w / 4, 18, -w / 5, 26, -w / 2, 8); ctx.closePath();
-    ctx.fillStyle = lin(ctx, -w / 2, 0, w / 2, 0, [[0, '#2f9e44'], [1, '#9be15d']]); ctx.fill(); ctx.restore();
-  }
-  function leaf(ctx, x, y, len, ang, col) {
-    ctx.save(); ctx.translate(x, y); ctx.rotate(ang);
-    ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(len * 0.5, -len * 0.32, len, 0); ctx.quadraticCurveTo(len * 0.5, len * 0.32, 0, 0);
-    ctx.fillStyle = col; ctx.fill(); ctx.restore();
-  }
-  function drawForm(ctx, id) {
-    ctx.clearRect(0, 0, FW, FH);
-    const cx = FW / 2, cy = FH / 2;
-    if (id === 'fruit') {
-      // A fruit bunch: ovals packed in a rounded cone, deep red at the core to orange at the rim, with frond spikes.
-      for (let i = 0; i < 8; i++) leaf(ctx, cx, cy - 40, 150 + (i % 3) * 20, -Math.PI / 2 + (i - 3.5) * 0.36, i % 2 ? '#3f8f3a' : '#5fae45');
-      const pts = [];
-      for (let r = 0; r < 9; r++) for (let k = 0; k < 6 + r; k++) {
-        const a = (k / (6 + r)) * Math.PI * 2 + r * 0.4, rad = 14 + r * 13;
-        pts.push([cx + Math.cos(a) * rad * 1.05, cy + 30 + Math.sin(a) * rad * 0.92, r]);
-      }
-      pts.sort((p, q) => q[2] - p[2]).forEach(([x, y, r]) => {
-        ctx.beginPath(); ctx.ellipse(x, y, 15, 19, Math.atan2(y - cy - 30, x - cx) + Math.PI / 2, 0, Math.PI * 2);
-        ctx.fillStyle = lin(ctx, x, y - 19, x, y + 19, [[0, r > 6 ? '#ffb347' : '#f06a2a'], [1, r > 6 ? '#e0531f' : '#7a1a12']]); ctx.fill();
-      });
-    } else if (id === 'drop') {
-      ctx.beginPath(); ctx.moveTo(cx, cy - 170);
-      ctx.bezierCurveTo(cx + 40, cy - 90, cx + 130, cy - 10, cx + 130, cy + 70);
-      ctx.arc(cx, cy + 70, 130, 0, Math.PI);
-      ctx.bezierCurveTo(cx - 130, cy - 10, cx - 40, cy - 90, cx, cy - 170); ctx.closePath();
-      ctx.fillStyle = lin(ctx, cx - 130, cy - 170, cx + 130, cy + 200, [[0, '#ffe27a'], [0.55, '#f5b81c'], [1, '#d98a0b']]); ctx.fill();
-      ctx.beginPath(); ctx.ellipse(cx - 55, cy + 40, 22, 52, 0.35, 0, Math.PI * 2); ctx.fillStyle = 'rgba(255,255,255,.75)'; ctx.fill();
-    } else if (id === 'pump') {
-      for (let i = 0; i < 16; i++) leaf(ctx, cx + Math.cos(i * 1.7) * 120, cy + 30 + Math.sin(i * 1.3) * 150, 70 + (i % 4) * 14, i * 0.9, i % 3 ? '#4fae4a' : '#8fd36a');
-      ctx.fillStyle = lin(ctx, cx - 70, 0, cx + 70, 0, [[0, '#a8e07e'], [0.5, '#5dbb52'], [1, '#2e8b3e']]);
-      ctx.beginPath(); ctx.roundRect(cx - 70, cy - 150, 140, 320, 26); ctx.fill();
-      ctx.fillStyle = '#1d3b2a'; ctx.beginPath(); ctx.roundRect(cx - 44, cy - 108, 88, 70, 10); ctx.fill();
-      ctx.fillStyle = '#e8f6d8'; ctx.beginPath(); ctx.roundRect(cx - 34, cy - 98, 68, 26, 6); ctx.fill();
-      ctx.strokeStyle = '#1d3b2a'; ctx.lineWidth = 12; ctx.lineCap = 'round';
-      ctx.beginPath(); ctx.moveTo(cx + 70, cy - 40); ctx.bezierCurveTo(cx + 170, cy - 30, cx + 150, cy + 120, cx + 110, cy + 150); ctx.stroke();
-      ctx.fillStyle = '#d63b2f'; ctx.beginPath(); ctx.roundRect(cx + 80, cy - 70, 26, 46, 8); ctx.fill();
-    } else if (id === 'partners') {
-      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.font = `800 132px ${FONT}`; ctx.fillStyle = lin(ctx, 0, cy - 150, 0, cy - 30, [[0, '#7bd35a'], [1, '#1f8a3c']]); ctx.fillText('MPOB', cx, cy - 92);
-      ctx.font = `800 132px ${FONT}`; ctx.fillStyle = lin(ctx, 0, cy + 30, 0, cy + 150, [[0, '#6fb7ff'], [1, '#1f5fb8']]); ctx.fillText('UKM', cx + 40, cy + 96);
-      ctx.font = `700 96px ${FONT}`; ctx.fillStyle = '#f5b81c'; ctx.fillText('×', cx - 150, cy + 92);
-    } else {
-      // B5 … B30: a green B, gold digits for the earlier blends, green digits with a leaf swoosh from B20.
-      const digits = id.slice(1), modern = Number(digits) >= 20;
-      ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'left';
-      const size = digits.length > 1 ? 210 : 240;
-      ctx.font = `900 ${size}px ${FONT}`;
-      const wb = ctx.measureText('B').width, wd = ctx.measureText(digits).width, x0 = cx - (wb + wd) / 2, base = cy + size * 0.33 - (modern ? 26 : 0);
-      ctx.fillStyle = lin(ctx, 0, base - size * 0.75, 0, base, [[0, '#6cc04a'], [1, '#14713a']]); ctx.fillText('B', x0, base);
-      ctx.fillStyle = modern ? lin(ctx, 0, base - size * 0.75, 0, base, [[0, '#9be15d'], [1, '#2f9e44']]) : lin(ctx, 0, base - size * 0.75, 0, base, [[0, '#ffe066'], [1, '#e89a0c']]);
-      ctx.fillText(digits, x0 + wb - 6, base);
-      if (id === 'B10') { ctx.beginPath(); ctx.arc(x0 + wb + wd * 0.55, base - size * 0.86, 22, 0, Math.PI * 2); ctx.fillStyle = '#f5b81c'; ctx.fill(); }
-      if (modern) {
-        swoosh(ctx, cx + 30, base + 22, wb + wd + 40);
-        ctx.font = `800 40px ${FONT}`; ctx.textAlign = 'center'; ctx.fillStyle = '#1f8a3c'; ctx.fillText('BIODIESEL', cx, base + 92);
-      }
-    }
-  }
-  // Sample a form into points with colours. The gap keeps the count near the swarm size.
-  const cache = new Map();
-  function sample(id, want) {
-    const key = `${id}:${want}`;
-    if (cache.has(key)) return cache.get(key);
-    const c = document.createElement('canvas'); c.width = FW; c.height = FH;
-    const ctx = c.getContext('2d', { willReadFrequently: true });
-    drawForm(ctx, id);
-    const data = ctx.getImageData(0, 0, FW, FH).data;
-    let filled = 0; for (let i = 3; i < data.length; i += 16) if (data[i] > 140) filled++;
-    const gap = Math.max(3, Math.sqrt(filled * 4 / want));
-    const pts = [];
-    for (let y = gap / 2; y < FH; y += gap) for (let x = gap / 2; x < FW; x += gap) {
-      const jx = Math.min(FW - 1, Math.round(x + (Math.random() - 0.5) * gap * 0.6)), jy = Math.min(FH - 1, Math.round(y + (Math.random() - 0.5) * gap * 0.6));
-      const i = (jy * FW + jx) * 4;
-      if (data[i + 3] > 140) pts.push([jx, jy, data[i], data[i + 1], data[i + 2]]);
-    }
-    for (let i = pts.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pts[i], pts[j]] = [pts[j], pts[i]]; }
-    cache.set(key, pts);
-    return pts;
-  }
 
   /* ── Page ── */
   // Sponsor marks, kept small: the build embeds brand/mpob.* and brand/ukm.* when present; otherwise quiet wordmarks.
@@ -157,7 +54,7 @@ const HOME = (() => {
           ${CHAPTERS.map((c, i) => `<article class="ss ss-${c.side}" data-ss="${i}">
             <p class="ss-k"><span>${c.n}</span>${esc(c.k)}</p>
             <h3 class="ss-h"><span class="ss-script">${esc(c.h[0])}</span>${esc(c.h.slice(1))}</h3>
-            <p class="ss-p">${esc(c.p)}</p>${links(c)}</article>`).join('')}
+            <p class="ss-p">${esc(c.p)}</p>${links(c)}${i === CHAPTERS.length - 1 ? sponsors() : ''}</article>`).join('')}
           <div class="story-hint" aria-hidden="true"><span>Scroll</span><i></i></div>
         </div>
       </section>`;
@@ -517,7 +414,7 @@ const HOME = (() => {
       autoRaf = requestAnimationFrame(autoStep);
     }
     const interrupt = e => { // pressing Play itself (a click, Enter or Space) is not an interruption; anything else is
-      if (e.target?.closest?.('[data-story-play], [data-story-autoplay]') && (e.type !== 'keydown' || e.key === 'Enter' || e.key === ' ')) return;
+      if (e.target?.closest?.('[data-story-play]') && (e.type !== 'keydown' || e.key === 'Enter' || e.key === ' ')) return;
       setAuto(false);
     };
     const AUTO_STOPS = ['wheel', 'touchstart', 'pointerdown', 'keydown'];
@@ -554,7 +451,7 @@ const HOME = (() => {
     io?.observe(section);
     let rt = 0;
     const ro = 'ResizeObserver' in window ? new ResizeObserver(() => { clearTimeout(rt); rt = setTimeout(() => { layout(); render(); }, 80); }) : null;
-    ro?.observe(stage);
+    ro?.observe(stage); const topbar = document.querySelector('.topbar'); if (topbar) ro?.observe(topbar); // the journey tucks under the bar, so it follows its height
     layout(); render();
     if (!io) { visible = true; kick(); }
     return {
@@ -567,79 +464,105 @@ const HOME = (() => {
     };
   }
 
+  // Home is the journey and nothing else: motion first, few words. The page title stays for screen readers.
   function html(cfg) {
-    const words = cfg.title.split(' ').map((w, i) => `<span class="hw" style="--w:${i}">${esc(w)}</span>`).join(' ');
-    return `<section class="hive" data-home-hive>
-        <div class="hive-anchor" data-hive-anchor aria-hidden="true"></div>
-        <div class="hive-copy">
-          <div class="hero-kicker">${esc(cfg.kicker)}</div>
-          <h1 class="home-title" aria-label="${esc(cfg.title)}"><span aria-hidden="true">${words}</span></h1>
-          <p class="home-lead">${cfg.lead}</p>
-          <div class="home-cta">${cfg.cta}<button type="button" class="btn btn-ghost home-watch" data-story-autoplay><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Watch the journey</span></button></div>
-          ${sponsors()}
-        </div>
-        <div class="hive-hud"><span class="hive-label"><b data-hive-label></b><small data-hive-note></small></span>
-          <button type="button" class="home-pause" data-home-pause aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="i-pause" d="M8 5v14M16 5v14"/><path class="i-play" d="M7 5l12 7-12 7z"/></svg><span>Pause</span></button></div>
-        <p class="sr-only">An animated swarm of particles forms, in turn, an oil palm fruit, a palm oil droplet, a biodiesel pump, the blends B5, B7, B10, B20 and B30, and the names MPOB and UKM.</p>
-      </section>
-      ${storyHtml()}`;
+    return `<h1 class="sr-only">${esc(cfg.title)}</h1>${storyHtml()}`;
   }
 
-  /* ── Atmosphere: fog, honeycomb and the swarm on one full-screen layer behind the Home page ── */
+  /* ── The living hive: fog, honeycomb and the swarm on one full-screen layer behind every page ── */
   const ATM = {
-    light: { base: [238, 247, 240], fog: [[155, 225, 93, 0.34], [30, 174, 191, 0.2], [108, 192, 74, 0.3], [245, 184, 28, 0.16], [143, 216, 192, 0.3]], hex: [20, 113, 58], roam: [46, 158, 68] },
-    dark: { base: [4, 17, 10], fog: [[47, 158, 68, 0.42], [30, 174, 191, 0.26], [245, 184, 28, 0.16], [20, 113, 58, 0.5], [143, 216, 192, 0.16]], hex: [160, 230, 180], roam: [255, 214, 90] },
+    light: { base: [238, 247, 240], fog: [[155, 225, 93, 0.34], [30, 174, 191, 0.2], [108, 192, 74, 0.3], [245, 184, 28, 0.16], [143, 216, 192, 0.3]], hex: [20, 113, 58] },
+    dark: { base: [4, 17, 10], fog: [[47, 158, 68, 0.42], [30, 174, 191, 0.26], [245, 184, 28, 0.16], [20, 113, 58, 0.5], [143, 216, 192, 0.16]], hex: [160, 230, 180] },
   };
-  const INTRO = 2.3, REVEAL = 0.9;
-  let introShown = false;
-  try { introShown = sessionStorage.getItem('mpob-hive-intro') === '1'; } catch {}
   function layerEl() {
     let l = document.getElementById('hive-layer');
     if (!l) { l = document.createElement('div'); l.id = 'hive-layer'; l.className = 'hive-layer'; l.setAttribute('aria-hidden', 'true'); l.innerHTML = '<canvas></canvas>'; document.body.prepend(l); }
     return l;
   }
   const mix = (a, b, t) => a + (b - a) * t;
+  // What the swarm writes for a step: its short title without "To" and the articles ("To set the diesel price" → "Set diesel price").
+  const phrase = s => String(s ?? '').replace(/<[^>]*>/g, '').replace(/&[a-z]+;/g, ' ').replace(/^\s*to\s+/i, '').replace(/\b(the|a|an)\s+/gi, '').replace(/\s+/g, ' ').trim().replace(/^./, c => c.toUpperCase());
+  // The words, drawn once in the step colour on a canvas shaped like the band, then sampled into points.
+  const LW = 1000, textCache = new Map();
+  function sampleText(text, lh, rgb, want) {
+    const key = `${text}|${lh}|${rgb}|${want}`;
+    if (textCache.has(key)) return textCache.get(key);
+    const c = document.createElement('canvas'); c.width = LW; c.height = lh;
+    const g = c.getContext('2d', { willReadFrequently: true });
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+    const fit = (lines, cap) => { g.font = `800 100px ${FONT}`; const w = Math.max(...lines.map(l => g.measureText(l).width)); return Math.min(cap, 100 * LW * 0.94 / w); };
+    let lines = [text], size = fit(lines, lh * 0.66);
+    const words = text.split(' ');
+    if (size < lh * 0.34 && words.length > 1) { // a narrow band: two lines, split near the middle
+      let best = 1, bestD = Infinity;
+      for (let i = 1; i < words.length; i++) { const d = Math.abs(words.slice(0, i).join(' ').length - words.slice(i).join(' ').length); if (d < bestD) { bestD = d; best = i; } }
+      const two = [words.slice(0, best).join(' '), words.slice(best).join(' ')], s2 = fit(two, lh * 0.4);
+      if (s2 > size) { lines = two; size = s2; }
+    }
+    g.font = `800 ${size}px ${FONT}`;
+    const [r, gg, b] = rgb, light = rgb.map(v => Math.round(v + (255 - v) * 0.45));
+    const grad = g.createLinearGradient(0, lh * 0.15, 0, lh * 0.85);
+    grad.addColorStop(0, `rgb(${light.join(',')})`); grad.addColorStop(1, `rgb(${r},${gg},${b})`);
+    g.fillStyle = grad;
+    lines.forEach((l, i) => g.fillText(l, LW / 2, lh / 2 + (i - (lines.length - 1) / 2) * size * 1.06));
+    const data = g.getImageData(0, 0, LW, lh).data;
+    let filled = 0; for (let i = 3; i < data.length; i += 16) if (data[i] > 140) filled++;
+    const gap = Math.max(2.2, Math.sqrt(filled * 4 / want));
+    const pts = [];
+    for (let y = gap / 2; y < lh; y += gap) for (let x = gap / 2; x < LW; x += gap) {
+      const jx = Math.min(LW - 1, Math.round(x + (Math.random() - 0.5) * gap * 0.5)), jy = Math.min(lh - 1, Math.round(y + (Math.random() - 0.5) * gap * 0.5));
+      const i = (jy * LW + jx) * 4;
+      if (data[i + 3] > 140) pts.push([jx, jy, data[i], data[i + 1], data[i + 2]]);
+    }
+    for (let i = pts.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pts[i], pts[j]] = [pts[j], pts[i]]; }
+    if (textCache.size > 40) textCache.clear();
+    textCache.set(key, pts);
+    return pts;
+  }
 
+  // One swarm for the whole app. It is made once and carried from page to page as the moving background: a vortex in the
+  // colour of the step on show (on Home it rests behind the journey). A page can give it a band ([data-hive-anchor]) where
+  // it writes the step in hand; a new step scatters the words and the swarm writes the next ones. A tab change swirls it.
   let current = null;
   function start(root) {
-    current?.stop();
-    const hive = root.querySelector('[data-home-hive]'), anchor = root.querySelector('[data-hive-anchor]');
-    if (!hive || !anchor) return null;
+    if (current) { current.attach(root); return current; }
     const html = document.documentElement;
     const layer = layerEl(), canvas = layer.querySelector('canvas'), ctx = canvas.getContext('2d');
-    const labelEl = hive.querySelector('[data-hive-label]'), noteEl = hive.querySelector('[data-hive-note]');
-    const vtx = { x: 0, y: 0, zoom: 1, spin: 0, init: false };
+    const vtx = { x: 0, y: 0, zoom: 1, spin: 0, kick: 0, init: false };
     let W = 0, H = 0, dpr = 1, N = 0, parts = [], wide = true, place = { x: 0, y: 0, s: 1 }, hexLayer = { light: null, dark: null }, hexes = [];
-    let form = 1, phase = 'hold', clock = 0, time = 0, frames = 0, raf = 0, last = 0, paused = false, roam = false;
-    const storyEl = root.querySelector('[data-story]'), story = storyEl ? storyField(storyEl, () => paused) : null;
-    const watchBtn = root.querySelector('[data-story-autoplay]');
-    const syncWatch = () => { if (watchBtn) watchBtn.hidden = !story || Boolean(M()?.reduce); };
-    watchBtn?.addEventListener('click', () => story?.play()); syncWatch();
+    let clock = 9, time = 0, frames = 0, raf = 0, last = 0, paused = false, roam = true;
+    let anchor = null, storyEl = null, story = null, page = null;
+    let words = '', lh = 160, cur = []; // the words being written, the band's shape in canvas units, their points
     let atm = 0, atmTo = 0; // 0 = light atmosphere, 1 = dark
-    let mode = 'run', modeClock = 0, count = -1; // 'intro' → 'reveal' → 'run'
     const pointer = { x: -9999, y: -9999, on: false, nx: 0, ny: 0 };
+    const tint = { to: null, c: [224, 161, 14], amt: 0, clock: 9 }; // the step colour the swarm takes on
     const still = () => Boolean(M()?.reduce) || paused;
-    let cur = [];
 
-    function readTheme() { atmTo = /dark/.test(getComputedStyle(html).colorScheme || '') ? 1 : 0; if (mode === 'run' && (still() || !frames)) atm = atmTo; }
+    // Pause lives in the top bar, so the swarm can be stopped from any page.
+    const bar = document.querySelector('.topbar-inner');
+    const toggle = document.createElement('button');
+    toggle.type = 'button'; toggle.className = 'hive-toggle'; toggle.dataset.homePause = ''; toggle.setAttribute('aria-pressed', 'false');
+    toggle.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path class="i-pause" d="M9 6v12M15 6v12"/><path class="i-play" d="M8 5.5l11 6.5-11 6.5z"/></svg><span class="sr-only">Pause the swarm</span>';
+    bar?.insertBefore(toggle, bar.querySelector('#theme'));
+
+    function readTheme() { atmTo = /dark/.test(getComputedStyle(html).colorScheme || '') ? 1 : 0; if (still() || !frames) atm = atmTo; }
     function layout() {
       W = Math.max(1, html.clientWidth); H = Math.max(1, html.clientHeight); // the fixed layer, without scrollbars
       dpr = Math.min(2, window.devicePixelRatio || 1);
       canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
       wide = W >= 860;
-      const want = Math.round(Math.min(3200, Math.max(wide ? 900 : 1100, W * H / 470))); // denser, now the forms draw bigger
+      const want = Math.round(Math.min(3200, Math.max(wide ? 900 : 1100, W * H / 470)));
       if (want !== N) {
         N = want;
         parts = Array.from({ length: N }, () => {
           const z = 0.45 + Math.random() * 1.0;
           return { x: Math.random() * W, y: Math.random() * H, vx: 0, vy: 0, px: 0, py: 0, t: -1, z,
             r: 90, g: 190, b: 120, k: 0.6 + Math.random() * 0.8, seed: Math.random() * 100, size: 0.7 + Math.random() * 1.1,
-            vr: 0.05 + 0.95 * Math.sqrt(Math.random()), arm: Math.floor(Math.random() * 3), th: Math.random() * 6.283, jit: (Math.random() - 0.5) * 0.55,
-            hx: Math.random(), hy: Math.random(), ang: Math.random() * 6.283, orb: 14 + Math.random() * 70, w: (Math.random() < 0.5 ? -1 : 1) * (0.25 + Math.random() * 0.6) };
+            vr: 0.05 + 0.95 * Math.sqrt(Math.random()), arm: Math.floor(Math.random() * 3), th: Math.random() * 6.283, jit: (Math.random() - 0.5) * 0.55 };
         });
         parts.forEach(p => { p.px = p.x; p.py = p.y; });
-        assign(form, false);
       }
+      writeWords(false);
       // Honeycomb drawn once per size and look, then blitted every frame.
       const hs = wide ? 36 : 26, hw = hs * Math.sqrt(3);
       hexes = [];
@@ -653,112 +576,89 @@ const HOME = (() => {
       }
     }
     function hexPath(g, x, y, s) { g.beginPath(); for (let k = 0; k < 6; k++) { const a = Math.PI / 3 * k + Math.PI / 6; const hx = x + Math.cos(a) * s * 0.96, hy = y + Math.sin(a) * s * 0.96; k ? g.lineTo(hx, hy) : g.moveTo(hx, hy); } g.closePath(); }
-    function placeForm() {
-      if (mode === 'intro') { const s = Math.min(W * 0.42 / FW, H * 0.5 / FH); place = { x: W / 2 - FW * s / 2, y: H * 0.46 - FH * s / 2, s }; roam = false; return; }
+    function placeWords() {
+      if (!anchor?.isConnected || !cur.length) { roam = true; return; } // nothing to write: the swarm is the background
       const r = anchor.getBoundingClientRect();
-      const s = Math.min(r.width / FW, r.height / FH);
-      place = { x: r.left + (r.width - FW * s) / 2, y: r.top + (r.height - FH * s) / 2, s };
-      // Scrolled past the hero: the whole swarm breaks up and drifts over the rest of the page.
-      roam = r.bottom < H * 0.28 || r.top > H * 0.92;
+      place = { x: r.left, y: r.top, s: r.width / LW };
+      // Scrolled away from the band, the words break up and the whole swarm drifts behind the page.
+      roam = r.bottom < H * 0.22 || r.top > H * 0.94;
     }
-    // Hand most particles a point of the form; the rest drift as atmosphere across the whole screen.
-    function assign(i, snap = false) {
-      const pts = sample(FORMS[i].id, Math.round(N * 0.7));
+    // Hand most particles a point of the words; the rest drift as atmosphere across the whole screen.
+    function writeWords(scatter = true) {
+      const r = anchor?.isConnected ? anchor.getBoundingClientRect() : null;
+      if (!words || !r || r.width < 10) { cur = []; parts.forEach(p => { p.t = -1; }); return; }
+      readTint();
+      lh = Math.max(60, Math.round(LW * r.height / r.width));
+      cur = sampleText(words, lh, tint.to ?? [61, 74, 143], Math.round(N * 0.72));
       const order = parts.map((p, j) => j).sort(() => Math.random() - 0.5);
-      order.forEach((j, n) => { parts[j].t = n < pts.length ? n : -1; });
-      cur = pts;
-      if (snap) settlePoints();
+      order.forEach((j, n) => { parts[j].t = n < cur.length ? n : -1; });
+      clock = 0;
+      if (scatter && !still()) parts.forEach(p => { const a = Math.random() * 6.283, s = 90 + Math.random() * 300; p.vx += Math.cos(a) * s; p.vy += Math.sin(a) * s; });
+      if (still()) settlePoints();
     }
-    function settlePoints() { placeForm(); parts.forEach(p => { if (p.t >= 0 && cur[p.t] && !roam) { const q = cur[p.t]; p.x = p.px = place.x + q[0] * place.s; p.y = p.py = place.y + q[1] * place.s; p.r = q[2]; p.g = q[3]; p.b = q[4]; } }); }
-    function setLabel(i) {
-      const f = FORMS[i];
-      labelEl.textContent = f.label; noteEl.textContent = f.note;
-      if (!still() && mode === 'run') labelEl.parentElement.animate?.([{ transform: 'translateY(8px)', opacity: 0, filter: 'blur(4px)' }, { transform: 'none', opacity: 1, filter: 'none' }], { duration: 420, easing: 'cubic-bezier(.23,1,.32,1)' });
+    function settlePoints() { placeWords(); parts.forEach(p => { if (p.t >= 0 && cur[p.t] && !roam) { const q = cur[p.t]; p.x = p.px = place.x + q[0] * place.s; p.y = p.py = place.y + q[1] * place.s; p.r = q[2]; p.g = q[3]; p.b = q[4]; } }); }
+    function say(text) {
+      const w = phrase(text);
+      if (w === words) return;
+      words = w; anchor?.setAttribute('data-hive-say', w);
+      writeWords(true);
+      if (still()) draw(); else kick();
     }
-    const burst = (cx, cy, power, radius = Infinity) => parts.forEach(p => {
+    const burst = (cx, cy, power, radius) => parts.forEach(p => {
       const dx = p.x - cx, dy = p.y - cy, d = Math.hypot(dx, dy) || 1;
       if (d > radius) return;
-      const f = power * (radius === Infinity ? (0.4 + Math.random()) : (1 - d / radius));
+      const f = power * (1 - d / radius);
       p.vx += dx / d * f; p.vy += dy / d * f;
     });
-    function go(i, { scatter = true } = {}) {
-      form = (i + FORMS.length) % FORMS.length; phase = 'hold'; clock = 0;
-      if (scatter && !still()) parts.forEach(p => { const a = Math.random() * 6.283, s = 120 + Math.random() * 360; p.vx += Math.cos(a) * s; p.vy += Math.sin(a) * s; });
-      assign(form, still());
-      setLabel(form);
-      if (still()) draw();
+    // A tab change: every bee is thrown round the vortex, which turns a little further, then settles on the new page.
+    function swirl() {
+      if (still() || !vtx.init) return;
+      vtx.kick += 0.9;
+      parts.forEach(p => { const dx = p.x - vtx.x, dy = p.y - vtx.y, d = Math.hypot(dx, dy) || 1, s = 110 + Math.random() * 190; p.vx += -dy / d * s; p.vy += dx / d * s; });
     }
-
-    // Intro: the fog gathers into one drop of palm oil while the count runs, then it bursts open into the page.
-    const ui = { el: null, num: null };
-    let introStart = 0, introPlayed = false;
-    function beginIntro() {
-      mode = 'intro'; modeClock = 0; atm = 1; introStart = performance.now(); introPlayed = true;
-      html.classList.add('hive-intro');
-      ui.el = document.createElement('div'); ui.el.className = 'hive-intro-ui'; ui.el.setAttribute('aria-hidden', 'true');
-      ui.el.innerHTML = `<div class="hi-top"><span>MPOB <i>×</i> UKM</span><span>Biodiesel mandate studio</span></div>
-        <div class="hi-mid"><span>Palm oil</span><span>B5</span><span>B7</span><span>B10</span><span>B20</span><span>B30</span></div>
-        <div class="hi-bottom"><b class="hi-num">0</b><button type="button" class="hi-skip" tabindex="-1">Skip</button></div>`;
-      document.body.appendChild(ui.el); ui.num = ui.el.querySelector('.hi-num');
-      const fi = FORMS.findIndex(f => f.id === 'drop'); form = fi; assign(fi, false); setLabel(fi);
-      ['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(t => addEventListener(t, skipIntro, { once: true, passive: true }));
-    }
-    function skipIntro() { if (mode === 'intro') reveal(); }
-    function reveal() {
-      mode = 'reveal'; modeClock = 0;
-      try { sessionStorage.setItem('mpob-hive-intro', '1'); } catch {}
-      introShown = true;
-      ['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(t => removeEventListener(t, skipIntro));
-      if (ui.num) ui.num.textContent = '100';
-      burst(W / 2, H * 0.46, 900);
-      M()?.haptic?.(12);
-      ui.el?.classList.add('is-out'); setTimeout(() => { ui.el?.remove(); ui.el = null; }, 700);
-      html.classList.remove('hive-intro');
-      const page = document.getElementById('page');
-      page?.animate?.([{ clipPath: 'circle(0% at 50% 46%)', opacity: 0.2 }, { clipPath: 'circle(150% at 50% 46%)', opacity: 1 }], { duration: 1100, easing: 'cubic-bezier(.23,1,.32,1)' });
-      setTimeout(() => { if (current === api && FORMS[form].id === 'drop') go(0, { scatter: false }); }, 650); // unless a blend was already chosen
+    // The colour of the step on show (the page's --accent), read every so often and eased into.
+    const probe = document.createElement('canvas').getContext('2d');
+    function readTint() {
+      const v = page ? getComputedStyle(page).getPropertyValue('--accent').trim() : '';
+      if (!v) { tint.to = null; return; }
+      probe.fillStyle = '#000'; probe.fillStyle = v; const hx = probe.fillStyle;
+      const m = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hx);
+      tint.to = m ? [1, 2, 3].map(k => parseInt(m[k], 16)) : null;
     }
 
     function step(dt) {
-      time += dt; clock += dt; modeClock += dt;
-      if (mode === 'intro') {
-        // Real time, not animation time: a slow device never keeps anyone waiting at the preloader.
-        const pr = Math.min(1, (performance.now() - introStart) / 1000 / INTRO), c = Math.round(100 * (1 - (1 - pr) ** 2.2));
-        if (c !== count) { count = c; if (ui.num) ui.num.textContent = String(c); }
-        if (pr >= 1) reveal();
-      } else if (mode === 'reveal') {
-        atm = mix(atm, atmTo, Math.min(1, dt * 2.4));
-        if (modeClock > REVEAL + 0.6) { mode = 'run'; }
-      } else {
-        atm = mix(atm, atmTo, Math.min(1, dt * 3));
-        if (phase === 'hold' && clock > HOLD && !roam) { phase = 'move'; clock = 0; parts.forEach(p => { const a = Math.random() * 6.283, s = 60 + Math.random() * 240; p.vx += Math.cos(a) * s; p.vy += Math.sin(a) * s; }); }
-        if (phase === 'move' && clock > MOVE * 0.35) { go(form + 1, { scatter: false }); clock = -MOVE * 0.65; }
-      }
-      placeForm();
-      const gather = mode === 'intro' ? 0.35 + 0.85 * Math.min(1, modeClock / (INTRO * 0.5)) : 1;
-      const swirl = mode === 'intro' ? 0.6 : clock < 0 ? 1 : Math.max(0, 1 - clock / 0.9);
+      time += dt; clock += dt;
+      atm = mix(atm, atmTo, Math.min(1, dt * 3));
+      placeWords();
+      tint.clock += dt;
+      if (tint.clock > 0.4) { tint.clock = 0; readTint(); }
+      const te = Math.min(1, dt * 1.6);
+      tint.amt += ((tint.to ? 1 : 0) - tint.amt) * te;
+      if (tint.to) for (let k = 0; k < 3; k++) tint.c[k] += (tint.to[k] - tint.c[k]) * te;
+      const swirlN = Math.max(0, 1 - clock / 0.9); // the bees swarm hardest just after new words are sent
       const sy = scrollY;
-      // The vortex swirls around the form in the hero, or the middle of the screen once the page scrolls on.
-      const tcx = mode === 'intro' ? W / 2 : roam ? W * 0.5 : place.x + FW * place.s / 2;
-      const tcy = mode === 'intro' ? H * 0.46 : roam ? H * 0.5 : place.y + FH * place.s / 2;
+      // The vortex turns around the words while they show, or the middle of the screen once the page scrolls on.
+      const tcx = roam ? W * 0.5 : place.x + LW * place.s / 2, tcy = roam ? H * 0.5 : place.y + lh * place.s / 2;
       if (!vtx.init) { vtx.x = tcx; vtx.y = tcy; vtx.init = true; }
       const ve = Math.min(1, dt * 2); vtx.x += (tcx - vtx.x) * ve; vtx.y += (tcy - vtx.y) * ve;
       const prog = Math.min(1, sy / Math.max(1, document.documentElement.scrollHeight - H));
       vtx.zoom = mix(vtx.zoom, 0.9 + prog * 0.45, ve);
-      vtx.spin = mix(vtx.spin, prog * 2.6, ve); // scrolling turns the whole vortex
+      vtx.kick *= Math.exp(-dt * 1.4);
+      vtx.spin = mix(vtx.spin, prog * 2.6, ve) + vtx.kick * dt * 3; // scrolling turns the whole vortex; a tab change spins it on
       const Rm = Math.hypot(W, H) * 0.56 * vtx.zoom;
-      const inner = [mix(224, 255, atm), mix(161, 214, atm), mix(14, 90, atm)], outer = [mix(31, 30, atm), mix(138, 174, atm), mix(92, 191, atm)];
+      const gold = [mix(224, 255, atm), mix(161, 214, atm), mix(14, 90, atm)];
+      const inner = gold.map((v, k) => mix(v, tint.c[k], tint.amt * 0.85)), outer = [mix(31, 30, atm), mix(138, 174, atm), mix(92, 191, atm)];
       for (const p of parts) {
         p.px = p.x; p.py = p.y;
         let tx, ty, k;
         const formed = p.t >= 0 && cur[p.t] && !roam;
         if (formed) {
-          const q = cur[p.t]; tx = place.x + q[0] * place.s; ty = place.y + q[1] * place.s; k = 7 * p.k * gather;
+          const q = cur[p.t]; tx = place.x + q[0] * place.s; ty = place.y + q[1] * place.s; k = 7 * p.k;
           const e = Math.min(1, dt * 3); p.r += (q[2] - p.r) * e; p.g += (q[3] - p.g) * e; p.b += (q[4] - p.b) * e;
         } else {
           // The vortex: every free particle orbits on one of three spiral arms, tilted like a galaxy seen at an angle;
-          // inner particles turn faster and glow gold, outer ones cool to teal.
-          p.th += (0.08 + 0.5 * (1 - p.vr) ** 1.5) * dt;
+          // inner particles turn faster and glow in the step colour, outer ones cool to teal. Slow, behind a working page.
+          p.th += (0.08 + 0.5 * (1 - p.vr) ** 1.5) * dt * 0.55;
           const a = p.th + p.arm * 2.094 + 2.7 * Math.log(1 + p.vr * 5) + vtx.spin + p.jit, rr = p.vr * Rm;
           tx = vtx.x + Math.cos(a) * rr + pointer.nx * 18 * p.z; ty = vtx.y + Math.sin(a) * rr * 0.58 + pointer.ny * 12 * p.z;
           k = 1.7 * p.k;
@@ -766,8 +666,8 @@ const HOME = (() => {
           p.r += (c0 - p.r) * e; p.g += (c1 - p.g) * e; p.b += (c2 - p.b) * e;
         }
         let ax = (tx - p.x) * k * k * 0.5, ay = (ty - p.y) * k * k * 0.5;
-        // Bee-like turbulence: strongest while the swarm travels, a soft shimmer once it holds a form.
-        const n = 150 * (0.07 + swirl) + (formed ? 0 : 40);
+        // Bee-like turbulence: strongest while the swarm travels, a soft shimmer once the words hold.
+        const n = 150 * (0.05 + swirlN) + (formed ? 0 : 22);
         ax += n * Math.sin(p.y * 0.012 + time * 1.7 + p.seed); ay += n * Math.cos(p.x * 0.011 - time * 1.4 + p.seed);
         if (pointer.on) {
           const dx = p.x - pointer.x, dy = p.y - pointer.y, d2 = dx * dx + dy * dy, R = wide ? 120 : 84;
@@ -785,8 +685,7 @@ const HOME = (() => {
       ctx.fillStyle = `rgb(${L.base.map((v, i) => Math.round(mix(v, D.base[i], atm))).join(',')})`;
       ctx.fillRect(0, 0, W, H);
       // Fog: large soft glows drifting slowly, the light and dark palettes cross-faded by the atmosphere.
-      const fogs = 5;
-      for (let i = 0; i < fogs; i++) {
+      for (let i = 0; i < 5; i++) {
         const fx = W * (0.5 + 0.42 * Math.sin(time * (0.05 + i * 0.013) + i * 1.9)), fy = H * (0.5 + 0.38 * Math.cos(time * (0.04 + i * 0.011) + i * 2.7));
         const rad = Math.max(W, H) * (0.38 + 0.08 * Math.sin(time * 0.2 + i));
         for (const [pal, wgt] of [[L, 1 - atm], [D, atm]]) {
@@ -796,38 +695,39 @@ const HOME = (() => {
           ctx.fillStyle = gr; ctx.fillRect(0, 0, W, H);
         }
       }
-      // The vortex core: a soft glow where the swirl turns.
+      // The vortex core: a soft glow where the swirl turns, in the step colour.
       if (vtx.init) {
         const cr = Math.min(W, H) * 0.42 * vtx.zoom, gr = ctx.createRadialGradient(vtx.x, vtx.y, 0, vtx.x, vtx.y, cr);
-        gr.addColorStop(0, atm > 0.5 ? `rgba(255,214,90,${(0.22 * atm).toFixed(3)})` : `rgba(155,225,93,${(0.32 * (1 - atm)).toFixed(3)})`);
+        const base = atm > 0.5 ? [255, 214, 90] : [155, 225, 93], c = base.map((v, k) => Math.round(mix(v, tint.c[k], tint.amt)));
+        gr.addColorStop(0, `rgba(${c.join(',')},${(atm > 0.5 ? 0.22 * atm : 0.32 * (1 - atm)).toFixed(3)})`);
         gr.addColorStop(0.45, atm > 0.5 ? `rgba(30,174,191,${(0.12 * atm).toFixed(3)})` : `rgba(30,174,191,${(0.1 * (1 - atm)).toFixed(3)})`);
         gr.addColorStop(1, 'rgba(0,0,0,0)');
         ctx.fillStyle = gr; ctx.fillRect(0, 0, W, H);
       }
-      // Honeycomb, lit where the swarm gathers and where the pointer is.
+      // Honeycomb, lit around the words and where the pointer is.
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       if (hexLayer.light && 1 - atm > 0.02) { ctx.globalAlpha = 1 - atm; ctx.drawImage(hexLayer.light, 0, 0); }
       if (hexLayer.dark && atm > 0.02) { ctx.globalAlpha = atm; ctx.drawImage(hexLayer.dark, 0, 0); }
       ctx.globalAlpha = 1; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      const cx = place.x + FW * place.s / 2, cy = place.y + FH * place.s / 2, reach = (wide ? 460 : 280) * (roam ? 0 : 1);
+      const cx = place.x + LW * place.s / 2, cy = place.y + lh * place.s / 2, reach = (wide ? 420 : 240) * (roam ? 0 : 1);
       const hc = ATM.dark.hex.map((v, i) => Math.round(mix(ATM.light.hex[i], v, atm)));
       for (const [x, y, s] of hexes) {
-        const d = Math.hypot(x - cx, y - cy), dp = pointer.on ? Math.hypot(x - pointer.x, y - pointer.y) : 1e9;
+        const d = Math.hypot((x - cx) * 0.5, y - cy), dp = pointer.on ? Math.hypot(x - pointer.x, y - pointer.y) : 1e9;
         const glow = (reach ? Math.max(0, 1 - d / reach) * (0.5 + 0.5 * Math.sin(time * 1.6 - d * 0.02)) : 0) + Math.max(0, 1 - dp / 170);
         if (glow < 0.08) continue;
         hexPath(ctx, x, y, s);
         ctx.strokeStyle = `rgba(${hc.join(',')},${(glow * (0.14 + atm * 0.08)).toFixed(3)})`; ctx.lineWidth = 1; ctx.stroke();
         if (glow > 0.6) { ctx.fillStyle = atm > 0.5 ? `rgba(255,214,90,${((glow - 0.6) * 0.12).toFixed(3)})` : `rgba(108,192,74,${((glow - 0.6) * 0.14).toFixed(3)})`; ctx.fill(); }
       }
-      // The swarm. Near particles (larger z) are bigger and brighter: depth without 3D.
+      // The swarm. Near particles (larger z) are bigger and brighter: depth without 3D. Free bees are softer dots.
       ctx.globalCompositeOperation = atm > 0.5 ? 'lighter' : 'source-over';
       ctx.lineCap = 'round';
       for (const p of parts) {
-        const col = `rgb(${p.r | 0},${p.g | 0},${p.b | 0})`, size = p.size * p.z;
-        const formed = p.t >= 0 && !roam;
+        const formed = p.t >= 0 && cur[p.t] && !roam;
+        const col = `rgb(${p.r | 0},${p.g | 0},${p.b | 0})`, size = formed ? 0.95 + p.size * 0.3 : p.size * p.z; // even dots keep the letters crisp
         const sp = Math.abs(p.x - p.px) + Math.abs(p.y - p.py);
-        ctx.globalAlpha = (formed ? 0.9 : 0.4) * (0.55 + 0.45 * p.z / 1.45);
-        if (sp > 1.2) { ctx.strokeStyle = col; ctx.lineWidth = size * 1.6; ctx.beginPath(); ctx.moveTo(p.px, p.py); ctx.lineTo(p.x, p.y); ctx.stroke(); }
+        ctx.globalAlpha = (formed ? 0.92 : 0.25) * (0.55 + 0.45 * p.z / 1.45);
+        if (sp > (formed ? 1.2 : 2.4)) { ctx.strokeStyle = col; ctx.lineWidth = size * 1.6; ctx.beginPath(); ctx.moveTo(p.px, p.py); ctx.lineTo(p.x, p.y); ctx.stroke(); }
         else { ctx.fillStyle = col; ctx.beginPath(); ctx.arc(p.x, p.y, size * 1.2, 0, 6.283); ctx.fill(); }
       }
       ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
@@ -835,53 +735,75 @@ const HOME = (() => {
     }
     function frame(now) {
       raf = 0;
-      if (!hive.isConnected || hive.closest('.is-leaving')) return stop();
       const dt = last ? Math.min(0.05, (now - last) / 1000) : 1 / 60; last = now;
       if (!document.hidden && !still() && !story?.covers) { step(dt); draw(); } // rests while the journey fills the screen
       if (!still()) raf = requestAnimationFrame(frame);
     }
     const kick = () => { if (!raf && !still()) { last = 0; raf = requestAnimationFrame(frame); } };
-    function settle() { atm = atmTo; settlePoints(); draw(); }
+    function settle() { atm = atmTo; readTint(); tint.amt = tint.to ? 1 : 0; if (tint.to) tint.c = tint.to.slice(); settlePoints(); draw(); }
 
-    // Touch the hive: the pointer parts the swarm and the drifting bees circle it; a tap sends a ripple.
+    // Touch the hive: the pointer parts the swarm and the drifting bees circle it; a tap on open ground sends a ripple.
+    const QUIET = '.story, .topbar, .stage, .flow, .hero h1, .hero-kicker, .theme-pop, footer';
     const onMove = e => {
-      if (e.target.closest?.('.hive-copy, .hive-hud, .story, .topbar')) { pointer.on = false; } else { pointer.x = e.clientX; pointer.y = e.clientY; pointer.on = true; }
+      if (e.target.closest?.(QUIET)) { pointer.on = false; } else { pointer.x = e.clientX; pointer.y = e.clientY; pointer.on = true; }
       pointer.nx = e.clientX / W - 0.5; pointer.ny = e.clientY / H - 0.5;
     };
     const onLeave = () => { pointer.on = false; };
     const onDown = e => {
-      if (mode !== 'run' || still() || e.target.closest?.('button, a, input, .topbar, .story')) return;
+      if (still() || e.target.closest?.(`button, a, input, select, textarea, label, ${QUIET}`)) return;
       burst(e.clientX, e.clientY, 950, 280); M()?.haptic?.(6);
     };
-    addEventListener('pointermove', onMove, { passive: true }); document.addEventListener('pointerleave', onLeave); root.addEventListener('pointerdown', onDown);
+    addEventListener('pointermove', onMove, { passive: true }); document.addEventListener('pointerleave', onLeave); addEventListener('pointerdown', onDown, { passive: true });
 
-    const pauseBtn = hive.querySelector('[data-home-pause]');
     const setPaused = v => {
-      paused = v; pauseBtn.setAttribute('aria-pressed', String(v)); pauseBtn.querySelector('span').textContent = v ? 'Play' : 'Pause';
-      if (v) settle(); else kick();
+      paused = v; toggle.setAttribute('aria-pressed', String(v));
+      toggle.querySelector('.sr-only').textContent = v ? 'Play the swarm' : 'Pause the swarm'; toggle.title = v ? 'Play the swarm' : 'Pause the swarm';
+      if (v) { if (raf) cancelAnimationFrame(raf); raf = 0; settle(); } else kick();
     };
-    pauseBtn.addEventListener('click', () => setPaused(!paused));
+    toggle.addEventListener('click', () => setPaused(!paused));
+    toggle.title = 'Pause the swarm';
+
+    // The top bar turns to night glass while the journey runs underneath it.
+    let under = null;
+    function syncBar() {
+      const b = storyEl?.isConnected ? storyEl.getBoundingClientRect() : null, h = bar?.offsetHeight ?? 60;
+      const now = Boolean(b && b.top < h && b.bottom > h);
+      if (now !== under) { under = now; html.classList.toggle('story-under-bar', now); }
+    }
 
     let rt = 0;
-    const onResize = () => { clearTimeout(rt); rt = setTimeout(() => { layout(); if (still()) settle(); }, 100); };
+    const onResize = () => { clearTimeout(rt); rt = setTimeout(() => { layout(); if (still()) settle(); syncBar(); }, 100); };
     addEventListener('resize', onResize);
-    const onScroll = () => { if (still()) settle(); };
+    const onScroll = () => { syncBar(); if (still()) settle(); };
     addEventListener('scroll', onScroll, { passive: true });
     const mo = new MutationObserver(() => { readTheme(); if (still()) settle(); });
     mo.observe(html, { attributes: true, attributeFilter: ['data-theme', 'style'] });
     const onVis = () => { if (!document.hidden) kick(); };
     document.addEventListener('visibilitychange', onVis);
-    M()?.watch?.(() => { if (current === api) { if (still()) settle(); else kick(); story?.redraw(); syncWatch(); } });
+    M()?.watch?.(() => { if (current === api) { if (still()) settle(); else kick(); story?.redraw(); } });
 
+    // Each page hands the swarm its own root: Home brings the journey; the other pages bring the band to write in.
+    function attach(r) {
+      const fresh = Boolean(page);
+      story?.stop();
+      page = document.getElementById('page');
+      anchor = r.querySelector('[data-hive-anchor]');
+      storyEl = r.querySelector('[data-story]'); story = storyEl ? storyField(storyEl, () => paused) : null;
+      html.classList.toggle('home-on', Boolean(storyEl));
+      html.classList.toggle('home-night-end', Boolean(storyEl && !storyEl.nextElementSibling)); // the page ends in the journey's night
+      under = null; syncBar();
+      words = ''; cur = []; parts.forEach(p => { p.t = -1; });
+      readTint();
+      if (fresh) { swirl(); if (still()) settle(); else kick(); }
+    }
     function stop() {
-      story?.stop(); sbwRo?.disconnect();
+      story?.stop(); story = null; sbwRo?.disconnect();
       if (raf) cancelAnimationFrame(raf); raf = 0;
-      removeEventListener('pointermove', onMove); document.removeEventListener('pointerleave', onLeave);
+      removeEventListener('pointermove', onMove); document.removeEventListener('pointerleave', onLeave); removeEventListener('pointerdown', onDown);
       removeEventListener('resize', onResize); removeEventListener('scroll', onScroll);
       mo.disconnect(); document.removeEventListener('visibilitychange', onVis);
-      ['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(t => removeEventListener(t, skipIntro));
-      if (mode === 'intro') { html.classList.remove('hive-intro'); ui.el?.remove(); }
-      layer.classList.remove('is-on'); html.classList.remove('home-on', 'home-night-end');
+      toggle.remove();
+      layer.classList.remove('is-on'); html.classList.remove('home-on', 'home-night-end', 'hive-on', 'story-under-bar');
       if (current === api) current = null;
     }
 
@@ -889,16 +811,16 @@ const HOME = (() => {
     const sbwRo = 'ResizeObserver' in window ? new ResizeObserver(setSbw) : null;
     setSbw(); sbwRo?.observe(html);
     readTheme(); layout();
-    layer.classList.add('is-on'); html.classList.add('home-on');
-    html.classList.toggle('home-night-end', Boolean(storyEl && !storyEl.nextElementSibling)); // the page ends in the journey's night
-    if (!introShown && !still()) beginIntro();
-    else { go(0, { scatter: false }); if (!still()) parts.forEach(p => { p.x = p.px = Math.random() * W; p.y = p.py = Math.random() * H; }); }
+    layer.classList.add('is-on'); html.classList.add('hive-on');
+    attach(root);
     if (still()) settle(); else kick();
-    const api = { stop, go: id => go(typeof id === 'number' ? id : FORMS.findIndex(f => f.id === id)), pause: setPaused, skipIntro,
-      get form() { return FORMS[form].id; }, get frames() { return frames; }, get particles() { return N; }, get mode() { return mode; }, get roaming() { return roam; }, get introPlayed() { return introPlayed; },
+    const api = { stop, attach, say, pause: setPaused,
+      get words() { return words; }, get frames() { return frames; }, get particles() { return N; }, get roaming() { return roam; },
+      get writing() { return Boolean(cur.length) && !roam; }, get paused() { return paused; },
+      get tint() { return tint.to && tint.amt > 0.5 ? `rgb(${tint.to.join(', ')})` : null; },
       get story() { return story?.stats; }, chapter: (i, instant) => story?.go(i, instant), play: () => story?.play() };
     current = api;
     return api;
   }
-  return { html, start, forms: FORMS.map(f => f.id), get scene() { return current; } };
+  return { html, start, phrase, say: text => current?.say(text), get scene() { return current; } };
 })();

@@ -66,29 +66,16 @@ const checks = [];
 const expect = (label, actual, wanted) => checks.push(`${actual === wanted ? 'PASS' : 'FAIL'} ${label}: ${JSON.stringify(actual)}${actual === wanted ? '' : ` (wanted ${JSON.stringify(wanted)})`}`);
 const go = async (tab, step) => { await click(`.tab[data-tab="${tab}"]`); await sleep(900); if (step !== undefined) { await click(`.node[data-go="${step}"]`); await sleep(700); } };
 
-// 0 · Home: opens first, the hive keeps moving and forms the blends, then the journey plays as one long camera move
+// 0 · Home: opens first, straight into the journey (no preloader), and is the journey only: one long camera move, few words
 expect('Home opens first', await run('S.tab'), 'home');
-expect('The preloader plays on opening', await run('HOME.scene.introPlayed'), true);
-await sleep(1100); await shot('home-intro', false);
-await sleep(2600);
-expect('The preloader opens into the page by itself', await run(`document.documentElement.classList.contains('hive-intro')`), false);
-await sleep(1200);
+expect('No preloader count stands in front of the page', await run(`document.querySelectorAll('.hive-intro-ui').length + (document.documentElement.classList.contains('hive-intro') ? 1 : 0)`), 0);
+await sleep(1500);
 expect('The swarm layer covers the whole screen', await run(`(() => { const r = document.querySelector('#hive-layer canvas').getBoundingClientRect(); return Math.abs(r.width - document.documentElement.clientWidth) < 1 && Math.abs(r.height - document.documentElement.clientHeight) < 1; })()`), true);
-expect('Hive canvas is painted', await run(`(() => { const c = document.querySelector('#hive-layer canvas'); const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; let n = 0; for (let i = 3; i < d.length; i += 64) if (d[i] > 0) n++; return n > 200; })()`), true);
+expect('Home is the journey only: no hero text, swarm hero, cards or pour scene', await run(`document.querySelectorAll('#page [data-home-hive], #page .home-title, #page .home-card, #page .pour').length`), 0);
+expect('The page title stays for screen readers', await run(`document.querySelector('#page h1.sr-only')?.textContent === TABS[0].title`), true);
+expect('The journey starts at the top, under the top bar', await run(`Math.round(document.querySelector('#page [data-story]').getBoundingClientRect().top + scrollY)`), 0);
+expect('The top bar turns to night glass over the journey', await run(`document.documentElement.classList.contains('story-under-bar')`), true);
 await shot('home', false);
-const f0 = await run('HOME.scene.frames'); await sleep(700);
-expect('Hive keeps moving', (await run('HOME.scene.frames')) > f0, true);
-await run('window.scrollTo(0, document.body.scrollHeight)'); await sleep(900);
-expect('Scrolled past the hero, the swarm drifts over the page', await run('HOME.scene.roaming'), true);
-await shot('home-scrolled', false);
-await run('window.scrollTo(0, 0)'); await sleep(900);
-expect('Back at the hero, the swarm re-forms', await run('HOME.scene.roaming'), false);
-await run(`HOME.scene.go('B30')`); await sleep(1500);
-expect('The swarm forms the blend it is sent to', await run('HOME.scene.form'), 'B30');
-expect('The label follows the swarm', await text('#page [data-hive-label]'), 'B30');
-expect('The swarm fills most of the hero', await run(`(() => { const a = document.querySelector('#page .hive-anchor').getBoundingClientRect(); return a.width >= document.documentElement.clientWidth * 0.6; })()`), true);
-await shot('home-B30', false);
-expect('No objective cards and no pour scene on Home', await run(`document.querySelectorAll('#page .home-card, #page .home-cards, #page .pour').length`), 0);
 // The journey: one long camera move with six screens of copy
 const storyAt = p => run(`(() => { const s = document.querySelector('#page [data-story]'), r = s.getBoundingClientRect(), span = r.height - s.querySelector('.story-stage').clientHeight; scrollTo({ top: scrollY + r.top + ${p} * span, behavior: 'instant' }); })()`);
 expect('Six screens of copy and six chapter buttons', await run(`document.querySelectorAll('#page [data-ss]').length + ':' + document.querySelectorAll('#page [data-story-go]').length`), '6:6');
@@ -125,22 +112,34 @@ await storyAt(1); await sleep(2000);
 expect('The last screen invites the next call', await run(`Number(getComputedStyle(document.querySelector('#page [data-ss="5"]')).opacity) > 0.9`), true);
 expect('The page ends in the same night', await run(`document.documentElement.classList.contains('home-night-end') && getComputedStyle(document.querySelector('footer.foot')).backgroundColor`), 'rgb(1, 5, 10)');
 await shot('home-story-end', false);
-await run('window.scrollTo(0, 0)'); await sleep(900);
-await click('#page [data-story-autoplay]'); await sleep(2500);
-expect('Watch the journey glides down into it', await run('HOME.scene.story.auto && scrollY > 200'), true);
-await key('Tab'); await sleep(200);
-expect('A key hands control back', await run('HOME.scene.story.auto'), false);
-await run('window.scrollTo(0, 0)'); await sleep(900);
-expect('Sponsors shown in the hero', await run(`document.querySelectorAll('#page .hive-sponsors img, #page .hive-sponsors .sp-word').length`), 2);
-await click('[data-home-pause]'); await sleep(150); const fp = await run('HOME.scene.frames'); await sleep(500);
-expect('Pause stops the hive', await run('HOME.scene.frames'), fp);
-await click('[data-home-pause]'); await sleep(500);
-expect('Play restarts it', (await run('HOME.scene.frames')) > fp, true);
+expect('The MPOB and UKM marks sit on the last screen', await run(`document.querySelectorAll('#page [data-ss="5"] .hive-sponsors img, #page [data-ss="5"] .hive-sponsors .sp-word').length`), 2);
 await storyAt(0.75); await sleep(1600);
 await click('#page [data-ss="4"] button[data-tab="obj2"]'); await sleep(1200);
 expect('A link in the journey opens its objective', await run('S.tab + ":" + S.step.obj2'), 'obj2:0');
-expect('Home stops its loop after leaving', await run('HOME.scene'), null);
-expect('Leaving Home ends the night footer', await run(`document.documentElement.classList.contains('home-night-end')`), false);
+expect('Leaving Home ends the night footer and the night top bar', await run(`['home-night-end', 'story-under-bar', 'home-on'].some(c => document.documentElement.classList.contains(c))`), false);
+// The swarm carries on as the background of every other page, in the colour of the step on show
+expect('The swarm becomes the page background', await run('document.querySelector("#hive-layer").classList.contains("is-on")'), true);
+await sleep(1500);
+expect('The swarm writes the step in hand under the objective', await run('HOME.scene.words + ":" + HOME.scene.writing'), 'See how fund moves:true');
+await shot('obj2-swarm-words', false);
+expect('The steps stand in a Mirror Hall of liquid cards', await run("document.querySelectorAll('#page .flow-wrap.has-hall').length + ':' + document.querySelectorAll('#page .hall-gl').length + ':' + HALL.scene.cards"), '1:1:' + await run("document.querySelectorAll('#page .node').length"));
+const hf0 = await run('HALL.scene.frames'); await sleep(600);
+expect('The liquid keeps flowing', (await run('HALL.scene.frames')) > hf0, true);
+expect('Each card carries its number and value, not a ring arrow', await run("getComputedStyle(document.querySelector('#page .has-hall .ring'), '::after').display"), 'none');
+await click('.node[data-go="1"]'); await sleep(1800);
+expect('A new step: the swarm writes its words', await run('HOME.scene.words'), 'Choose oil-price case');
+await run("document.body.style.paddingBottom = '1600px'; window.scrollTo(0, 1e6)"); await sleep(900); // room to scroll the band away on a short step
+expect('Scrolled on, the words break up into the background', await run('HOME.scene.roaming'), true);
+await run("document.body.style.paddingBottom = ''; window.scrollTo(0, 0)"); await sleep(600);
+const bf0 = await run('HOME.scene.frames'); await sleep(700);
+expect('The background keeps moving', (await run('HOME.scene.frames')) > bf0, true);
+expect('The background takes the step colour', await run('HOME.scene.tint'), await run(`(() => { const c = document.createElement('canvas').getContext('2d'); c.fillStyle = getComputedStyle(document.getElementById('page')).getPropertyValue('--accent').trim(); const m = /^#(..)(..)(..)$/.exec(c.fillStyle); return m ? \`rgb(\${[1, 2, 3].map(k => parseInt(m[k], 16)).join(', ')})\` : null; })()`));
+expect('The old ambient glow gives way to the swarm', await run(`getComputedStyle(document.getElementById('aurora')).display`), 'none');
+await shot('obj2-swarm', false);
+await click('[data-home-pause]'); await sleep(150); const fp = await run('HOME.scene.frames'); await sleep(500);
+expect('Pause in the top bar stops the swarm', await run('HOME.scene.frames'), fp);
+await click('[data-home-pause]'); await sleep(500);
+expect('Play restarts it', (await run('HOME.scene.frames')) > fp, true);
 await go('home'); await sleep(1500);
 await storyAt(0.58); await sleep(1600);
 await click('#page [data-ss="3"] button[data-tab="obj4"][data-step="1"]'); await sleep(1200);
@@ -236,11 +235,12 @@ expect('CR11 stage is not a live region', await run(`document.querySelectorAll('
 // 10 · Swipe: drag the step card left to advance, with momentum
 await go('obj1', 0);
 for (let i = 0; i < 40 && await run("document.getElementById('fold-layer').children.length + document.querySelectorAll('.stage.is-leaving').length"); i++) await sleep(100); // start from a settled page
+await run("document.querySelector('.stage:not(.is-leaving)').scrollIntoView({ block: 'center' })"); await sleep(400); // the card sits below the step hall, so bring it on screen first
 const box = await run(`(() => { const r = document.querySelector('.stage:not(.is-leaving) .stage-head').getBoundingClientRect(); return [r.left + r.width * 0.7, r.top + r.height / 2]; })()`);
 await run("window._sw = []; ['pointerdown', 'pointermove', 'pointerup', 'pointercancel'].forEach(t => document.addEventListener(t, e => window._sw.push(t[7] + Math.round(e.clientX)), { capture: true }))");
 await send('Input.dispatchMouseEvent', { type: 'mousePressed', x: box[0], y: box[1], button: 'left', clickCount: 1 });
-for (let k = 1; k <= 8; k++) { await send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: box[0] - k * 40, y: box[1] + 2, button: 'left', buttons: 1 }); await sleep(16); }
-await send('Input.dispatchMouseEvent', { type: 'mouseReleased', x: box[0] - 320, y: box[1] + 2, button: 'left', clickCount: 1 }); await sleep(900);
+for (let k = 1; k <= 8; k++) { await send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: box[0] - k * 60, y: box[1] + 2, button: 'left', buttons: 1 }); await sleep(16); }
+await send('Input.dispatchMouseEvent', { type: 'mouseReleased', x: box[0] - 480, y: box[1] + 2, button: 'left', clickCount: 1 }); await sleep(1600);
 expect('Swipe left advances one step', await run('S.step.obj1'), 1);
 if (checks.at(-1).startsWith('FAIL')) checks.push('INFO swipe events ' + await run('window._sw.join(" ")') + ' fold ' + await run("document.getElementById('fold-layer').children.length"));
 await shot('obj1-after-swipe', false);
@@ -333,7 +333,6 @@ for (const width of [375, 320]) {
   await shot(`mobile-${width}-journey`, false);
   await run('window.scrollTo(0, 0)'); await sleep(600);
   expect(`${width}px home has no horizontal scroll`, await run('document.documentElement.scrollWidth <= window.innerWidth'), true);
-  expect(`${width}px hive sits above the words`, await run(`(() => { const c = document.querySelector('#page .hive-anchor').getBoundingClientRect(), t = document.querySelector('#page .home-title').getBoundingClientRect(); return c.bottom <= t.top + 1; })()`), true);
 }
 await size(812, 375); await go('obj1', 0); await shot('landscape-812-obj1', false);
 await size(1440);
@@ -342,7 +341,7 @@ await size(1440);
 await media([{ name: 'prefers-color-scheme', value: scheme }, { name: 'prefers-reduced-motion', value: 'reduce' }]); await sleep(200);
 expect('CR20 reduced motion picked up mid-session', await run('MOTION.reduce'), true);
 await go('home'); await sleep(1000);
-expect('Reduce motion makes the journey a still picture and a column of words', await run(`HOME.scene.story.still && document.querySelector('#page [data-story]').offsetHeight < innerHeight * 5 && document.querySelector('#page [data-story-autoplay]').hidden`), true);
+expect('Reduce motion makes the journey a still picture and a column of words', await run(`HOME.scene.story.still && document.querySelector('#page [data-story]').offsetHeight < innerHeight * 5`), true);
 await shot('home-story-still', false);
 await go('obj1', 0);
 await media([{ name: 'prefers-color-scheme', value: scheme }]); await sleep(200);

@@ -1023,14 +1023,9 @@ const TABS = [
     ],
   },
 ];
-// Home: the living hive and the journey (shared home.js); the objectives live in the tab bar.
+// Home: the journey only (shared home.js); its title is kept for screen readers. The objectives live in the tab bar.
 function homeConfig() {
-  return {
-    kicker: 'Biodiesel mandate study · Developer level',
-    title: TABS[0].title,
-    lead: 'B30 needs three checks to pass at the same time: biodiesel is cheaper than diesel, the Biodiesel Stabilisation Fund is above its safety limit, and the government has approved B30. Otherwise the blend stays at B20. Every step carries its evidence in Detail cards.',
-    cta: `<button type="button" class="btn btn-primary c1" data-tab="obj1"><span>Start with Objective 1</span>${ICON.chev}</button><button type="button" class="btn btn-ghost" data-tab="decision"><span>Go to Decision now</span></button>`,
-  };
+  return { title: TABS[0].title };
 }
 const tabById = id => TABS.find(t => t.id === id) ?? TABS[0];
 const tabIndex = id => TABS.findIndex(t => t.id === id);
@@ -1073,6 +1068,7 @@ function pageHtml(tab) {
     <div class="flow-wrap"><nav class="flow" data-n="${n}" aria-label="Steps">${tab.steps.map((s, i) => `<button type="button" class="node c${i + 1}" data-go="${i}" style="--i:${i}">
       <span class="ring"><span class="disc">${ICON[s.icon]}<span class="n">${String(i + 1).padStart(2, '0')}</span></span><span class="check">${ICON.check}</span></span>
       <span class="node-label">Step ${i + 1}</span><span class="node-title">${s.short}</span><span class="node-value" data-chip="${i}"></span></button>`).join('')}</nav></div>
+    <div class="hive-say" data-hive-anchor aria-hidden="true"></div>
     <div class="stage-shell" id="stage-shell"></div>`;
 }
 function renderPage(dir = 0) {
@@ -1107,7 +1103,9 @@ function renderPage(dir = 0) {
     glow.to({ x: -dir * 60 }, { response: 0.5 }).then(() => glow.to({ x: 0 }, { response: 1.4 }));
   }
   if (dir) window.scrollTo({ top: 0, behavior: 'auto' });
-  if (tab.home) { HOME.start(el); writeHash(); } else renderStage(0);
+  HOME.start(el); // the swarm carries on as this page's background
+  HALL.mount(tab.home ? null : $('.flow-wrap', el)); // the steps as a Mirror Hall of liquid cards
+  if (tab.home) writeHash(); else renderStage(0);
   sweepAnims();
 }
 
@@ -1152,6 +1150,7 @@ function renderStage(dir = 0, handoff = null) {
   el.setAttribute('aria-label', `Step ${i + 1} of ${tab.steps.length}`);
   el.innerHTML = stageHtml(tab, i);
   $('#page').style.setProperty('--accent', `var(--s${i + 1})`);
+  HOME.say(tab.steps[i].short); // the swarm writes this step in the band under the objective
   const width = old?.offsetWidth || shell.offsetWidth;
   const motion = dir && !reduced();
   if (old) {
