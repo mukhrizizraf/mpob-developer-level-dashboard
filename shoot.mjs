@@ -66,7 +66,7 @@ const checks = [];
 const expect = (label, actual, wanted) => checks.push(`${actual === wanted ? 'PASS' : 'FAIL'} ${label}: ${JSON.stringify(actual)}${actual === wanted ? '' : ` (wanted ${JSON.stringify(wanted)})`}`);
 const go = async (tab, step) => { await click(`.tab[data-tab="${tab}"]`); await sleep(900); if (step !== undefined) { await click(`.node[data-go="${step}"]`); await sleep(700); } };
 
-// 0 · Home: opens first, the hive keeps moving, forms the blends, pauses, and hands off to the objectives
+// 0 · Home: opens first, the hive keeps moving and forms the blends, then the journey plays as one long camera move
 expect('Home opens first', await run('S.tab'), 'home');
 expect('The preloader plays on opening', await run('HOME.scene.introPlayed'), true);
 await sleep(1100); await shot('home-intro', false);
@@ -78,43 +78,73 @@ expect('Hive canvas is painted', await run(`(() => { const c = document.querySel
 await shot('home', false);
 const f0 = await run('HOME.scene.frames'); await sleep(700);
 expect('Hive keeps moving', (await run('HOME.scene.frames')) > f0, true);
-expect('Journey badges B5 to B30', await run(`[...document.querySelectorAll('#page .jb')].map(b => b.textContent.match(/B\\s*\\d+/)?.[0].replace(/\\s/g, '')).join()`), 'B5,B7,B10,B20,B30');
-await click('#page .jb[data-form="7"]'); await sleep(4500);
-expect('A badge sends the swarm to that blend', await run('HOME.scene.form'), 'B30');
-expect('The label follows the swarm', await text('#page [data-hive-label]'), 'B30');
-expect('The chosen badge is marked', await run(`document.querySelector('#page .jb.is-on')?.dataset.form`), '7');
-await shot('home-B30', false);
 await run('window.scrollTo(0, document.body.scrollHeight)'); await sleep(900);
 expect('Scrolled past the hero, the swarm drifts over the page', await run('HOME.scene.roaming'), true);
 await shot('home-scrolled', false);
 await run('window.scrollTo(0, 0)'); await sleep(900);
 expect('Back at the hero, the swarm re-forms', await run('HOME.scene.roaming'), false);
-await run(`document.querySelector('#page .pour').scrollIntoView({ block: 'center' })`); await sleep(900);
-const pf0 = await run('HOME.scene.pour.frames'); await sleep(700);
-expect('The palm-to-pump scene keeps moving', (await run('HOME.scene.pour.frames')) > pf0, true);
-await shot('home-pour-b20', false);
-await click('#page [data-pour-pick="30"]');
-for (let i = 0; i < 80 && (await run('Math.round(HOME.scene.pour.share * 100)')) !== 30; i++) await sleep(100);
-expect('Choosing B30 fills the blend to 30%', await run('Math.round(HOME.scene.pour.share * 100)'), 30);
-expect('The title follows the blend', await text('#page [data-pour-blend]'), 'B30');
-expect('The share line follows the blend', await text('#page [data-pour-share]'), '30% palm biodiesel · 70% diesel');
-expect('A chosen blend stops the automatic switching', await run('HOME.scene.pour.auto'), false);
-await shot('home-pour-b30', false);
-expect('Five clickable steps under the scene', await run(`document.querySelectorAll('#page .pour-index button[data-tab][data-step]').length`), 5);
+await run(`HOME.scene.go('B30')`); await sleep(1500);
+expect('The swarm forms the blend it is sent to', await run('HOME.scene.form'), 'B30');
+expect('The label follows the swarm', await text('#page [data-hive-label]'), 'B30');
+expect('The swarm fills most of the hero', await run(`(() => { const a = document.querySelector('#page .hive-anchor').getBoundingClientRect(); return a.width >= document.documentElement.clientWidth * 0.6; })()`), true);
+await shot('home-B30', false);
+expect('No objective cards and no pour scene on Home', await run(`document.querySelectorAll('#page .home-card, #page .home-cards, #page .pour').length`), 0);
+// The journey: one long camera move with six screens of copy
+const storyAt = p => run(`(() => { const s = document.querySelector('#page [data-story]'), r = s.getBoundingClientRect(), span = r.height - s.querySelector('.story-stage').clientHeight; scrollTo({ top: scrollY + r.top + ${p} * span, behavior: 'instant' }); })()`);
+expect('Six screens of copy and six chapter buttons', await run(`document.querySelectorAll('#page [data-ss]').length + ':' + document.querySelectorAll('#page [data-story-go]').length`), '6:6');
+await storyAt(0); await sleep(1000);
+expect('The journey opens through a closed keyhole', (await run('HOME.scene.story.open')) < 0.05, true);
+expect('The stage is pinned to the screen', await run(`Math.round(document.querySelector('#page .story-stage').getBoundingClientRect().top)`), 0);
+await shot('home-story-keyhole', false);
+await storyAt(0.09); await sleep(1600);
+expect('Scrolling on opens the keyhole', (await run('HOME.scene.story.open')) > 0.99, true);
+const sf0 = await run('HOME.scene.story.frames'); await sleep(600);
+expect('The journey keeps moving', (await run('HOME.scene.story.frames')) > sf0, true);
+expect('Only the first screen of copy shows', await run(`[...document.querySelectorAll('#page [data-ss]')].map(e => Number(getComputedStyle(e).opacity) > 0.5 ? 1 : 0).join('')`), '100000');
+await shot('home-story-1', false);
+await click('#page [data-story-go="3"]');
+for (let i = 0; i < 40 && (await run('HOME.scene.story.chapter')) !== 3; i++) await sleep(150);
+await sleep(1600);
+expect('A chapter button travels to that chapter', await run('HOME.scene.story.chapter'), 3);
+expect('Its screen of copy shows', await run(`Number(getComputedStyle(document.querySelector('#page [data-ss="3"]')).opacity) > 0.9`), true);
+expect('The chapter count follows', await text('#page [data-story-n]'), '04');
+expect('The chapter button is marked current', await run(`document.querySelector('#page [data-story-go][aria-current]')?.dataset.storyGo`), '3');
+await shot('home-story-4', false);
+await storyAt(0.45); await sleep(1800); await shot('home-story-3', false);
+await storyAt(0.76); await sleep(1800); await shot('home-story-5', false);
+// Play: the journey runs without scrolling; any wheel, touch or key hands it back
+await storyAt(0.2); await sleep(900);
+await click('#page [data-story-play]'); await sleep(200);
+expect('Play runs the journey by itself', await run('HOME.scene.story.auto'), true);
+const pp0 = await run('HOME.scene.story.progress'); await sleep(1500);
+expect('Playing moves the camera on', (await run('HOME.scene.story.progress')) > pp0 + 0.005, true);
+expect('The Play button turns into Pause', await text('#page [data-story-play] span'), 'Pause');
+await send('Input.dispatchMouseEvent', { type: 'mouseWheel', x: 400, y: 400, deltaX: 0, deltaY: 40 }); await sleep(200);
+expect('A wheel hands control back', await run('HOME.scene.story.auto'), false);
+await storyAt(1); await sleep(2000);
+expect('The last screen invites the next call', await run(`Number(getComputedStyle(document.querySelector('#page [data-ss="5"]')).opacity) > 0.9`), true);
+expect('The page ends in the same night', await run(`document.documentElement.classList.contains('home-night-end') && getComputedStyle(document.querySelector('footer.foot')).backgroundColor`), 'rgb(1, 5, 10)');
+await shot('home-story-end', false);
+await run('window.scrollTo(0, 0)'); await sleep(900);
+await click('#page [data-story-autoplay]'); await sleep(2500);
+expect('Watch the journey glides down into it', await run('HOME.scene.story.auto && scrollY > 200'), true);
+await key('Tab'); await sleep(200);
+expect('A key hands control back', await run('HOME.scene.story.auto'), false);
 await run('window.scrollTo(0, 0)'); await sleep(900);
 expect('Sponsors shown in the hero', await run(`document.querySelectorAll('#page .hive-sponsors img, #page .hive-sponsors .sp-word').length`), 2);
 await click('[data-home-pause]'); await sleep(150); const fp = await run('HOME.scene.frames'); await sleep(500);
 expect('Pause stops the hive', await run('HOME.scene.frames'), fp);
 await click('[data-home-pause]'); await sleep(500);
 expect('Play restarts it', (await run('HOME.scene.frames')) > fp, true);
-expect('Home cards cover the objectives', await run(`[...document.querySelectorAll('#page .home-card')].map(c => c.dataset.tab).join()`), 'obj1,obj2,obj3,obj4,decision');
-await click('#page .home-card[data-tab="obj2"]'); await sleep(1200);
-expect('A Home card opens its objective', await run('S.tab'), 'obj2');
+await storyAt(0.75); await sleep(1600);
+await click('#page [data-ss="4"] button[data-tab="obj2"]'); await sleep(1200);
+expect('A link in the journey opens its objective', await run('S.tab + ":" + S.step.obj2'), 'obj2:0');
 expect('Home stops its loop after leaving', await run('HOME.scene'), null);
+expect('Leaving Home ends the night footer', await run(`document.documentElement.classList.contains('home-night-end')`), false);
 await go('home'); await sleep(1500);
-await run(`document.querySelector('#page .pour').scrollIntoView({ block: 'center' })`); await sleep(500);
-await click('#page .pour-index button[data-tab="obj4"][data-step="1"]'); await sleep(1200);
-expect('A step under the scene opens that exact step', await run('S.tab + ":" + S.step.obj4'), 'obj4:1');
+await storyAt(0.58); await sleep(1600);
+await click('#page [data-ss="3"] button[data-tab="obj4"][data-step="1"]'); await sleep(1200);
+expect('A step link in the journey opens that exact step', await run('S.tab + ":" + S.step.obj4'), 'obj4:1');
 
 // 1 · Tour every step
 const tabs = { obj1: 6, obj2: 6, obj3: 5, obj4: 7, decision: 4 };
@@ -296,7 +326,12 @@ for (const width of [375, 320]) {
   expect(`${width}px no horizontal page scroll`, await run('document.documentElement.scrollWidth <= window.innerWidth'), true);
   await go('decision', 3); await sleep(600); await shot(`mobile-${width}-decision`);
   await go('home'); await sleep(900); await shot(`mobile-${width}-home`);
-  expect(`${width}px scene labels stay on one line`, await run(`[...document.querySelectorAll('#page .pour-top > span')].every(s => s.getClientRects().length === 1 && s.offsetHeight < 20)`), true);
+  expect(`${width}px journey header stays on one line`, await run(`document.querySelector('#page .story-top').offsetHeight < 40`), true);
+  await run(`(() => { const s = document.querySelector('#page [data-story]'), r = s.getBoundingClientRect(), span = r.height - s.querySelector('.story-stage').clientHeight; scrollTo({ top: scrollY + r.top + 0.58 * span, behavior: 'instant' }); })()`); await sleep(1600);
+  expect(`${width}px journey words fit below the chapter bar`, await run(`(() => { const b = document.querySelector('#page [data-ss="3"]').getBoundingClientRect(), r = document.querySelector('#page .story-rail').getBoundingClientRect(); return b.top >= r.bottom && b.bottom <= innerHeight + 1; })()`), true);
+  expect(`${width}px journey has no horizontal scroll`, await run('document.documentElement.scrollWidth <= window.innerWidth'), true);
+  await shot(`mobile-${width}-journey`, false);
+  await run('window.scrollTo(0, 0)'); await sleep(600);
   expect(`${width}px home has no horizontal scroll`, await run('document.documentElement.scrollWidth <= window.innerWidth'), true);
   expect(`${width}px hive sits above the words`, await run(`(() => { const c = document.querySelector('#page .hive-anchor').getBoundingClientRect(), t = document.querySelector('#page .home-title').getBoundingClientRect(); return c.bottom <= t.top + 1; })()`), true);
 }
@@ -306,6 +341,10 @@ await size(1440);
 // 13 · CR20: reduced motion followed live
 await media([{ name: 'prefers-color-scheme', value: scheme }, { name: 'prefers-reduced-motion', value: 'reduce' }]); await sleep(200);
 expect('CR20 reduced motion picked up mid-session', await run('MOTION.reduce'), true);
+await go('home'); await sleep(1000);
+expect('Reduce motion makes the journey a still picture and a column of words', await run(`HOME.scene.story.still && document.querySelector('#page [data-story]').offsetHeight < innerHeight * 5 && document.querySelector('#page [data-story-autoplay]').hidden`), true);
+await shot('home-story-still', false);
+await go('obj1', 0);
 await media([{ name: 'prefers-color-scheme', value: scheme }]); await sleep(200);
 
 // 14 · A03: dark print uses light ink on white and carries the decision record

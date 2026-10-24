@@ -2,7 +2,8 @@
 // On opening, an atmospheric preloader: fog gathers into one drop of palm oil while a count runs to 100, then it bursts
 // open into the page. A swarm of glowing particles then fills the whole screen behind Home (fog, honeycomb, depth) and
 // flows together into the story of Malaysia's biodiesel mandate: oil palm fruit, palm oil, biodiesel at the pump, B5, B7,
-// B10, B20, B30 and MPOB × UKM. Below it, a sunlit scene pours palm oil into diesel to a B20 or B30 blend. Every form is drawn in code on a small offscreen canvas and sampled for points and colours.
+// B10, B20, B30 and MPOB × UKM. Below it, the journey is told as one long camera move through a fruit bunch drawn in
+// light, from B5 to the B30 decision. Every form is drawn in code.
 // One requestAnimationFrame loop; it rests when the tab is hidden, stops when Home is left, and becomes a still picture
 // under Reduce motion. Pause is always available; the preloader shows once per browser session and any input skips it.
 
@@ -12,16 +13,16 @@ const HOME = (() => {
   const FW = 560, FH = 440; // form canvas (logical px)
   const FONT = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI Variable Display", "Segoe UI", Roboto, Arial, sans-serif';
 
-  // The journey. Years are when each blend was introduced; roll-out was phased by region and sector.
+  // What the swarm forms. Years are when each blend was introduced; roll-out was phased by region and sector.
   const FORMS = [
     { id: 'fruit', label: 'Oil palm fruit', note: 'Where it starts' },
     { id: 'drop', label: 'Palm oil', note: 'Crude palm oil becomes palm methyl ester (PME)' },
     { id: 'pump', label: 'Biodiesel at the pump', note: 'PME blended into diesel' },
-    { id: 'B5', label: 'B5', note: '2011', badge: true },
-    { id: 'B7', label: 'B7', note: '2014', badge: true },
-    { id: 'B10', label: 'B10', note: '2019', badge: true },
-    { id: 'B20', label: 'B20', note: 'From 2020, phased', badge: true },
-    { id: 'B30', label: 'B30', note: 'The next step this studio tests', badge: true, next: true },
+    { id: 'B5', label: 'B5', note: '2011' },
+    { id: 'B7', label: 'B7', note: '2014' },
+    { id: 'B10', label: 'B10', note: '2019' },
+    { id: 'B20', label: 'B20', note: 'From 2020, phased' },
+    { id: 'B30', label: 'B30', note: 'The next step this studio tests' },
     { id: 'partners', label: 'MPOB × UKM', note: 'Malaysian Palm Oil Board and Universiti Kebangsaan Malaysia' },
   ];
   const HOLD = 2.9, MOVE = 1.25; // seconds holding a form, seconds of swarming between forms
@@ -114,14 +115,6 @@ const HOME = (() => {
   }
 
   /* ── Page ── */
-  const ring = (k, next) => `<svg class="jb-ring" viewBox="0 0 120 120" aria-hidden="true">
-      <circle class="r1" cx="60" cy="60" r="55"/><circle class="r2" cx="60" cy="60" r="51"/><circle class="r3" cx="60" cy="60" r="47"/>${next ? '<circle class="r4" cx="60" cy="60" r="57"/>' : ''}</svg>`;
-  function badge(f, i) {
-    const d = f.id.slice(1), modern = Number(d) >= 20;
-    return `<li><button type="button" class="jb ${modern ? 'is-modern' : ''} ${f.next ? 'is-next' : ''}" data-form="${i}" aria-label="${f.label}, ${f.note}">
-      ${ring(i, f.next)}<span class="jb-face"><span class="jb-mark"><b>B</b><em>${d}</em></span>${modern ? '<small>BIODIESEL</small>' : ''}${f.id === 'B10' ? '<i class="jb-drop"></i>' : ''}</span>
-      <span class="jb-year">${f.note}</span></button></li>`;
-  }
   // Sponsor marks, kept small: the build embeds brand/mpob.* and brand/ukm.* when present; otherwise quiet wordmarks.
   function sponsors() {
     let logos = {};
@@ -131,225 +124,446 @@ const HOME = (() => {
       : `<span class="sp-word" title="${name}"><b>${short}</b><small>${name}</small></span>`;
     return `<div class="hive-sponsors"><span class="sp-k">Supported by</span><span class="sp-marks">${mark('mpob', 'MPOB', 'Malaysian Palm Oil Board')}<i aria-hidden="true"></i>${mark('ukm', 'UKM', 'Universiti Kebangsaan Malaysia')}</span></div>`;
   }
-  /* ── From palm to pump: a sunlit scene drawn in code. Palm oil drips into diesel and the blend fills to B20 or B30. ── */
-  // Each index item opens the step that works it out (the same steps in both levels).
-  const RULE = [
-    ['01', 'Palm oil', 'CPO sets the biodiesel cost', 'obj1', 1],
-    ['02', 'Price gap', 'Is biodiesel cheaper than diesel?', 'obj4', 0],
-    ['03', 'Fund', 'Is the fund above its safety limit?', 'obj4', 1],
-    ['04', 'Approval', 'Has the government approved B30?', 'obj4', 2],
-    ['05', 'Blend', 'B30 only when all three pass', 'decision', 3],
+  /* ── The journey, as one long camera move through an oil palm fruit bunch drawn in light ── */
+  // A tall section whose stage stays pinned while you scroll. It opens through a drop-shaped keyhole onto the bunch,
+  // swaying once in a night field as first light creeps along the horizon. Then the bunch turns and lets its fruit go
+  // (B5, B7 and B10 fly off with them), rings gather where the core was (B20: a fifth of the ring is palm gold), a flower
+  // opens there (B30 and its three checks), its petals scatter (the fund), and an iris gathers in the dark, watching the
+  // four inputs, under the invitation to make the next call. Six screens of copy take their turns over the same stretch.
+  // Scroll drives everything, so scrolling back plays it backwards; the pointer is a breeze. The words and buttons are real.
+  const CHAPTERS = [
+    { n: '01', short: 'Palm', side: 'l', k: 'Where it starts', h: 'Grow first. Blend later.',
+      p: 'Malaysia has blended palm biodiesel into its diesel since 2011. Scroll to follow the oil from the fruit to the pump.', links: [['Start with the palm oil price', 'obj1', 1]] },
+    { n: '02', short: 'B5 to B10', side: 'r', k: '2011 to 2019', h: 'Five, seven, ten.',
+      p: 'B5 came in 2011, B7 in 2014 and B10 in 2019. Each step put more palm biodiesel into every litre.', links: [] },
+    { n: '03', short: 'B20', side: 'l', k: 'From 2020, phased', h: 'Twenty, today.',
+      p: 'B20 began in 2020 and was rolled out in phases, by region and sector. In a B20 litre, one fifth is palm biodiesel.', links: [['See today’s decision', 'decision', 3]] },
+    { n: '04', short: 'Three checks', side: 'r', k: 'The rule for B30', h: 'Three checks before thirty.',
+      p: 'B30 starts only when biodiesel is cheaper than diesel, the fund is above its safety limit and the government has approved it.', links: [['Price gap', 'obj4', 0], ['Fund', 'obj4', 1], ['Approval', 'obj4', 2]] },
+    { n: '05', short: 'Fund', side: 'l', k: 'Biodiesel Stabilisation Fund', h: 'A fund for the hard months.',
+      p: 'When biodiesel costs more than diesel, the fund pays the gap. When it costs less, the savings go back in.', links: [['Test the fund against shocks', 'obj2', 0]] },
+    { n: '06', short: 'Decide', side: 'l', k: 'Your turn', h: 'Make the next call.',
+      p: 'Set the prices and the fund, and see whether the blend stays at B20 or can move to B30.', links: [['Decide now', 'decision', 0, true], ['Start with Objective 1', 'obj1', 0]] },
   ];
-  function pourHtml(cfg) {
-    return `<section class="pour" data-pour aria-labelledby="pour-h">
-        <canvas class="pour-canvas" aria-hidden="true"></canvas>
-        <div class="pour-lines" aria-hidden="true"><i></i><i></i><i></i></div>
-        <div class="pour-top"><span>How the studio decides</span><span class="pour-tag">Illustration<span class="pt-more"> · MPOB · UKM</span></span></div>
-        <div class="pour-copy">
-          <h2 id="pour-h" class="pour-title"><span data-pour-blend>B20</span>.</h2>
-          <p class="pour-sub">From palm to pump.</p>
-          <p class="pour-share" data-pour-share>20% palm biodiesel · 80% diesel</p>
-          <div class="pour-seg" role="group" aria-label="Blend">
-            <button type="button" data-pour-pick="20" aria-pressed="true"><b>B20</b><small>today</small></button>
-            <button type="button" data-pour-pick="30" aria-pressed="false"><b>B30</b><small>next</small></button>
-          </div>
-          <p class="pour-body">Choose a blend to pour it. Each step below opens the part of the studio that works it out.</p>
+  function storyHtml() {
+    const links = c => c.links.length ? `<div class="ss-links">${c.links.map(([t, tab, step, primary]) =>
+      `<button type="button" class="${primary ? 'is-primary' : ''}" data-tab="${tab}" data-step="${step}">${esc(t)}<span aria-hidden="true">→</span></button>`).join('')}</div>` : '';
+    return `<section class="story" data-story aria-labelledby="story-h">
+        <div class="story-stage">
+          <canvas class="story-canvas" aria-hidden="true"></canvas>
+          <div class="story-top"><span id="story-h">Malaysia’s biodiesel journey</span><span class="st-right"><span class="st-count"><b data-story-n>01</b> / ${String(CHAPTERS.length).padStart(2, '0')}</span>
+            <button type="button" class="st-play" data-story-play aria-pressed="false"><svg viewBox="0 0 12 12" aria-hidden="true"><path class="i-play" d="M3 1.5v9l7.5-4.5z"/><path class="i-pause" d="M2.5 1.5h2.6v9H2.5zM6.9 1.5h2.6v9H6.9z"/></svg><span>Play</span></button></span></div>
+          <ol class="story-rail" aria-label="Chapters">${CHAPTERS.map((c, i) => `<li><button type="button" data-story-go="${i}" aria-label="Chapter ${c.n}: ${esc(c.short)}"><i></i><span>${esc(c.short)}</span></button></li>`).join('')}</ol>
+          ${CHAPTERS.map((c, i) => `<article class="ss ss-${c.side}" data-ss="${i}">
+            <p class="ss-k"><span>${c.n}</span>${esc(c.k)}</p>
+            <h3 class="ss-h"><span class="ss-script">${esc(c.h[0])}</span>${esc(c.h.slice(1))}</h3>
+            <p class="ss-p">${esc(c.p)}</p>${links(c)}</article>`).join('')}
+          <div class="story-hint" aria-hidden="true"><span>Scroll</span><i></i></div>
         </div>
-        <button type="button" class="pour-card" data-tab="decision" data-step="3">
-          <span class="pc-k">Decision now</span><strong>${esc(cfg.blend ?? 'B20')}</strong><small>${esc(cfg.blendNote ?? 'Reviewed snapshot')}</small><span class="pc-go" aria-hidden="true">Open →</span></button>
-        <ol class="pour-index">${RULE.map(([n, t, q, tab, step]) => `<li><button type="button" data-tab="${tab}" data-step="${step}">
-          <span class="pi-n">${n}</span><b>${t}</b><small>${q}</small><span class="pi-go" aria-hidden="true">→</span></button></li>`).join('')}</ol>
       </section>`;
   }
-  function pourField(section) {
-    const cv = section.querySelector('canvas'), g = cv.getContext('2d');
-    const blendEl = section.querySelector('[data-pour-blend]'), shareEl = section.querySelector('[data-pour-share]');
-    const picks = [...section.querySelectorAll('[data-pour-pick]')];
-    let W = 0, H = 0, dpr = 1, bg = null, bokeh = null, raf = 0, last = 0, visible = false, time = 0, frames = 0, wide = true;
-    let v = { x: 0, top: 0, bottom: 0, w: 100 }, bunch = { x: 0, y: 0, r: 40 }, fruits = [];
-    let drops = [], splashes = [], rings = [], motes = [], wisps = [];
-    let target = 0.2, share = 0.2, shareV = 0, slosh = 0, sloshV = 0, dropClock = 0, auto = true, autoClock = 0;
-    const wind = { x: -1, y: -1, vx: 0, vy: 0, at: 0 };
-    const still = () => Boolean(M()?.reduce);
-    const FILL = 0.8; // the vessel is 80% full; the blend share is of that liquid
+  const clamp01 = x => (x < 0 ? 0 : x > 1 ? 1 : x);
+  const sstep = (a, b, x) => { const t = clamp01((x - a) / (b - a)); return t * t * (3 - 2 * t); };
+  const keys = (pts, x) => { // smooth piecewise curve through [x, y] keys
+    if (x <= pts[0][0]) return pts[0][1];
+    for (let i = 1; i < pts.length; i++) if (x <= pts[i][0]) { const [x0, y0] = pts[i - 1], [x1, y1] = pts[i], t = (x - x0) / (x1 - x0); return y0 + (y1 - y0) * t * t * (3 - 2 * t); }
+    return pts.at(-1)[1];
+  };
+  const seeded = s => () => { s = (s + 0x6D2B79F5) | 0; let t = Math.imul(s ^ (s >>> 15), 1 | s); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+  // 0 gold · 1 orange · 2 ember · 3 deep red · 4 teal · 5 ice · 6 white · 7 green
+  const PAL = [[255, 212, 120], [255, 150, 60], [240, 92, 40], [176, 44, 30], [96, 222, 206], [146, 200, 255], [236, 244, 255], [130, 214, 112]];
+  const RINGS = [{ R: 1.32, tx: 0, tz: 0, w: 0.07 }, { R: 1.02, tx: 1.15, tz: 0.5, w: -0.34 }, { R: 0.74, tx: -0.95, tz: 1.25, w: 0.5 }];
+  const EDGE = [0.37, 0.53, 0.71, 0.87], HALF = 0.05; // bunch → rings → flower → scattered petals → iris
+  const camYaw = p => 6.2832 * sstep(0.06, 0.88, p); // one full turn, ending face-on to the iris
+  const camPitch = p => keys([[0, 0.1], [0.3, 0.22], [0.44, 0.3], [0.6, 0.42], [0.76, 0.26], [0.9, 0], [1, 0]], p);
+  const DIST = {
+    wide: [[0, 7.2], [0.14, 6.2], [0.32, 5.6], [0.44, 4.6], [0.6, 5.4], [0.76, 6.6], [0.9, 5.1], [1, 5.0]],
+    narrow: [[0, 7.2], [0.14, 6.4], [0.32, 6.0], [0.44, 5.4], [0.6, 6.4], [0.76, 7.2], [0.9, 5.6], [1, 5.4]],
+  };
+  function dropPath(g, x, y, s) { // a palm-oil drop, s = half its height
+    g.beginPath(); g.moveTo(x, y - s);
+    g.bezierCurveTo(x + s * 0.2, y - s * 0.55, x + s * 0.6, y - s * 0.12, x + s * 0.6, y + s * 0.34);
+    g.arc(x, y + s * 0.34, s * 0.6, 0, Math.PI);
+    g.bezierCurveTo(x - s * 0.6, y - s * 0.12, x - s * 0.2, y - s * 0.55, x, y - s); g.closePath();
+  }
 
-    function paintBackground() {
-      const c = document.createElement('canvas'); c.width = Math.round(W * dpr); c.height = Math.round(H * dpr);
-      const b = c.getContext('2d'); b.setTransform(dpr, 0, 0, dpr, 0, 0);
-      const lg = b.createLinearGradient(0, 0, 0, H); lg.addColorStop(0, '#2c2915'); lg.addColorStop(0.55, '#1c2010'); lg.addColorStop(1, '#0c100a');
-      b.fillStyle = lg; b.fillRect(0, 0, W, H);
-      const glow = (x, y, r, stops) => { const s = b.createRadialGradient(x, y, 0, x, y, r); stops.forEach(([o, col]) => s.addColorStop(o, col)); b.fillStyle = s; b.fillRect(0, 0, W, H); };
-      glow(W * 0.8, H * 0.14, Math.max(W, H) * 0.78, [[0, 'rgba(255,250,226,.95)'], [0.12, 'rgba(250,222,146,.72)'], [0.36, 'rgba(196,146,58,.3)'], [1, 'rgba(0,0,0,0)']]);
-      glow(W * 0.1, H, Math.max(W, H) * 0.6, [[0, 'rgba(120,164,70,.4)'], [1, 'rgba(0,0,0,0)']]);
-      // Palm fronds hanging into the frame: a curved midrib with leaflets, far ones soft.
-      const canBlur = 'filter' in b;
-      const frond = (x0, y0, len, ang, bend, col, blur) => {
-        if (canBlur) b.filter = `blur(${blur}px)`;
-        b.strokeStyle = col; b.fillStyle = col; b.lineCap = 'round';
-        const pts = [];
-        for (let i = 0; i <= 24; i++) { const t = i / 24, a = ang + bend * t; pts.push([x0 + Math.cos(a) * len * t, y0 + Math.sin(a) * len * t, a]); }
-        b.lineWidth = 3; b.beginPath(); pts.forEach(([x, y], i) => i ? b.lineTo(x, y) : b.moveTo(x, y)); b.stroke();
-        pts.forEach(([x, y, a], i) => { if (i < 2) return; const l = len * 0.2 * Math.sin(Math.PI * i / 24) + 6;
-          for (const side of [-1, 1]) { const la = a + side * 1.05 + 0.35; b.beginPath(); b.moveTo(x, y); b.quadraticCurveTo(x + Math.cos(la - side * 0.3) * l * 0.5, y + Math.sin(la - side * 0.3) * l * 0.5, x + Math.cos(la) * l, y + Math.sin(la) * l + l * 0.25); b.lineWidth = 2.4; b.stroke(); } });
-      };
-      frond(-20, H * 0.08, W * 0.42, 0.15, 0.5, 'rgba(70,92,40,.55)', 6);
-      frond(W + 20, H * 0.02, W * 0.4, Math.PI - 0.1, -0.55, 'rgba(60,82,34,.5)', 7);
-      frond(W * 0.98, H * 0.55, W * 0.32, Math.PI + 0.25, -0.35, 'rgba(36,50,22,.75)', 2);
-      frond(W * 0.02, H * 0.7, W * 0.3, -0.3, 0.4, 'rgba(36,50,22,.8)', 2);
-      if (canBlur) b.filter = 'none';
-      return c;
+  function storyField(section, frozen) {
+    const stage = section.querySelector('.story-stage'), cv = section.querySelector('canvas'), g = cv.getContext('2d');
+    const screens = [...section.querySelectorAll('[data-ss]')], rail = [...section.querySelectorAll('[data-story-go]')];
+    const numEl = section.querySelector('[data-story-n]'), hint = section.querySelector('.story-hint'), playBtn = section.querySelector('[data-story-play]');
+    const NC = CHAPTERS.length, still = () => Boolean(M()?.reduce);
+    let W = 0, H = 0, dpr = 1, wide = true, U = 100, P = [], reads = [], sprites = [], barH = 60;
+    let raf = 0, last = 0, visible = false, time = 0, frames = 0, chapter = -1, covers = false, isStill = null;
+    let q = 0, qRaw = 0, qs = 0, qv = 0, keyOpen = 0, primed = false; // scroll progress, the camera's smoothed copy, its velocity
+    let copyBox = null; // the screen of copy on show, so readings keep clear of it
+    const view = { cx: 0, cy: 0 }, cam = {}, A = [0, 0, 0], B = [0, 0, 0], S = [0, 0, 0];
+    const wind = { x: -1e4, y: -1e4, on: 0, to: 0, nx: 0, ny: 0, sx: 0, sy: 0 };
+
+    function makeSprites() {
+      sprites = PAL.map(([r, gg, b]) => {
+        const c = document.createElement('canvas'); c.width = c.height = 48; const x = c.getContext('2d');
+        const gr = x.createRadialGradient(24, 24, 0, 24, 24, 24), hi = v => Math.min(255, v + 70);
+        gr.addColorStop(0, `rgba(${hi(r)},${hi(gg)},${hi(b)},1)`); gr.addColorStop(0.16, `rgba(${r},${gg},${b},.92)`);
+        gr.addColorStop(0.42, `rgba(${r},${gg},${b},.2)`); gr.addColorStop(1, `rgba(${r},${gg},${b},0)`);
+        x.fillStyle = gr; x.fillRect(0, 0, 48, 48); return c;
+      });
     }
-    function paintBokeh() {
-      const c = document.createElement('canvas'), s = 64; c.width = c.height = s;
-      const b = c.getContext('2d'), gr = b.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2);
-      gr.addColorStop(0, 'rgba(255,240,196,.55)'); gr.addColorStop(0.65, 'rgba(255,226,150,.2)'); gr.addColorStop(1, 'rgba(255,226,150,0)');
-      b.fillStyle = gr; b.fillRect(0, 0, s, s); return c;
+    // From the camera's view at progress p back to the world: the rings are framed for the camera as it stands when they
+    // form, so the B20 ring faces the viewer, and the history readings fly toward the side away from the words.
+    function toCamFrame(x, y, z, out, p = 0.44) {
+      const yw = camYaw(p), pt = camPitch(p), cy = Math.cos(yw), sy = Math.sin(yw), cp = Math.cos(pt), sp = Math.sin(pt);
+      const y0 = cp * y + sp * z, z1 = -sp * y + cp * z;
+      out[0] = cy * x + sy * z1; out[1] = y0; out[2] = -sy * x + cy * z1;
     }
-    function layout() {
-      const r = cv.getBoundingClientRect();
-      W = Math.max(1, r.width); H = Math.max(1, r.height); dpr = Math.min(2, window.devicePixelRatio || 1);
-      cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
-      wide = W >= 760;
-      // On a phone the scene is its own strip above the words, so the vessel fills more of it.
-      const vw = wide ? Math.min(W * 0.15, 190) : Math.min(W * 0.26, 120), vh = wide ? H * 0.5 : H * 0.52;
-      v = { x: wide ? W * 0.62 : W * 0.5, bottom: wide ? H * 0.8 : H * 0.92, w: vw }; v.top = v.bottom - vh;
-      bunch = { x: v.x - vw * 0.05, y: wide ? H * 0.14 : H * 0.14, r: vw * 0.42 };
-      // The fruit bunch: ovals packed in a rounded cone, deep red inside, orange at the rim.
-      fruits = [];
-      for (let ring = 0; ring < 6; ring++) for (let k = 0; k < 5 + ring * 2; k++) {
-        const a = k / (5 + ring * 2) * 6.283 + ring * 0.5, rad = bunch.r * (0.08 + ring * 0.17);
-        fruits.push({ x: Math.cos(a) * rad, y: Math.sin(a) * rad * 0.8 + ring * bunch.r * 0.04, ring });
-      }
-      fruits.sort((p, q) => p.ring - q.ring).reverse();
-      bg = paintBackground(); bokeh ??= paintBokeh();
-      motes = Array.from({ length: wide ? 70 : 40 }, () => ({ x: Math.random() * W, y: Math.random() * H, vx: 0, vy: 0, r: 0.8 + Math.random() * 1.8, a: 0.3 + Math.random() * 0.6, seed: Math.random() * 100 }));
-      wisps = Array.from({ length: 7 }, (_, i) => ({ x: (i + 0.5) / 7, ph: Math.random() * 6.283, sp: 0.4 + Math.random() * 0.5 }));
-    }
-    const liquidTop = () => v.bottom - (v.bottom - v.top) * FILL;
-    function pick(pct, { user = true } = {}) {
-      target = pct / 100;
-      if (user) auto = false;
-      blendEl.textContent = `B${pct}`; shareEl.textContent = `${pct}% palm biodiesel · ${100 - pct}% diesel`;
-      picks.forEach(b => b.setAttribute('aria-pressed', String(Number(b.dataset.pourPick) === pct)));
-      if (!still()) { blendEl.animate?.([{ transform: 'translateY(.18em)', opacity: 0, filter: 'blur(6px)' }, { transform: 'none', opacity: 1, filter: 'none' }], { duration: 520, easing: 'cubic-bezier(.23,1,.32,1)' }); sloshV += 40; }
-      if (still()) { share = target; draw(); }
-    }
-    function step(dt) {
-      time += dt;
-      if (auto) { autoClock += dt; if (autoClock > 6) { autoClock = 0; pick(target > 0.25 ? 20 : 30, { user: false }); } }
-      // The share rises on a spring as more palm oil is poured in.
-      const k = 18, c = 2 * Math.sqrt(k) * 0.9;
-      shareV += (-(share - target) * k - shareV * c) * dt; share += shareV * dt;
-      // Drops fall faster while the share is climbing toward B30.
-      const climbing = target - share > 0.004;
-      dropClock += dt * (climbing ? 9 : 2.2);
-      const bx = bunch.x + bunch.r * 0.05, by = bunch.y + bunch.r * 0.95;
-      while (dropClock >= 1) { dropClock--; drops.push({ x: bx + (Math.random() - 0.5) * 6, y: by, vy: 40 + Math.random() * 30, r: 3 + Math.random() * 2.4 }); }
-      const surf = liquidTop();
-      for (let i = drops.length - 1; i >= 0; i--) {
-        const d = drops[i]; d.vy += 900 * dt; d.y += d.vy * dt;
-        if (d.y >= surf + slosh * 0.2) {
-          rings.push({ x: d.x, y: surf, r: 2, a: 0.6 });
-          for (let s = 0; s < 4; s++) splashes.push({ x: d.x, y: surf, vx: (Math.random() - 0.5) * 120, vy: -80 - Math.random() * 120, life: 0.5 });
-          sloshV += (Math.random() - 0.5) * 18; drops.splice(i, 1);
+    function build() {
+      const rnd = seeded(2011), n = wide ? 2600 : 1500;
+      const nStar = Math.round(n * 0.15), nGround = Math.round(n * 0.12), nMain = n - nStar - nGround, per = 6, nFruit = Math.ceil(nMain / per);
+      P = [];
+      // Fruitlets on an ovoid bunch, each a small cluster of points that flies off together when it is let go.
+      for (let f = 0; f < nFruit; f++) {
+        const t = (f + 0.5) / nFruit, phi = Math.acos(1 - 2 * t), th = f * 2.39996, yy = Math.cos(phi), rr = Math.sin(phi) * (1 - 0.16 * yy);
+        const fx = rr * Math.cos(th) * 0.84, fy = yy, fz = rr * Math.sin(th) * 0.84;
+        const rel = rnd() < 0.58, relP = 0.13 + rnd() * 0.19, ripe = rnd();
+        const ux = fx, uy = fy * 0.6 + 0.45, uz = fz, ul = Math.hypot(ux, uy, uz) || 1, far = 7 + rnd() * 7;
+        const fcol = yy > 0.7 ? 3 : ripe < 0.42 ? 1 : ripe < 0.74 ? 2 : ripe < 0.9 ? 3 : 0;
+        for (let k = 0; k < per && P.length < nMain; k++) {
+          const hx = rnd() * 2 - 1, hy = rnd() * 2 - 1, hz = rnd() * 2 - 1, hl = Math.hypot(hx, hy, hz) || 1, fr = rnd();
+          P.push({ role: 2, rel, relP: relP + rnd() * 0.012, st: rnd(), fcol, size: 1 + rnd() * 1.1, tw: rnd() * 6.283, arc: 0.15 + rnd() * 0.45,
+            bx: fx * (0.97 + rnd() * 0.06) + (rnd() - 0.5) * 0.06, by: fy * (0.97 + rnd() * 0.06) + (rnd() - 0.5) * 0.06, bz: fz * (0.97 + rnd() * 0.06) + (rnd() - 0.5) * 0.06,
+            far: [ux / ul * far + (rnd() - 0.5) * 1.2, uy / ul * far + (rnd() - 0.5) * 1.2, uz / ul * far + (rnd() - 0.5) * 1.2], swirl: (rnd() - 0.5) * 1.6,
+            hx: hx / hl, hy: hy / hl, hz: hz / hl, // a direction, for the small spheres (ring core, flower heart)
+            ri: rnd() < 0.5 ? 0 : rnd() < 0.6 ? 1 : 2, ra: rnd() * 6.283, rj: (rnd() - 0.5) * 0.06, core: rnd() < 0.07,
+            fp: fr < 0.12 ? 0 : fr < 0.22 ? 1 : 2, pk: Math.floor(rnd() * 6), ps: rnd() ** 0.85, pw: rnd() < 0.62 ? (rnd() < 0.5 ? -1 : 1) : rnd() * 2 - 1,
+            ia: Math.floor(rnd() * 140) / 140 * 6.283 + (rnd() - 0.5) * 0.02, iu: rnd() ** 0.9, iw: rnd() * 6.283, spark: rnd() < 0.05 });
         }
       }
-      for (let i = splashes.length - 1; i >= 0; i--) { const s = splashes[i]; s.vy += 700 * dt; s.x += s.vx * dt; s.y += s.vy * dt; s.life -= dt; if (s.life <= 0 || s.y > surf + 4) splashes.splice(i, 1); }
-      for (let i = rings.length - 1; i >= 0; i--) { const r = rings[i]; r.r += 60 * dt; r.a -= dt * 1.2; if (r.a <= 0) rings.splice(i, 1); }
-      // The pointer's wind sloshes the liquid and stirs the golden motes in the light.
-      const gust = Math.max(0, 1 - (performance.now() - wind.at) / 600);
-      if (gust > 0 && Math.abs(wind.x - v.x) < v.w * 1.5) sloshV += wind.vx * 0.02 * gust;
-      sloshV += (-slosh * 60 - sloshV * 4) * dt; slosh += sloshV * dt; slosh = Math.max(-14, Math.min(14, slosh));
-      for (const m of motes) {
-        let ax = 10 + 16 * Math.sin(m.y * 0.012 + time * 0.6 + m.seed), ay = -6 + 14 * Math.cos(m.x * 0.01 - time * 0.5 + m.seed);
-        if (gust > 0) { const d = Math.hypot(m.x - wind.x, m.y - wind.y); if (d < 200) { const f = (1 - d / 200) * gust; ax += wind.vx * f * 2; ay += wind.vy * f * 2; } }
-        const damp = Math.exp(-dt * 1.3); m.vx = (m.vx + ax * dt) * damp; m.vy = (m.vy + ay * dt) * damp; m.x += m.vx * dt; m.y += m.vy * dt;
-        if (m.x > W + 10) m.x = -10; if (m.x < -10) m.x = W + 10; if (m.y < -10) m.y = H + 10; if (m.y > H + 10) m.y = -10;
+      for (let i = 0; i < nStar; i++) {
+        const u = rnd() * 2 - 1, a = rnd() * 6.283, r = 9 + rnd() * 9, s = Math.sqrt(1 - u * u);
+        P.push({ role: 0, x: Math.cos(a) * s * r, y: u * r * 0.7 + 1.5, z: Math.sin(a) * s * r, size: 0.5 + rnd() * 1.1, tw: rnd() * 6.283, tws: 0.5 + rnd() * 1.6, c: rnd() < 0.75 ? 6 : rnd() < 0.5 ? 5 : 0 });
+      }
+      for (let i = 0; i < nGround; i++) P.push({ role: 1, x: (rnd() - 0.5) * 24, y: -2.3 + (rnd() - 0.5) * 0.08, z: (rnd() - 0.5) * 24, size: 0.5 + rnd() * 0.8, tw: rnd() * 6.283 });
+      // Readings ride on particular particles, so they fly off with the fruit and the petals.
+      reads = [];
+      const anchor = (test, set, text, win, long = false) => { const o = P.find(v => v.role === 2 && !v.anchor && test(v)); if (!o) return; o.anchor = true; set(o); reads.push({ o, text, win, long }); };
+      const toward = (o, x, y, at) => { const f = [0, 0, 0]; toCamFrame(x, y, 0, f, at); o.far = f; o.swirl = 0; };
+      anchor(o => o.rel && o.by > 0.2, o => { o.relP = 0.15; toward(o, -2.3, 0.9, 0.23); }, 'B5 · 2011', [0.15, 0.17, 0.27, 0.31]);
+      anchor(o => o.rel && Math.abs(o.by) < 0.3, o => { o.relP = 0.2; toward(o, -2.5, -0.5, 0.28); }, 'B7 · 2014', [0.2, 0.22, 0.31, 0.35]);
+      anchor(o => o.rel && o.by < -0.2, o => { o.relP = 0.25; toward(o, -1.2, -1.6, 0.33); }, 'B10 · 2019', [0.25, 0.27, 0.34, 0.38]);
+      anchor(o => !o.rel, o => { o.ri = 0; o.ra = 0.03; o.core = false; }, 'B20 · 20% palm biodiesel', [0.44, 0.46, 0.5, 0.53]);
+      anchor(o => !o.rel, o => { o.ri = 0; o.ra = 3.9; o.core = false; }, '80% diesel', [0.4, 0.43, 0.5, 0.53]);
+      anchor(o => !o.rel, o => { o.fp = 1; o.hx = 0; o.hy = 1; o.hz = 0; }, 'B30 · 30% palm', [0.57, 0.61, 0.68, 0.72]);
+      [['1 · Cheaper than diesel?', 0], ['2 · Fund above its limit?', 2], ['3 · Government approval?', 4]].forEach(([t, k]) =>
+        anchor(o => !o.rel, o => { o.fp = 2; o.pk = k; o.ps = 1; o.pw = 0; }, t, [0.58, 0.62, 0.68, 0.71], true));
+      [['Biodiesel dearer: the fund pays', 1], ['Biodiesel cheaper: savings go in', 3]].forEach(([t, k]) =>
+        anchor(o => !o.rel, o => { o.fp = 2; o.pk = k; o.ps = 1; o.pw = 0; }, t, [0.72, 0.75, 0.83, 0.86], true));
+      ['Palm oil price', 'Diesel price', 'Fund balance', 'B30 approval'].forEach((t, j) =>
+        anchor(() => true, o => { o.ia = 0.785 + j * 1.571; o.iu = 1; }, t, [0.89, 0.93, 2, 3]));
+      // Colours by keyframe: bunch, rings, flower, scattered petals, iris (released fruit become stars until the iris).
+      for (const o of P) {
+        if (o.role !== 2) continue;
+        const ring = o.core ? 6 : o.ri === 0 ? (o.ra < 1.2566 ? 0 : 5) : o.ri === 1 ? 4 : 6;
+        const flower = o.fp === 0 ? 7 : o.fp === 1 ? 6 : o.ps < 0.25 ? 2 : Math.abs(o.pw) === 1 ? 0 : 1;
+        const iris = o.iu < 0.07 ? 0 : o.spark ? 6 : o.iu < 0.45 ? 4 : 5;
+        o.cols = [o.fcol, ring, flower, flower, iris]; o.star = o.tw > 1.6 ? 6 : 5;
       }
     }
-    function vesselPath(inset = 0) {
-      const x0 = v.x - v.w / 2 + inset, x1 = v.x + v.w / 2 - inset, t = v.top + inset, b = v.bottom - inset, r = Math.min(26, v.w * 0.18);
-      g.beginPath(); g.moveTo(x0, t); g.lineTo(x0, b - r); g.quadraticCurveTo(x0, b, x0 + r, b); g.lineTo(x1 - r, b); g.quadraticCurveTo(x1, b, x1, b - r); g.lineTo(x1, t);
+
+    // Keyframe positions in the world (bunch at the origin, about one unit across).
+    function bunchPos(o, out) { const b = 1 + 0.015 * Math.sin(time * 1.3 + o.tw); out[0] = o.bx * b; out[1] = o.by * b; out[2] = o.bz * b; }
+    function flyPos(o, p, out) {
+      bunchPos(o, out);
+      const t = clamp01((p - o.relP) / 0.2); if (t <= 0) return 0;
+      const e = 1 - (1 - t) ** 3, [fx, fy, fz] = o.far;
+      const x = out[0] + (fx - out[0]) * e, y = out[1] + (fy - out[1]) * e + Math.sin(Math.PI * t) * 0.8, z = out[2] + (fz - out[2]) * e;
+      const c = Math.cos(o.swirl * e), s = Math.sin(o.swirl * e);
+      out[0] = x * c - z * s + Math.sin(time * 0.3 + o.tw) * 0.25 * e; out[1] = y + Math.cos(time * 0.25 + o.tw) * 0.2 * e; out[2] = x * s + z * c;
+      return t;
+    }
+    function ringPos(o, out) {
+      if (o.core) { out[0] = o.hx * 0.16; out[1] = o.hy * 0.16; out[2] = o.hz * 0.16; return; }
+      const R = RINGS[o.ri], a = o.ra + time * R.w, r = R.R + o.rj;
+      let x = Math.cos(a) * r, y = Math.sin(a) * r, z = (o.st - 0.5) * 0.03;
+      if (o.ri) { // the other two rings are tilted, a gyroscope around the blend ring
+        const y1 = y * Math.cos(R.tx) - z * Math.sin(R.tx); z = y * Math.sin(R.tx) + z * Math.cos(R.tx); y = y1;
+        const x1 = x * Math.cos(R.tz) - y * Math.sin(R.tz); y = x * Math.sin(R.tz) + y * Math.cos(R.tz); x = x1;
+      }
+      toCamFrame(x, y, z, out);
+    }
+    function flowerPos(o, open, out) {
+      if (o.fp === 0) { const s = o.ps; out[0] = 0.1 * Math.sin(s * 2.4) + (o.st - 0.5) * 0.03; out[1] = -0.12 - 3 * s; out[2] = (o.tw / 6.283 - 0.5) * 0.03; return; }
+      if (o.fp === 1) { const r = o.anchor ? 0 : 0.17 * (0.6 + 0.4 * open); out[0] = o.hx * r; out[1] = 0.04 + o.hy * r * 0.8; out[2] = o.hz * r; return; }
+      const phi = o.pk / 6 * 6.283 + 0.26, s = o.ps;
+      const a = mix(0.16, 1.05, open) + s * mix(0.05, 0.55, open); // petals curl outward toward the tip as they open
+      const L = 1.3 * s, rad = Math.sin(a) * L, hgt = Math.cos(a) * L * mix(1, 0.75, open);
+      const wv = 0.4 * Math.sin(Math.PI * s ** 0.75) * o.pw * mix(0.55, 1, open), c = Math.cos(phi), sn = Math.sin(phi);
+      out[0] = c * rad - sn * wv; out[1] = 0.02 + hgt; out[2] = sn * rad + c * wv;
+    }
+    function scatterPos(o, p, out) {
+      flowerPos(o, 1, out);
+      const u = sstep(0.66, 0.86, p);
+      if (o.fp === 2) {
+        const phi = o.pk / 6 * 6.283 + 0.26, d = (0.6 + 2.1 * u) * (0.75 + 0.08 * ((o.pk * 37) % 7));
+        out[0] += Math.cos(phi) * d; out[1] += 0.12 * d - 1.3 * u * u; out[2] += Math.sin(phi) * d;
+      } else if (o.fp === 0) out[1] -= 1.8 * u;
+      else { const d = 0.4 + 1.2 * u; out[0] += o.hx * d; out[1] += o.hy * d; out[2] += o.hz * d; }
+    }
+    function irisPos(o, out) {
+      const a = o.ia + time * 0.025 + 0.035 * Math.sin(o.iu * 10 + o.iw), r = 0.34 + 1.06 * o.iu;
+      out[0] = Math.cos(a) * r; out[1] = Math.sin(a) * r; out[2] = -0.12 * (1 - o.iu) + (o.st - 0.5) * 0.04;
+    }
+    function kf(o, k, p, out) {
+      if (k === 4) return irisPos(o, out);
+      if (o.rel) return flyPos(o, p, out);
+      if (k === 0) return bunchPos(o, out);
+      if (k === 1) return ringPos(o, out);
+      if (k === 2) return flowerPos(o, sstep(0.55, 0.67, p), out);
+      return scatterPos(o, p, out);
+    }
+    function stageOf(o, p) { // [keyframe, progress to the next one]; each particle changes a moment apart from its neighbours
+      for (let e = 0; e < 4; e++) { const c = EDGE[e] + (o.st - 0.5) * 0.05; if (p < c - HALF) return [e, 0]; if (p < c + HALF) return [e, (p - c + HALF) / (2 * HALF)]; }
+      return [4, 0];
+    }
+    function camera(p) {
+      cam.yaw = camYaw(p) + wind.sx * 0.12 + 0.04 * Math.sin(time * 0.2);
+      cam.pitch = camPitch(p) + wind.sy * 0.07;
+      const roll = (p > 0 && p < 0.14 ? 0.14 * Math.sin(6.2832 * p / 0.14) : 0) + 0.015 * Math.sin(time * 0.5); // the bunch sways once
+      cam.dist = keys(wide ? DIST.wide : DIST.narrow, p); cam.ty = keys(wide ? [[0, 0], [0.5, 0], [0.62, -0.15], [0.76, -0.3], [0.88, 0], [1, 0]] : [[0, 0], [0.5, 0], [0.62, 0.45], [0.76, 0.1], [0.88, 0], [1, 0]], p);
+      cam.cy = Math.cos(cam.yaw); cam.sy = Math.sin(cam.yaw); cam.cp = Math.cos(cam.pitch); cam.sp = Math.sin(cam.pitch); cam.cr = Math.cos(roll); cam.sr = Math.sin(roll);
+      cam.F = U * 6;
+      // The scene leans away from the words: right of centre when the copy is on the left, and the other way round.
+      const side = keys(CHAPTERS.map((c, i) => [(i + 0.5) / NC, c.side === 'l' ? 1 : -1]), p);
+      view.cx = wide ? W / 2 + side * W * 0.17 : W / 2; view.cy = wide ? H * 0.53 : (barH + 64 + H * 0.64) / 2;
+    }
+    function project(x, y, z, out) {
+      y -= cam.ty;
+      const x1 = x * cam.cy - z * cam.sy, z1 = x * cam.sy + z * cam.cy, y2 = y * cam.cp - z1 * cam.sp, z2 = y * cam.sp + z1 * cam.cp;
+      const d = z2 + cam.dist; if (d < 0.3) return false;
+      const k = cam.F / d; out[0] = view.cx + (x1 * cam.cr - y2 * cam.sr) * k; out[1] = view.cy - (x1 * cam.sr + y2 * cam.cr) * k; out[2] = 6 / d;
+      return true;
+    }
+    function dot(x, y, r, c, a) {
+      if (a < 0.01 || x < -40 || y < -40 || x > W + 40 || y > H + 40) return;
+      g.globalAlpha = a > 1 ? 1 : a; const s = r * 3.2; g.drawImage(sprites[c], x - s, y - s, s * 2, s * 2);
     }
     function draw() {
-      g.setTransform(1, 0, 0, 1, 0, 0); g.drawImage(bg, 0, 0); g.setTransform(dpr, 0, 0, dpr, 0, 0);
-      // Bokeh and motes in the light.
-      g.globalCompositeOperation = 'lighter';
-      for (let i = 0; i < 16; i++) { const x = (i * 97 + time * (6 + i % 5)) % (W + 120) - 60, y = (i * 61) % H, r = 14 + (i * 13) % 40; g.globalAlpha = 0.35 + 0.2 * Math.sin(time * 0.7 + i); g.drawImage(bokeh, x - r, y - r, r * 2, r * 2); }
-      g.globalAlpha = 1; g.fillStyle = 'rgba(255,226,140,.85)';
-      for (const m of motes) { g.globalAlpha = m.a; g.beginPath(); g.arc(m.x, m.y, m.r, 0, 6.283); g.fill(); }
-      g.globalAlpha = 1; g.globalCompositeOperation = 'source-over';
-      // The fruit bunch, backlit, with a short stalk.
-      g.strokeStyle = 'rgba(96,110,52,.95)'; g.lineWidth = 5; g.lineCap = 'round';
-      g.beginPath(); g.moveTo(bunch.x, bunch.y - bunch.r * 1.9); g.quadraticCurveTo(bunch.x + 8, bunch.y - bunch.r, bunch.x, bunch.y - bunch.r * 0.6); g.stroke();
-      for (const f of fruits) {
-        const x = bunch.x + f.x, y = bunch.y + f.y, rr = bunch.r * 0.17;
-        const fg = g.createLinearGradient(x, y - rr, x, y + rr); fg.addColorStop(0, f.ring > 3 ? '#ffb347' : '#f06a2a'); fg.addColorStop(1, f.ring > 3 ? '#d8521f' : '#6e1a10');
-        g.fillStyle = fg; g.beginPath(); g.ellipse(x, y, rr * 0.82, rr, Math.atan2(f.y, f.x) + Math.PI / 2, 0, 6.283); g.fill();
+      const p = Math.max(-0.3, Math.min(1, qs));
+      camera(p);
+      g.setTransform(dpr, 0, 0, dpr, 0, 0); g.globalAlpha = 1; g.globalCompositeOperation = 'source-over';
+      const bg = g.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, '#01050a'); bg.addColorStop(0.55, '#04131b'); bg.addColorStop(1, '#01050a');
+      g.fillStyle = bg; g.fillRect(0, 0, W, H);
+      const warm = keys([[0, 1], [0.3, 0.8], [0.44, 0.45], [0.6, 1], [0.76, 0.7], [0.9, 0.3], [1, 0.3]], p), R0 = Math.max(W, H) * 0.62;
+      const neb = g.createRadialGradient(view.cx, view.cy, 0, view.cx, view.cy, R0);
+      neb.addColorStop(0, `rgba(245,170,60,${(0.13 * warm).toFixed(3)})`); neb.addColorStop(0.35, 'rgba(30,130,150,.1)'); neb.addColorStop(1, 'rgba(0,0,0,0)');
+      g.fillStyle = neb; g.fillRect(0, 0, W, H);
+      // First light creeps along the horizon of the night field, then fades as the camera lifts.
+      const dawn = 1 - sstep(0.4, 0.58, p), front = sstep(-0.12, 0.42, p);
+      if (dawn > 0.01) {
+        const hy = view.cy + cam.F * Math.tan(cam.pitch), fx = W * (0.04 + 0.96 * front);
+        g.save(); g.translate(fx * 0.5, hy - 6); g.scale(Math.max(40, fx * 0.62) / 60, 1);
+        const band = g.createRadialGradient(0, 0, 0, 0, 0, 60);
+        band.addColorStop(0, `rgba(245,170,60,${(0.2 * dawn).toFixed(3)})`); band.addColorStop(1, 'rgba(245,170,60,0)');
+        g.fillStyle = band; g.fillRect(-60, -60, 120, 120); g.restore();
+        const hot = g.createRadialGradient(fx, hy, 0, fx, hy, 180); hot.addColorStop(0, `rgba(255,214,130,${(0.34 * dawn).toFixed(3)})`); hot.addColorStop(1, 'rgba(255,214,130,0)');
+        g.fillStyle = hot; g.fillRect(fx - 180, hy - 180, 360, 360);
+        const line = g.createLinearGradient(0, 0, fx + 60, 0); line.addColorStop(0, 'rgba(255,224,160,0)');
+        line.addColorStop(0.8, `rgba(255,224,160,${(0.55 * dawn).toFixed(3)})`); line.addColorStop(1, 'rgba(255,224,160,0)');
+        g.fillStyle = line; g.fillRect(0, hy - 0.5, fx + 60, 1);
       }
-      const halo = g.createRadialGradient(bunch.x, bunch.y, 0, bunch.x, bunch.y, bunch.r * 1.6); halo.addColorStop(0, 'rgba(255,190,90,.25)'); halo.addColorStop(1, 'rgba(255,190,90,0)');
-      g.fillStyle = halo; g.fillRect(bunch.x - bunch.r * 2, bunch.y - bunch.r * 2, bunch.r * 4, bunch.r * 4);
-      // Drops of palm oil, glowing as they fall.
       g.globalCompositeOperation = 'lighter';
-      for (const d of drops) { const dg = g.createRadialGradient(d.x, d.y, 0, d.x, d.y, d.r * 2.4); dg.addColorStop(0, 'rgba(255,236,150,.95)'); dg.addColorStop(0.45, 'rgba(245,184,28,.8)'); dg.addColorStop(1, 'rgba(245,184,28,0)');
-        g.fillStyle = dg; g.beginPath(); g.ellipse(d.x, d.y, d.r * 2.4, d.r * 2.4 * (1 + Math.min(0.8, d.vy / 900)), 0, 0, 6.283); g.fill(); }
-      g.fillStyle = 'rgba(255,224,130,.9)'; for (const s of splashes) { g.beginPath(); g.arc(s.x, s.y, 1.6, 0, 6.283); g.fill(); }
+      const R = wide ? 130 : 90, gust = wind.on, scale = wide ? 1.2 : 1, groundA = 0.26 * (1 - sstep(0.42, 0.6, p));
+      const frontX = -12 + 24 * front, fill = 6.2832 * 0.2 * sstep(0.37, 0.46, p); // the B20 ring fills to one fifth
+      for (const o of P) {
+        let x, y, z, c, c2 = -1, mixT = 0, a, size = o.size;
+        if (o.role === 0) { x = o.x; y = o.y; z = o.z; c = o.c; a = 0.3 + 0.6 * Math.sin(time * o.tws + o.tw) ** 2; }
+        else if (o.role === 1) {
+          if (groundA < 0.01) continue;
+          x = o.x; y = o.y; z = o.z; const lit = Math.abs(x - frontX) < 0.9; c = lit ? 0 : 4; a = groundA * (lit ? 2.6 : 1) * (0.7 + 0.3 * Math.sin(time + o.tw));
+        } else {
+          const [k, t] = stageOf(o, p);
+          const ft = kf(o, k, p, A);
+          if (t > 0) {
+            kf(o, k + 1, p, B); const e = t * t * (3 - 2 * t), lift = Math.sin(Math.PI * t) * o.arc;
+            x = A[0] + (B[0] - A[0]) * e; y = A[1] + (B[1] - A[1]) * e; z = A[2] + (B[2] - A[2]) * e;
+            const l = Math.hypot(x, y, z) || 1; x += x / l * lift; y += y / l * lift; z += z / l * lift;
+          } else { x = A[0]; y = A[1]; z = A[2]; }
+          const colAt = kk => (o.rel && kk < 4 ? (ft > 0.4 || kk > 0 ? o.star : o.fcol)
+            : kk === 1 && o.ri === 0 && !o.core ? (o.ra < fill ? 0 : 5) : o.cols[kk]);
+          c = colAt(k); if (t > 0) { c2 = colAt(k + 1); mixT = t; }
+          a = 0.62;
+          if (o.rel && k < 4 && ft > 0) { a = 0.62 - 0.3 * ft; size *= 1 - 0.35 * ft; }
+          const inScatter = k === 2 ? t : k === 3 ? 1 - t : 0; // how far this particle is into the scattered-petals keyframe
+          if (!o.rel && o.fp === 2 && Math.abs(o.pw) < 1) a *= 1 - 0.75 * sstep(0.68, 0.84, p) * inScatter; // petals thin to outlines
+          if (!o.rel && o.fp === 0) a *= 1 - sstep(0.7, 0.84, p) * inScatter; // the stem falls away
+          size *= 1 - 0.15 * (k === 4 ? 1 : k === 3 ? t : 0);
+        }
+        if (!project(x, y, z, S)) continue;
+        let sx = S[0], sy = S[1];
+        if (gust > 0.01) { // the pointer is a breeze
+          const dx = sx - wind.x, dy = sy - wind.y, d2 = dx * dx + dy * dy;
+          if (d2 < R * R) { const d = Math.sqrt(d2) || 1, f = (1 - d / R) ** 2 * 34 * gust; sx += dx / d * f; sy += dy / d * f; }
+        }
+        if (o.anchor) { o.sx = sx; o.sy = sy; }
+        const r = Math.min(7, (0.55 + size * 0.7) * S[2] * scale), aa = a * Math.min(1.4, 0.55 + S[2] * 0.5);
+        if (c2 >= 0 && c2 !== c) { dot(sx, sy, r, c, aa * (1 - mixT)); dot(sx, sy, r, c2, aa * mixT); } else dot(sx, sy, r, c, aa);
+      }
+      g.globalAlpha = 1;
+      // A lens flare at the heart of the scene: the bunch's core, the rings' centre, the flower's heart, the iris's pupil.
+      const fl = keys([[-0.2, 1], [0.1, 0.8], [0.3, 0.45], [0.42, 0.95], [0.52, 0.55], [0.64, 0.42], [0.8, 0.15], [0.92, 0.8], [1, 0.85]], p);
+      const centre = project(0, 0.02, 0, S) ? S[0] : view.cx;
+      if (project(0, 0.02, 0, S)) {
+        const fr = (wide ? 70 : 46) * (0.6 + fl), glow = g.createRadialGradient(S[0], S[1], 0, S[0], S[1], fr);
+        glow.addColorStop(0, `rgba(255,255,255,${(0.9 * fl).toFixed(3)})`); glow.addColorStop(0.12, `rgba(220,236,255,${(0.45 * fl).toFixed(3)})`); glow.addColorStop(1, 'rgba(160,200,255,0)');
+        g.fillStyle = glow; g.fillRect(S[0] - fr, S[1] - fr, fr * 2, fr * 2);
+        const sw = W * 0.42 * fl, streak = g.createLinearGradient(S[0] - sw, 0, S[0] + sw, 0);
+        streak.addColorStop(0, 'rgba(160,200,255,0)'); streak.addColorStop(0.5, `rgba(235,244,255,${(0.55 * fl).toFixed(3)})`); streak.addColorStop(1, 'rgba(160,200,255,0)');
+        g.fillStyle = streak; g.fillRect(S[0] - sw, S[1] - 1, sw * 2, 2);
+      }
       g.globalCompositeOperation = 'source-over';
-      // The liquid: diesel below, the golden palm biodiesel share above, mixing through drifting wisps.
-      const x0 = v.x - v.w / 2 + 3, x1 = v.x + v.w / 2 - 3, surf = liquidTop(), depth = v.bottom - 3 - surf, band = depth * share;
-      g.save(); vesselPath(3); g.closePath(); g.clip();
-      const wave = x => surf + Math.sin(x * 0.05 + time * 2.2) * 2 + slosh * ((x - v.x) / v.w);
-      const surfacePath = () => { g.beginPath(); g.moveTo(x0, v.bottom); for (let x = x0; x <= x1; x += 4) g.lineTo(x, wave(x)); g.lineTo(x1, v.bottom); g.closePath(); };
-      surfacePath(); const dz = g.createLinearGradient(0, surf, 0, v.bottom); dz.addColorStop(0, '#7a4e12'); dz.addColorStop(1, '#2a1a07'); g.fillStyle = dz; g.fill();
-      const bandBottom = surf + band;
-      g.beginPath(); g.moveTo(x0, bandBottom + 10); for (let x = x0; x <= x1; x += 4) g.lineTo(x, wave(x)); for (let x = x1; x >= x0; x -= 4) g.lineTo(x, bandBottom + Math.sin(x * 0.07 - time * 1.3) * 4); g.closePath();
-      const bz = g.createLinearGradient(0, surf, 0, bandBottom + 10); bz.addColorStop(0, 'rgba(255,226,110,.98)'); bz.addColorStop(0.7, 'rgba(232,170,30,.92)'); bz.addColorStop(1, 'rgba(176,112,20,.0)');
-      g.fillStyle = bz; g.fill();
-      g.globalCompositeOperation = 'lighter'; g.strokeStyle = 'rgba(255,214,90,.35)'; g.lineWidth = 2;
-      for (const w of wisps) { const wx = x0 + (x1 - x0) * w.x; g.beginPath(); for (let t = 0; t <= 1; t += 0.05) { const yy = bandBottom - 6 + t * depth * 0.45, xx = wx + Math.sin(t * 6 + time * w.sp + w.ph) * v.w * 0.08; t ? g.lineTo(xx, yy) : g.moveTo(xx, yy); } g.stroke(); }
-      for (const r of rings) { g.strokeStyle = `rgba(255,236,170,${r.a.toFixed(2)})`; g.lineWidth = 1.2; g.beginPath(); g.ellipse(r.x, r.y, r.r, r.r * 0.25, 0, 0, 6.283); g.stroke(); }
-      g.globalCompositeOperation = 'source-over'; g.restore();
-      // Glass: outline, highlights, and a scale marking the B20 and B30 shares.
-      vesselPath(0); g.strokeStyle = 'rgba(255,255,255,.55)'; g.lineWidth = 2; g.stroke();
-      g.fillStyle = 'rgba(255,255,255,.08)'; g.fillRect(v.x - v.w / 2 + 8, v.top + 10, 6, v.bottom - v.top - 30);
-      g.fillStyle = 'rgba(255,255,255,.18)'; g.fillRect(v.x + v.w / 2 - 14, v.top + 20, 2, (v.bottom - v.top) * 0.5);
-      g.font = `600 ${wide ? 12 : 11}px ${FONT}`; g.textBaseline = 'middle';
-      for (let p = 0; p <= 50; p += 10) {
-        const y = surf + depth * p / 100, key = p === 20 || p === 30, on = Math.round(target * 100) === p;
-        g.strokeStyle = key ? (on ? 'rgba(255,236,150,1)' : 'rgba(255,255,255,.6)') : 'rgba(255,255,255,.3)'; g.lineWidth = key ? 1.6 : 1;
-        g.beginPath(); g.moveTo(v.x + v.w / 2, y); g.lineTo(v.x + v.w / 2 + (key ? 16 : 8), y); g.stroke();
-        if (key) { g.fillStyle = on ? '#ffe38a' : 'rgba(255,255,255,.7)'; g.fillText(`B${p} · ${p}%`, v.x + v.w / 2 + 22, y); }
+      // Readings: a ring on the particle, a hairline, a label.
+      g.font = `600 ${wide ? 11 : 10}px ${FONT}`; g.textBaseline = 'middle'; g.lineWidth = 1;
+      if ('letterSpacing' in g) g.letterSpacing = '1.6px';
+      const safeTop = barH + 96;
+      for (const rd of reads) {
+        const [a0, a1, b0, b1] = rd.win, al = sstep(a0, a1, p) * (1 - sstep(b0, b1, p)), o = rd.o;
+        if (al < 0.02 || (rd.long && !wide) || o.sx === undefined || o.sx < 0 || o.sx > W || o.sy < safeTop - 10 || o.sy > H - 20) continue;
+        const tw = g.measureText(rd.text.toUpperCase()).width + 46;
+        let right = o.sx >= centre - 4; if (right && o.sx + tw > W - 12) right = false; if (!right && o.sx - tw < 12) right = true;
+        const dy = o.sy - 16 < safeTop ? 16 : -16, ly = o.sy + dy;
+        const hits = r => copyBox && ly > copyBox.t - 14 && ly < copyBox.b + 14 && (r ? o.sx + tw > copyBox.l - 12 && o.sx < copyBox.r + 12 : o.sx - tw < copyBox.r + 12 && o.sx > copyBox.l - 12);
+        if (hits(right)) { if (hits(!right)) continue; right = !right; }
+        const dx = right ? 24 : -24;
+        g.globalAlpha = al; g.strokeStyle = 'rgba(255,248,230,.75)';
+        g.beginPath(); g.arc(o.sx, o.sy, 3.5, 0, 6.283); g.stroke();
+        g.beginPath(); g.moveTo(o.sx + dx / 8, o.sy + dy / 5); g.lineTo(o.sx + dx, o.sy + dy); g.lineTo(o.sx + dx * 1.5, o.sy + dy); g.stroke();
+        g.fillStyle = '#f7f1e3'; g.textAlign = right ? 'left' : 'right'; g.fillText(rd.text.toUpperCase(), o.sx + dx * 1.5 + (right ? 6 : -6), o.sy + dy);
+      }
+      g.globalAlpha = 1;
+      if ('letterSpacing' in g) g.letterSpacing = '0px';
+      // The keyhole: the scene is first seen through one drop of palm oil, which opens as you scroll in.
+      keyOpen = sstep(0, 0.08, p);
+      if (keyOpen < 0.999) {
+        const s = mix(wide ? 66 : 50, Math.hypot(W, H) * 1.4, keyOpen ** 3), kx = view.cx, ky = view.cy - s * 0.1;
+        g.globalCompositeOperation = 'destination-in'; dropPath(g, kx, ky, s); g.fillStyle = '#000'; g.fill();
+        g.globalCompositeOperation = 'source-over';
+        g.save(); dropPath(g, kx, ky, s); g.strokeStyle = `rgba(245,214,138,${(0.75 * (1 - keyOpen)).toFixed(3)})`; g.lineWidth = 1.2;
+        g.shadowColor = 'rgba(245,184,28,.7)'; g.shadowBlur = 18; g.stroke(); g.restore();
       }
       frames++;
     }
+    // Screens of copy take turns: each owns a sixth of the scroll, fading in and out at its edges; the last one stays.
+    function screensAt(p) {
+      screens.forEach((el, i) => {
+        const a = i / NC, b = (i + 1) / NC, f = 0.25 / NC;
+        const o = (i === 0 ? 1 : sstep(a, a + f, p)) * (i === NC - 1 ? 1 : 1 - sstep(b - f, b, p));
+        if (el._o !== undefined && Math.abs(el._o - o) < 0.002) return;
+        el._o = o; el.style.opacity = o.toFixed(3); el.style.transform = `translate3d(0, ${((1 - o) * (p < (a + b) / 2 ? 34 : -34)).toFixed(1)}px, 0)`;
+        el.style.visibility = o < 0.02 ? 'hidden' : 'visible';
+      });
+      const c = Math.max(0, Math.min(NC - 1, Math.floor(p * NC)));
+      if (c !== chapter) {
+        chapter = c; numEl.textContent = CHAPTERS[c].n; section.dataset.chapter = String(c);
+        rail.forEach((b, i) => (i === c ? b.setAttribute('aria-current', 'step') : b.removeAttribute('aria-current')));
+      }
+      rail.forEach((b, i) => b.style.setProperty('--f', clamp01((p - i / NC) * NC).toFixed(3)));
+      hint.style.opacity = (1 - sstep(0, 0.04, p)).toFixed(3);
+      const el = screens[chapter], cr = cv.getBoundingClientRect(), b = el._o > 0.1 ? el.getBoundingClientRect() : null;
+      copyBox = b ? { l: b.left - cr.left, r: b.right - cr.left, t: b.top - cr.top, b: b.bottom - cr.top } : null;
+    }
+    function readScroll() {
+      const r = section.getBoundingClientRect(), span = Math.max(1, r.height - H);
+      qRaw = -r.top / span; q = Math.max(-0.3, Math.min(1, qRaw)); covers = r.top <= 0.5 && r.bottom >= innerHeight - 0.5;
+    }
+    function layout() {
+      const now = still();
+      if (now !== isStill) {
+        isStill = now; section.classList.toggle('is-still', now);
+        if (now) screens.forEach(el => { el.style.opacity = el.style.transform = el.style.visibility = ''; el._o = undefined; });
+      }
+      barH = document.querySelector('.topbar')?.offsetHeight ?? 60; section.style.setProperty('--bar-h', `${barH}px`);
+      const r = cv.getBoundingClientRect(); W = Math.max(1, r.width); H = Math.max(1, r.height);
+      dpr = Math.min(2, window.devicePixelRatio || 1); cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+      const nowWide = W >= 860;
+      if (nowWide !== wide || !P.length) { wide = nowWide; build(); }
+      U = wide ? Math.min(W * 0.5, H) * 0.25 : Math.min(W * 0.27, (H * 0.64 - barH - 64) * 0.3);
+      if (!sprites.length) makeSprites();
+    }
+    function render() { if (still()) { qs = 0.62; draw(); return; } readScroll(); if (!primed) { qs = q; primed = true; } screensAt(qs); draw(); }
     function frame(now) {
       raf = 0;
-      if (!section.isConnected || section.closest('.is-leaving')) return;
-      const dt = last ? Math.min(0.1, (now - last) / 1000) : 1 / 60; last = now; // real time, even on a slow device
-      if (visible && !document.hidden && !still()) { step(dt); draw(); raf = requestAnimationFrame(frame); }
+      if (!section.isConnected || section.closest('.is-leaving') || still()) return;
+      const dt = last ? Math.min(0.1, (now - last) / 1000) : 1 / 60; last = now;
+      if (!frozen()) time += dt;
+      readScroll();
+      // The camera follows the scroll on a spring, so a flick glides to a stop instead of jumping.
+      const w = 8; qv += (w * w * (q - qs) - 2 * w * qv) * dt; qs += qv * dt;
+      if (Math.abs(q - qs) > 0.3) { qs = q - Math.sign(q - qs) * 0.3; qv = 0; }
+      const e = Math.min(1, dt * 4); wind.on += (wind.to - wind.on) * e; wind.sx += (wind.nx - wind.sx) * e * 0.5; wind.sy += (wind.ny - wind.sy) * e * 0.5;
+      screensAt(qs); draw();
+      if (visible && !document.hidden) raf = requestAnimationFrame(frame);
     }
     const kick = () => { if (!raf && visible && !still()) { last = 0; raf = requestAnimationFrame(frame); } };
-    const local = e => { const r = cv.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
-    let lx = null, ly = null, lt = 0;
-    section.addEventListener('pointermove', e => {
-      const [x, y] = local(e), t = e.timeStamp;
-      if (lx !== null && t > lt) { const kk = 1000 / Math.max(8, t - lt); wind.vx = wind.vx * 0.5 + (x - lx) * kk * 0.5; wind.vy = wind.vy * 0.5 + (y - ly) * kk * 0.5; }
-      wind.x = x; wind.y = y; wind.at = performance.now(); lx = x; ly = y; lt = t;
-    });
-    section.addEventListener('pointerleave', () => { lx = null; });
-    picks.forEach(b => b.addEventListener('click', () => { pick(Number(b.dataset.pourPick)); M()?.haptic?.(8); }));
-    const io = 'IntersectionObserver' in window ? new IntersectionObserver(([e]) => { visible = e.isIntersecting; if (visible) kick(); }) : null;
+    let auto = false, autoQ = 0, autoRaf = 0, autoLast = 0;
+    const CHAPTER_S = 6.3; // seconds per chapter at the average pace
+    const topAt = at => scrollY + section.getBoundingClientRect().top + at * (section.offsetHeight - H);
+    function autoStep(now) {
+      autoRaf = 0;
+      if (!auto) return;
+      if (!section.isConnected || section.closest('.is-leaving')) { setAuto(false); return; }
+      const dt = autoLast ? Math.min(0.1, (now - autoLast) / 1000) : 1 / 60; autoLast = now;
+      const x = ((autoQ * NC) % 1 + 1) % 1, pace = autoQ < 0 ? 2.2 : 0.4 + 1.2 * (1 - Math.sin(Math.PI * x));
+      autoQ = Math.min(1, autoQ + dt * pace / (NC * CHAPTER_S));
+      scrollTo({ top: topAt(autoQ), behavior: 'auto' });
+      if (autoQ >= 1) { setAuto(false); return; }
+      autoRaf = requestAnimationFrame(autoStep);
+    }
+    const interrupt = e => { // pressing Play itself (a click, Enter or Space) is not an interruption; anything else is
+      if (e.target?.closest?.('[data-story-play], [data-story-autoplay]') && (e.type !== 'keydown' || e.key === 'Enter' || e.key === ' ')) return;
+      setAuto(false);
+    };
+    const AUTO_STOPS = ['wheel', 'touchstart', 'pointerdown', 'keydown'];
+    function setAuto(on) {
+      if (on !== auto) {
+        auto = on;
+        if (on) { AUTO_STOPS.forEach(t => addEventListener(t, interrupt, { passive: true, capture: true })); autoLast = 0; autoRaf = requestAnimationFrame(autoStep); }
+        else { AUTO_STOPS.forEach(t => removeEventListener(t, interrupt, { capture: true })); if (autoRaf) cancelAnimationFrame(autoRaf); autoRaf = 0; }
+      }
+      playBtn.setAttribute('aria-pressed', String(auto));
+      playBtn.querySelector('span').textContent = auto ? 'Pause' : autoQ >= 0.995 || qRaw >= 0.995 ? 'Replay' : 'Play';
+    }
+    function play() {
+      if (still()) return;
+      readScroll();
+      if (qRaw >= 0.995) { autoQ = 0; scrollTo({ top: topAt(0), behavior: 'auto' }); } else autoQ = Math.max(-0.3, qRaw);
+      setAuto(true); M()?.haptic?.(8);
+    }
+    playBtn.addEventListener('click', () => (auto ? setAuto(false) : play()));
+    function goChapter(i, instant = false) {
+      setAuto(false);
+      const r = section.getBoundingClientRect(), span = r.height - H, target = i === NC - 1 ? 1 : (i + 0.5) / NC;
+      scrollTo({ top: scrollY + r.top + target * span, behavior: instant || still() ? 'auto' : 'smooth' });
+      M()?.haptic?.(6);
+    }
+    stage.addEventListener('pointermove', e => {
+      const r = cv.getBoundingClientRect(); wind.x = e.clientX - r.left; wind.y = e.clientY - r.top;
+      wind.to = e.target.closest('button') ? 0 : 1; wind.nx = wind.x / W - 0.5; wind.ny = wind.y / H - 0.5;
+    }, { passive: true });
+    const calm = () => { wind.to = 0; wind.nx = wind.ny = 0; };
+    stage.addEventListener('pointerleave', calm); stage.addEventListener('pointercancel', calm); // a finger that starts scrolling
+    rail.forEach(b => b.addEventListener('click', () => goChapter(Number(b.dataset.storyGo))));
+    const io = 'IntersectionObserver' in window ? new IntersectionObserver(([en]) => { visible = en.isIntersecting; if (visible) kick(); }) : null;
     io?.observe(section);
     let rt = 0;
-    const ro = 'ResizeObserver' in window ? new ResizeObserver(() => { clearTimeout(rt); rt = setTimeout(() => { layout(); draw(); }, 80); }) : null;
-    ro?.observe(cv);
-    layout(); draw();
+    const ro = 'ResizeObserver' in window ? new ResizeObserver(() => { clearTimeout(rt); rt = setTimeout(() => { layout(); render(); }, 80); }) : null;
+    ro?.observe(stage);
+    layout(); render();
     if (!io) { visible = true; kick(); }
     return {
-      stop() { if (raf) cancelAnimationFrame(raf); raf = 0; io?.disconnect(); ro?.disconnect(); },
-      redraw() { if (still()) { share = target; draw(); } else kick(); },
-      pick,
-      get stats() { return { frames, share, target, drops: drops.length, auto }; },
+      stop() { setAuto(false); if (raf) cancelAnimationFrame(raf); raf = 0; io?.disconnect(); ro?.disconnect(); },
+      play,
+      redraw() { layout(); if (still()) render(); else { primed = false; render(); kick(); } },
+      go: goChapter,
+      get covers() { return covers && !still(); },
+      get stats() { return { frames, progress: qs, chapter, open: keyOpen, particles: P.length, still: Boolean(isStill), auto }; },
     };
   }
 
@@ -361,22 +575,14 @@ const HOME = (() => {
           <div class="hero-kicker">${esc(cfg.kicker)}</div>
           <h1 class="home-title" aria-label="${esc(cfg.title)}"><span aria-hidden="true">${words}</span></h1>
           <p class="home-lead">${cfg.lead}</p>
-          <div class="home-cta">${cfg.cta}</div>
+          <div class="home-cta">${cfg.cta}<button type="button" class="btn btn-ghost home-watch" data-story-autoplay><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Watch the journey</span></button></div>
           ${sponsors()}
         </div>
         <div class="hive-hud"><span class="hive-label"><b data-hive-label></b><small data-hive-note></small></span>
           <button type="button" class="home-pause" data-home-pause aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="i-pause" d="M8 5v14M16 5v14"/><path class="i-play" d="M7 5l12 7-12 7z"/></svg><span>Pause</span></button></div>
         <p class="sr-only">An animated swarm of particles forms, in turn, an oil palm fruit, a palm oil droplet, a biodiesel pump, the blends B5, B7, B10, B20 and B30, and the names MPOB and UKM.</p>
       </section>
-      ${pourHtml(cfg)}
-      <section class="journey" aria-labelledby="journey-h">
-        <div class="journey-head"><h2 id="journey-h">Malaysia’s biodiesel journey</h2><p>From B5 in 2011 to B20 today. This studio tests when B30 is affordable. Tap a blend to see it form.</p></div>
-        <ol class="journey-row">${FORMS.map((f, i) => f.badge ? badge(f, i) : '').join('')}</ol>
-        <p class="journey-note">Years are when each blend was introduced; the roll-out was phased by region and sector.</p>
-      </section>
-      <nav class="home-cards" aria-label="Objectives">${cfg.cards.map((t, i) => `<button type="button" class="home-card c${i + 1}" data-tab="${t.tab}" style="--i:${i}">
-          <span class="home-card-ico" aria-hidden="true">${t.icon}</span><span class="home-card-k">${esc(t.label)}</span><strong>${esc(t.title)}</strong><small>${esc(t.meta)}</small>
-          <span class="home-card-go" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span></button>`).join('')}</nav>`;
+      ${storyHtml()}`;
   }
 
   /* ── Atmosphere: fog, honeycomb and the swarm on one full-screen layer behind the Home page ── */
@@ -402,11 +608,13 @@ const HOME = (() => {
     const html = document.documentElement;
     const layer = layerEl(), canvas = layer.querySelector('canvas'), ctx = canvas.getContext('2d');
     const labelEl = hive.querySelector('[data-hive-label]'), noteEl = hive.querySelector('[data-hive-note]');
-    const badges = [...root.querySelectorAll('.jb[data-form]')];
     const vtx = { x: 0, y: 0, zoom: 1, spin: 0, init: false };
-    const pourEl = root.querySelector('[data-pour]'), pour = pourEl ? pourField(pourEl) : null;
     let W = 0, H = 0, dpr = 1, N = 0, parts = [], wide = true, place = { x: 0, y: 0, s: 1 }, hexLayer = { light: null, dark: null }, hexes = [];
     let form = 1, phase = 'hold', clock = 0, time = 0, frames = 0, raf = 0, last = 0, paused = false, roam = false;
+    const storyEl = root.querySelector('[data-story]'), story = storyEl ? storyField(storyEl, () => paused) : null;
+    const watchBtn = root.querySelector('[data-story-autoplay]');
+    const syncWatch = () => { if (watchBtn) watchBtn.hidden = !story || Boolean(M()?.reduce); };
+    watchBtn?.addEventListener('click', () => story?.play()); syncWatch();
     let atm = 0, atmTo = 0; // 0 = light atmosphere, 1 = dark
     let mode = 'run', modeClock = 0, count = -1; // 'intro' → 'reveal' → 'run'
     const pointer = { x: -9999, y: -9999, on: false, nx: 0, ny: 0 };
@@ -415,10 +623,11 @@ const HOME = (() => {
 
     function readTheme() { atmTo = /dark/.test(getComputedStyle(html).colorScheme || '') ? 1 : 0; if (mode === 'run' && (still() || !frames)) atm = atmTo; }
     function layout() {
-      W = Math.max(1, html.clientWidth); H = Math.max(1, html.clientHeight); // the fixed layer, without scrollbars dpr = Math.min(2, window.devicePixelRatio || 1);
+      W = Math.max(1, html.clientWidth); H = Math.max(1, html.clientHeight); // the fixed layer, without scrollbars
+      dpr = Math.min(2, window.devicePixelRatio || 1);
       canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
       wide = W >= 860;
-      const want = Math.round(Math.min(2400, Math.max(800, W * H / 560)));
+      const want = Math.round(Math.min(3200, Math.max(wide ? 900 : 1100, W * H / 470))); // denser, now the forms draw bigger
       if (want !== N) {
         N = want;
         parts = Array.from({ length: N }, () => {
@@ -465,7 +674,6 @@ const HOME = (() => {
       const f = FORMS[i];
       labelEl.textContent = f.label; noteEl.textContent = f.note;
       if (!still() && mode === 'run') labelEl.parentElement.animate?.([{ transform: 'translateY(8px)', opacity: 0, filter: 'blur(4px)' }, { transform: 'none', opacity: 1, filter: 'none' }], { duration: 420, easing: 'cubic-bezier(.23,1,.32,1)' });
-      badges.forEach(b => { const on = Number(b.dataset.form) === i; b.classList.toggle('is-on', on); if (on) b.setAttribute('aria-current', 'true'); else b.removeAttribute('aria-current'); });
     }
     const burst = (cx, cy, power, radius = Infinity) => parts.forEach(p => {
       const dx = p.x - cx, dy = p.y - cy, d = Math.hypot(dx, dy) || 1;
@@ -629,7 +837,7 @@ const HOME = (() => {
       raf = 0;
       if (!hive.isConnected || hive.closest('.is-leaving')) return stop();
       const dt = last ? Math.min(0.05, (now - last) / 1000) : 1 / 60; last = now;
-      if (!document.hidden && !still()) { step(dt); draw(); }
+      if (!document.hidden && !still() && !story?.covers) { step(dt); draw(); } // rests while the journey fills the screen
       if (!still()) raf = requestAnimationFrame(frame);
     }
     const kick = () => { if (!raf && !still()) { last = 0; raf = requestAnimationFrame(frame); } };
@@ -637,16 +845,15 @@ const HOME = (() => {
 
     // Touch the hive: the pointer parts the swarm and the drifting bees circle it; a tap sends a ripple.
     const onMove = e => {
-      if (e.target.closest?.('.hive-copy, .hive-hud, .home-card, .jb, .topbar')) { pointer.on = false; } else { pointer.x = e.clientX; pointer.y = e.clientY; pointer.on = true; }
+      if (e.target.closest?.('.hive-copy, .hive-hud, .story, .topbar')) { pointer.on = false; } else { pointer.x = e.clientX; pointer.y = e.clientY; pointer.on = true; }
       pointer.nx = e.clientX / W - 0.5; pointer.ny = e.clientY / H - 0.5;
     };
     const onLeave = () => { pointer.on = false; };
     const onDown = e => {
-      if (mode !== 'run' || still() || e.target.closest?.('button, a, input, .topbar')) return;
+      if (mode !== 'run' || still() || e.target.closest?.('button, a, input, .topbar, .story')) return;
       burst(e.clientX, e.clientY, 950, 280); M()?.haptic?.(6);
     };
     addEventListener('pointermove', onMove, { passive: true }); document.addEventListener('pointerleave', onLeave); root.addEventListener('pointerdown', onDown);
-    badges.forEach(b => b.addEventListener('click', () => { go(Number(b.dataset.form)); hive.scrollIntoView?.({ behavior: still() ? 'auto' : 'smooth', block: 'start' }); }));
 
     const pauseBtn = hive.querySelector('[data-home-pause]');
     const setPaused = v => {
@@ -654,17 +861,6 @@ const HOME = (() => {
       if (v) settle(); else kick();
     };
     pauseBtn.addEventListener('click', () => setPaused(!paused));
-
-    // Objective cards lean toward a precise pointer (CSS springs the tilt back when it leaves).
-    root.querySelectorAll('.home-card').forEach(card => {
-      card.addEventListener('pointermove', e => {
-        if (e.pointerType !== 'mouse' || M()?.reduce) return;
-        const r = card.getBoundingClientRect();
-        card.style.setProperty('--tx', `${((e.clientX - r.left) / r.width - 0.5) * 10}deg`);
-        card.style.setProperty('--ty', `${(0.5 - (e.clientY - r.top) / r.height) * 8}deg`);
-      });
-      card.addEventListener('pointerleave', () => { card.style.removeProperty('--tx'); card.style.removeProperty('--ty'); });
-    });
 
     let rt = 0;
     const onResize = () => { clearTimeout(rt); rt = setTimeout(() => { layout(); if (still()) settle(); }, 100); };
@@ -675,27 +871,32 @@ const HOME = (() => {
     mo.observe(html, { attributes: true, attributeFilter: ['data-theme', 'style'] });
     const onVis = () => { if (!document.hidden) kick(); };
     document.addEventListener('visibilitychange', onVis);
-    M()?.watch?.(() => { if (current === api) { if (still()) settle(); else kick(); pour?.redraw(); } });
+    M()?.watch?.(() => { if (current === api) { if (still()) settle(); else kick(); story?.redraw(); syncWatch(); } });
 
     function stop() {
-      pour?.stop();
+      story?.stop(); sbwRo?.disconnect();
       if (raf) cancelAnimationFrame(raf); raf = 0;
       removeEventListener('pointermove', onMove); document.removeEventListener('pointerleave', onLeave);
       removeEventListener('resize', onResize); removeEventListener('scroll', onScroll);
       mo.disconnect(); document.removeEventListener('visibilitychange', onVis);
       ['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(t => removeEventListener(t, skipIntro));
       if (mode === 'intro') { html.classList.remove('hive-intro'); ui.el?.remove(); }
-      layer.classList.remove('is-on'); html.classList.remove('home-on');
+      layer.classList.remove('is-on'); html.classList.remove('home-on', 'home-night-end');
       if (current === api) current = null;
     }
 
+    const setSbw = () => html.style.setProperty('--sbw', `${Math.max(0, innerWidth - html.clientWidth)}px`);
+    const sbwRo = 'ResizeObserver' in window ? new ResizeObserver(setSbw) : null;
+    setSbw(); sbwRo?.observe(html);
     readTheme(); layout();
     layer.classList.add('is-on'); html.classList.add('home-on');
+    html.classList.toggle('home-night-end', Boolean(storyEl && !storyEl.nextElementSibling)); // the page ends in the journey's night
     if (!introShown && !still()) beginIntro();
     else { go(0, { scatter: false }); if (!still()) parts.forEach(p => { p.x = p.px = Math.random() * W; p.y = p.py = Math.random() * H; }); }
     if (still()) settle(); else kick();
     const api = { stop, go: id => go(typeof id === 'number' ? id : FORMS.findIndex(f => f.id === id)), pause: setPaused, skipIntro,
-      get form() { return FORMS[form].id; }, get frames() { return frames; }, get particles() { return N; }, get mode() { return mode; }, get roaming() { return roam; }, get introPlayed() { return introPlayed; }, get pour() { return pour?.stats; }, pick: pct => pour?.pick(pct) };
+      get form() { return FORMS[form].id; }, get frames() { return frames; }, get particles() { return N; }, get mode() { return mode; }, get roaming() { return roam; }, get introPlayed() { return introPlayed; },
+      get story() { return story?.stats; }, chapter: (i, instant) => story?.go(i, instant), play: () => story?.play() };
     current = api;
     return api;
   }
