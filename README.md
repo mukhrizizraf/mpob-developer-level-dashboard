@@ -18,7 +18,7 @@ that open like an iPhone notification stack.
 
 | Tab | Objective | Steps |
 |---|---|---|
-| Home | To decide, each month, whether Malaysia's biodiesel blend stays at B20 or moves to B30. | Living hive and vortex, the rule as an orbiting rosette, the biodiesel journey B5 to B30 |
+| Home | To decide, each month, whether Malaysia's biodiesel blend stays at B20 or moves to B30. | Living hive and vortex, a palm-to-pump blending scene (B20 or B30) with clickable rule steps, the biodiesel journey B5 to B30 |
 | OBJ1 · Price | To develop an automatic pricing mechanism for biodiesel (APM-Bio). | 6 |
 | OBJ2 · Shock test | To evaluate whether a Biodiesel Stabilisation Fund (BSF) can withstand price shocks. | 6 |
 | OBJ3 · Money sources | To determine the best sources of funding for the BSF. | 5 |

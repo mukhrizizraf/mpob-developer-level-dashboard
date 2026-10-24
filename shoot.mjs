@@ -68,7 +68,7 @@ const go = async (tab, step) => { await click(`.tab[data-tab="${tab}"]`); await 
 
 // 0 · Home: opens first, the hive keeps moving, forms the blends, pauses, and hands off to the objectives
 expect('Home opens first', await run('S.tab'), 'home');
-expect('The preloader plays on opening', await run(`document.documentElement.classList.contains('hive-intro')`), true);
+expect('The preloader plays on opening', await run('HOME.scene.introPlayed'), true);
 await sleep(1100); await shot('home-intro', false);
 await sleep(2600);
 expect('The preloader opens into the page by itself', await run(`document.documentElement.classList.contains('hive-intro')`), false);
@@ -89,10 +89,18 @@ expect('Scrolled past the hero, the swarm drifts over the page', await run('HOME
 await shot('home-scrolled', false);
 await run('window.scrollTo(0, 0)'); await sleep(900);
 expect('Back at the hero, the swarm re-forms', await run('HOME.scene.roaming'), false);
-await run(`document.querySelector('#page .engine').scrollIntoView({ block: 'center' })`); await sleep(500); const o0 = await run('HOME.scene.orbit'); await sleep(900);
-expect('The rule steps orbit the rosette', (await run('HOME.scene.orbit')) > o0, true);
-expect('Five steps orbit the rosette', await run(`document.querySelectorAll('#page .engine-node').length`), 5);
-await shot('home-engine', false);
+await run(`document.querySelector('#page .pour').scrollIntoView({ block: 'center' })`); await sleep(900);
+const pf0 = await run('HOME.scene.pour.frames'); await sleep(700);
+expect('The palm-to-pump scene keeps moving', (await run('HOME.scene.pour.frames')) > pf0, true);
+await shot('home-pour-b20', false);
+await click('#page [data-pour-pick="30"]');
+for (let i = 0; i < 80 && (await run('Math.round(HOME.scene.pour.share * 100)')) !== 30; i++) await sleep(100);
+expect('Choosing B30 fills the blend to 30%', await run('Math.round(HOME.scene.pour.share * 100)'), 30);
+expect('The title follows the blend', await text('#page [data-pour-blend]'), 'B30');
+expect('The share line follows the blend', await text('#page [data-pour-share]'), '30% palm biodiesel · 70% diesel');
+expect('A chosen blend stops the automatic switching', await run('HOME.scene.pour.auto'), false);
+await shot('home-pour-b30', false);
+expect('Five clickable steps under the scene', await run(`document.querySelectorAll('#page .pour-index button[data-tab][data-step]').length`), 5);
 await run('window.scrollTo(0, 0)'); await sleep(900);
 expect('Sponsors shown in the hero', await run(`document.querySelectorAll('#page .hive-sponsors img, #page .hive-sponsors .sp-word').length`), 2);
 await click('[data-home-pause]'); await sleep(150); const fp = await run('HOME.scene.frames'); await sleep(500);
@@ -103,6 +111,10 @@ expect('Home cards cover the objectives', await run(`[...document.querySelectorA
 await click('#page .home-card[data-tab="obj2"]'); await sleep(1200);
 expect('A Home card opens its objective', await run('S.tab'), 'obj2');
 expect('Home stops its loop after leaving', await run('HOME.scene'), null);
+await go('home'); await sleep(1500);
+await run(`document.querySelector('#page .pour').scrollIntoView({ block: 'center' })`); await sleep(500);
+await click('#page .pour-index button[data-tab="obj4"][data-step="1"]'); await sleep(1200);
+expect('A step under the scene opens that exact step', await run('S.tab + ":" + S.step.obj4'), 'obj4:1');
 
 // 1 · Tour every step
 const tabs = { obj1: 6, obj2: 6, obj3: 5, obj4: 7, decision: 4 };
@@ -284,6 +296,7 @@ for (const width of [375, 320]) {
   expect(`${width}px no horizontal page scroll`, await run('document.documentElement.scrollWidth <= window.innerWidth'), true);
   await go('decision', 3); await sleep(600); await shot(`mobile-${width}-decision`);
   await go('home'); await sleep(900); await shot(`mobile-${width}-home`);
+  expect(`${width}px scene labels stay on one line`, await run(`[...document.querySelectorAll('#page .pour-top > span')].every(s => s.getClientRects().length === 1 && s.offsetHeight < 20)`), true);
   expect(`${width}px home has no horizontal scroll`, await run('document.documentElement.scrollWidth <= window.innerWidth'), true);
   expect(`${width}px hive sits above the words`, await run(`(() => { const c = document.querySelector('#page .hive-anchor').getBoundingClientRect(), t = document.querySelector('#page .home-title').getBoundingClientRect(); return c.bottom <= t.top + 1; })()`), true);
 }
