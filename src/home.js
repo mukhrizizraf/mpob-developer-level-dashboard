@@ -131,6 +131,15 @@ const HOME = (() => {
       : `<span class="sp-word" title="${name}"><b>${short}</b><small>${name}</small></span>`;
     return `<div class="hive-sponsors"><span class="sp-k">Supported by</span><span class="sp-marks">${mark('mpob', 'MPOB', 'Malaysian Palm Oil Board')}<i aria-hidden="true"></i>${mark('ukm', 'UKM', 'Universiti Kebangsaan Malaysia')}</span></div>`;
   }
+  // The rule as five orbiting steps (Atmospherik's sense, perceive, decide, learn, deliver, told as the mandate rule).
+  const NODES = [['Price gap', 'Biodiesel cheaper than diesel?'], ['Fund', 'Above its safety limit?'], ['Approval', 'Is B30 approved?'], ['Decide', 'All three must pass'], ['Blend', 'B30, or stay at B20']];
+  function rosette() {
+    const loops = Array.from({ length: 7 }, (_, i) => `<ellipse rx="52" ry="18" transform="rotate(${(i * 180 / 7).toFixed(2)})"/>`).join('');
+    return `<svg class="ro" viewBox="-70 -70 140 140" aria-hidden="true"><defs>
+      <linearGradient id="ro-g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffd65a"/><stop offset=".5" stop-color="#6cc04a"/><stop offset="1" stop-color="#1eaebf"/></linearGradient>
+      <radialGradient id="ro-core"><stop offset="0" stop-color="#fffbe6"/><stop offset=".4" stop-color="#ffd65a" stop-opacity=".95"/><stop offset="1" stop-color="#ffd65a" stop-opacity="0"/></radialGradient></defs>
+      <circle class="ro-ring" r="64"/><g class="ro-a">${loops}</g><g class="ro-b">${loops}</g><circle r="18" fill="url(#ro-core)"/></svg>`;
+  }
   function html(cfg) {
     const words = cfg.title.split(' ').map((w, i) => `<span class="hw" style="--w:${i}">${esc(w)}</span>`).join(' ');
     return `<section class="hive" data-home-hive>
@@ -145,6 +154,17 @@ const HOME = (() => {
         <div class="hive-hud"><span class="hive-label"><b data-hive-label></b><small data-hive-note></small></span>
           <button type="button" class="home-pause" data-home-pause aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="i-pause" d="M8 5v14M16 5v14"/><path class="i-play" d="M7 5l12 7-12 7z"/></svg><span>Pause</span></button></div>
         <p class="sr-only">An animated swarm of particles forms, in turn, an oil palm fruit, a palm oil droplet, a biodiesel pump, the blends B5, B7, B10, B20 and B30, and the names MPOB and UKM.</p>
+      </section>
+      <section class="engine" aria-labelledby="engine-h">
+        <div class="engine-copy"><div class="hero-kicker">How the studio decides</div>
+          <h2 id="engine-h">One rule decides the blend, every month.</h2>
+          <p>Three checks feed one decision. When biodiesel is cheaper than diesel, the fund is above its safety limit and B30 is approved, the blend moves to B30. Otherwise it stays at B20.</p></div>
+        <div class="engine-stage" data-engine-stage aria-hidden="true">
+          <svg class="engine-lines" data-engine-lines></svg>
+          <div class="engine-orb">${rosette()}</div>
+          ${NODES.map((n, i) => `<span class="engine-node" data-node="${i}"><b>${n[0]}</b><small>${n[1]}</small></span>`).join('')}
+        </div>
+        <ol class="sr-only">${NODES.map(n => `<li>${n[0]}: ${n[1]}</li>`).join('')}</ol>
       </section>
       <section class="journey" aria-labelledby="journey-h">
         <div class="journey-head"><h2 id="journey-h">Malaysia’s biodiesel journey</h2><p>From B5 in 2011 to B20 today. This studio tests when B30 is affordable. Tap a blend to see it form.</p></div>
@@ -180,6 +200,10 @@ const HOME = (() => {
     const layer = layerEl(), canvas = layer.querySelector('canvas'), ctx = canvas.getContext('2d');
     const labelEl = hive.querySelector('[data-hive-label]'), noteEl = hive.querySelector('[data-hive-note]');
     const badges = [...root.querySelectorAll('.jb[data-form]')];
+    const stage = root.querySelector('[data-engine-stage]'), linesEl = root.querySelector('[data-engine-lines]');
+    const nodes = [...root.querySelectorAll('.engine-node')], roA = root.querySelector('.ro-a'), roB = root.querySelector('.ro-b');
+    const vtx = { x: 0, y: 0, zoom: 1, spin: 0, init: false };
+    let orbit = 0, engineOn = false;
     let W = 0, H = 0, dpr = 1, N = 0, parts = [], wide = true, place = { x: 0, y: 0, s: 1 }, hexLayer = { light: null, dark: null }, hexes = [];
     let form = 1, phase = 'hold', clock = 0, time = 0, frames = 0, raf = 0, last = 0, paused = false, roam = false;
     let atm = 0, atmTo = 0; // 0 = light atmosphere, 1 = dark
@@ -200,6 +224,7 @@ const HOME = (() => {
           const z = 0.45 + Math.random() * 1.0;
           return { x: Math.random() * W, y: Math.random() * H, vx: 0, vy: 0, px: 0, py: 0, t: -1, z,
             r: 90, g: 190, b: 120, k: 0.6 + Math.random() * 0.8, seed: Math.random() * 100, size: 0.7 + Math.random() * 1.1,
+            vr: 0.05 + 0.95 * Math.sqrt(Math.random()), arm: Math.floor(Math.random() * 3), th: Math.random() * 6.283, jit: (Math.random() - 0.5) * 0.55,
             hx: Math.random(), hy: Math.random(), ang: Math.random() * 6.283, orb: 14 + Math.random() * 70, w: (Math.random() < 0.5 ? -1 : 1) * (0.25 + Math.random() * 0.6) };
         });
         parts.forEach(p => { p.px = p.x; p.py = p.y; });
@@ -212,7 +237,7 @@ const HOME = (() => {
       for (const key of ['light', 'dark']) {
         const c = document.createElement('canvas'); c.width = canvas.width; c.height = canvas.height;
         const g = c.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.lineWidth = 1;
-        const [r, gg, b] = ATM[key].hex; g.strokeStyle = `rgba(${r},${gg},${b},${key === 'dark' ? 0.07 : 0.08})`;
+        const [r, gg, b] = ATM[key].hex; g.strokeStyle = `rgba(${r},${gg},${b},${key === 'dark' ? 0.045 : 0.055})`;
         for (const [x, y, s] of hexes) { hexPath(g, x, y, s); g.stroke(); }
         hexLayer[key] = c;
       }
@@ -257,8 +282,9 @@ const HOME = (() => {
 
     // Intro: the fog gathers into one drop of palm oil while the count runs, then it bursts open into the page.
     const ui = { el: null, num: null };
+    let introStart = 0;
     function beginIntro() {
-      mode = 'intro'; modeClock = 0; atm = 1;
+      mode = 'intro'; modeClock = 0; atm = 1; introStart = performance.now();
       html.classList.add('hive-intro');
       ui.el = document.createElement('div'); ui.el.className = 'hive-intro-ui'; ui.el.setAttribute('aria-hidden', 'true');
       ui.el.innerHTML = `<div class="hi-top"><span>MPOB <i>×</i> UKM</span><span>Biodiesel mandate studio</span></div>
@@ -281,13 +307,35 @@ const HOME = (() => {
       html.classList.remove('hive-intro');
       const page = document.getElementById('page');
       page?.animate?.([{ clipPath: 'circle(0% at 50% 46%)', opacity: 0.2 }, { clipPath: 'circle(150% at 50% 46%)', opacity: 1 }], { duration: 1100, easing: 'cubic-bezier(.23,1,.32,1)' });
-      setTimeout(() => { if (current === api) { go(0, { scatter: false }); } }, 650);
+      setTimeout(() => { if (current === api && FORMS[form].id === 'drop') go(0, { scatter: false }); }, 650); // unless a blend was already chosen
     }
 
+    let stageBox = { w: 0, h: 0 };
+    function updateEngine(dt) {
+      if (!stage || !nodes.length) return;
+      if (dt && !engineOn) return; // nothing to move while it is off screen
+      orbit += dt * 0.16;
+      const w = stage.clientWidth, h = stage.clientHeight;
+      if (w !== stageBox.w || h !== stageBox.h) { stageBox = { w, h }; linesEl.setAttribute('viewBox', `0 0 ${w} ${h}`); }
+      const cx = w / 2, cy = h / 2, rx = Math.min(w * 0.42, 330), ry = Math.min(h * 0.4, 190);
+      roA?.setAttribute('transform', `rotate(${(orbit * 60).toFixed(2)})`);
+      roB?.setAttribute('transform', `rotate(${(-orbit * 90).toFixed(2)}) scale(${(0.6 + 0.04 * Math.sin(time * 1.3)).toFixed(3)})`);
+      let d = '';
+      nodes.forEach((el, i) => {
+        const a = orbit + i * Math.PI * 2 / nodes.length - Math.PI / 2, x = cx + Math.cos(a) * rx, y = cy + Math.sin(a) * ry;
+        el.style.transform = `translate(${(x - el.offsetWidth / 2).toFixed(1)}px, ${(y - el.offsetHeight / 2).toFixed(1)}px)`;
+        el.style.zIndex = String(Math.round(10 + Math.sin(a) * 5));
+        const mx = (cx + x) / 2 - Math.sin(a) * 26, my = (cy + y) / 2 + Math.cos(a) * 26;
+        d += `M${cx.toFixed(1)} ${cy.toFixed(1)}Q${mx.toFixed(1)} ${my.toFixed(1)} ${x.toFixed(1)} ${y.toFixed(1)}`;
+      });
+      if (!linesEl.firstChild) linesEl.innerHTML = '<path class="el-glow"/><path class="el-line"/>';
+      linesEl.querySelectorAll('path').forEach(p => p.setAttribute('d', d));
+    }
     function step(dt) {
       time += dt; clock += dt; modeClock += dt;
       if (mode === 'intro') {
-        const pr = Math.min(1, modeClock / INTRO), c = Math.round(100 * (1 - (1 - pr) ** 2.2));
+        // Real time, not animation time: a slow device never keeps anyone waiting at the preloader.
+        const pr = Math.min(1, (performance.now() - introStart) / 1000 / INTRO), c = Math.round(100 * (1 - (1 - pr) ** 2.2));
         if (c !== count) { count = c; if (ui.num) ui.num.textContent = String(c); }
         if (pr >= 1) reveal();
       } else if (mode === 'reveal') {
@@ -301,7 +349,20 @@ const HOME = (() => {
       placeForm();
       const gather = mode === 'intro' ? 0.35 + 0.85 * Math.min(1, modeClock / (INTRO * 0.5)) : 1;
       const swirl = mode === 'intro' ? 0.6 : clock < 0 ? 1 : Math.max(0, 1 - clock / 0.9);
-      const sy = scrollY, roamCol = ATM.dark.roam.map((v, i) => mix(ATM.light.roam[i], v, atm));
+      const sy = scrollY;
+      // The vortex swirls around what the page is showing: the form in the hero, the rosette in "How the studio decides".
+      const er = stage?.getBoundingClientRect();
+      engineOn = Boolean(er) && er.top < H * 0.78 && er.bottom > H * 0.22;
+      const tcx = mode === 'intro' ? W / 2 : engineOn ? er.left + er.width / 2 : roam ? W * 0.5 : place.x + FW * place.s / 2;
+      const tcy = mode === 'intro' ? H * 0.46 : engineOn ? er.top + er.height / 2 : roam ? H * 0.5 : place.y + FH * place.s / 2;
+      if (!vtx.init) { vtx.x = tcx; vtx.y = tcy; vtx.init = true; }
+      const ve = Math.min(1, dt * 2); vtx.x += (tcx - vtx.x) * ve; vtx.y += (tcy - vtx.y) * ve;
+      const prog = Math.min(1, sy / Math.max(1, document.documentElement.scrollHeight - H));
+      vtx.zoom = mix(vtx.zoom, (engineOn ? 0.62 : 1) * (0.9 + prog * 0.45), ve);
+      vtx.spin = mix(vtx.spin, prog * 2.6, ve); // scrolling turns the whole vortex
+      const Rm = Math.hypot(W, H) * 0.56 * vtx.zoom;
+      const inner = [mix(224, 255, atm), mix(161, 214, atm), mix(14, 90, atm)], outer = [mix(31, 30, atm), mix(138, 174, atm), mix(92, 191, atm)];
+      updateEngine(dt);
       for (const p of parts) {
         p.px = p.x; p.py = p.y;
         let tx, ty, k;
@@ -310,17 +371,18 @@ const HOME = (() => {
           const q = cur[p.t]; tx = place.x + q[0] * place.s; ty = place.y + q[1] * place.s; k = 7 * p.k * gather;
           const e = Math.min(1, dt * 3); p.r += (q[2] - p.r) * e; p.g += (q[3] - p.g) * e; p.b += (q[4] - p.b) * e;
         } else {
-          // Atmosphere: every drifting particle has its own home on the screen, with depth parallax as the page scrolls.
-          p.ang += p.w * dt;
-          const hy = ((p.hy * H - sy * 0.18 * p.z) % H + H) % H;
-          tx = p.hx * W + Math.cos(p.ang) * p.orb + pointer.nx * 18 * p.z; ty = hy + Math.sin(p.ang * 1.3) * p.orb * 0.7 + pointer.ny * 12 * p.z;
-          if (Math.abs(ty - p.y) > H * 0.5) { p.y = p.py = ty; p.x = p.px = tx; }
-          k = 1.2 * p.k;
-          const e = Math.min(1, dt * 1.2); p.r += (roamCol[0] - p.r) * e; p.g += (roamCol[1] - p.g) * e; p.b += (roamCol[2] - p.b) * e;
+          // The vortex: every free particle orbits on one of three spiral arms, tilted like a galaxy seen at an angle;
+          // inner particles turn faster and glow gold, outer ones cool to teal.
+          p.th += (0.08 + 0.5 * (1 - p.vr) ** 1.5) * dt;
+          const a = p.th + p.arm * 2.094 + 2.7 * Math.log(1 + p.vr * 5) + vtx.spin + p.jit, rr = p.vr * Rm;
+          tx = vtx.x + Math.cos(a) * rr + pointer.nx * 18 * p.z; ty = vtx.y + Math.sin(a) * rr * 0.58 + pointer.ny * 12 * p.z;
+          k = 1.7 * p.k;
+          const e = Math.min(1, dt * 1.5), c0 = mix(inner[0], outer[0], p.vr), c1 = mix(inner[1], outer[1], p.vr), c2 = mix(inner[2], outer[2], p.vr);
+          p.r += (c0 - p.r) * e; p.g += (c1 - p.g) * e; p.b += (c2 - p.b) * e;
         }
         let ax = (tx - p.x) * k * k * 0.5, ay = (ty - p.y) * k * k * 0.5;
         // Bee-like turbulence: strongest while the swarm travels, a soft shimmer once it holds a form.
-        const n = 150 * (0.07 + swirl) + (formed ? 0 : 110);
+        const n = 150 * (0.07 + swirl) + (formed ? 0 : 40);
         ax += n * Math.sin(p.y * 0.012 + time * 1.7 + p.seed); ay += n * Math.cos(p.x * 0.011 - time * 1.4 + p.seed);
         if (pointer.on) {
           const dx = p.x - pointer.x, dy = p.y - pointer.y, d2 = dx * dx + dy * dy, R = wide ? 120 : 84;
@@ -348,6 +410,14 @@ const HOME = (() => {
           gr.addColorStop(0, `rgba(${r},${g},${b},${(a * wgt).toFixed(3)})`); gr.addColorStop(1, `rgba(${r},${g},${b},0)`);
           ctx.fillStyle = gr; ctx.fillRect(0, 0, W, H);
         }
+      }
+      // The vortex core: a soft glow where the swirl turns.
+      if (vtx.init) {
+        const cr = Math.min(W, H) * 0.42 * vtx.zoom, gr = ctx.createRadialGradient(vtx.x, vtx.y, 0, vtx.x, vtx.y, cr);
+        gr.addColorStop(0, atm > 0.5 ? `rgba(255,214,90,${(0.22 * atm).toFixed(3)})` : `rgba(155,225,93,${(0.32 * (1 - atm)).toFixed(3)})`);
+        gr.addColorStop(0.45, atm > 0.5 ? `rgba(30,174,191,${(0.12 * atm).toFixed(3)})` : `rgba(30,174,191,${(0.1 * (1 - atm)).toFixed(3)})`);
+        gr.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = gr; ctx.fillRect(0, 0, W, H);
       }
       // Honeycomb, lit where the swarm gathers and where the pointer is.
       ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -386,7 +456,7 @@ const HOME = (() => {
       if (!still()) raf = requestAnimationFrame(frame);
     }
     const kick = () => { if (!raf && !still()) { last = 0; raf = requestAnimationFrame(frame); } };
-    function settle() { atm = atmTo; settlePoints(); draw(); }
+    function settle() { atm = atmTo; settlePoints(); updateEngine(0); draw(); }
 
     // Touch the hive: the pointer parts the swarm and the drifting bees circle it; a tap sends a ripple.
     const onMove = e => {
@@ -447,7 +517,7 @@ const HOME = (() => {
     else { go(0, { scatter: false }); if (!still()) parts.forEach(p => { p.x = p.px = Math.random() * W; p.y = p.py = Math.random() * H; }); }
     if (still()) settle(); else kick();
     const api = { stop, go: id => go(typeof id === 'number' ? id : FORMS.findIndex(f => f.id === id)), pause: setPaused, skipIntro,
-      get form() { return FORMS[form].id; }, get frames() { return frames; }, get particles() { return N; }, get mode() { return mode; }, get roaming() { return roam; } };
+      get form() { return FORMS[form].id; }, get frames() { return frames; }, get particles() { return N; }, get mode() { return mode; }, get roaming() { return roam; }, get orbit() { return orbit; } };
     current = api;
     return api;
   }

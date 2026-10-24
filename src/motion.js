@@ -131,6 +131,11 @@ const MOTION = (() => {
     const end = event => {
       if (!g || event.pointerId !== g.id) return;
       const done = g; g = null;
+      // A flick on a busy frame can arrive whole, with no move before the release: judge it by the release point.
+      if (!done.axis && event.type === 'pointerup' && Number.isFinite(event.clientX)) {
+        const dx = event.clientX - done.x0, dy = event.clientY - done.y0;
+        if (Math.hypot(dx, dy) >= 10 && Math.abs(dx) > Math.abs(dy) * 1.2) { done.axis = 'x'; done.offset = 0; }
+      }
       if (done.axis !== 'x') return;
       done.el.classList.remove('is-dragging');
       // Slow frames coalesce pointer moves, so the release point itself counts as the last sample.

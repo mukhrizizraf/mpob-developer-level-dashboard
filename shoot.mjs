@@ -49,7 +49,10 @@ await size(1440);
 await send('Page.navigate', { url: pathToFileURL(page).href });
 await sleep(1500);
 await run(`localStorage.clear(); history.replaceState(null, '', location.pathname); true`);
-await send('Page.reload'); await sleep(1600);
+await send('Page.reload');
+// Wait for the app itself, not a fixed delay: a large page on a slow machine takes longer to start.
+for (let i = 0; i < 100 && !(await run("typeof S !== 'undefined' && document.readyState === 'complete'")); i++) await sleep(100);
+await sleep(200);
 
 const click = sel => run(`(() => { const el = document.querySelector(${JSON.stringify(sel)}); if (!el) return 'missing ' + ${JSON.stringify(sel)}; el.click(); return 'ok'; })()`);
 const text = sel => run(`document.querySelector(${JSON.stringify(sel)})?.textContent?.trim()`);
@@ -86,6 +89,11 @@ expect('Scrolled past the hero, the swarm drifts over the page', await run('HOME
 await shot('home-scrolled', false);
 await run('window.scrollTo(0, 0)'); await sleep(900);
 expect('Back at the hero, the swarm re-forms', await run('HOME.scene.roaming'), false);
+await run(`document.querySelector('#page .engine').scrollIntoView({ block: 'center' })`); await sleep(500); const o0 = await run('HOME.scene.orbit'); await sleep(900);
+expect('The rule steps orbit the rosette', (await run('HOME.scene.orbit')) > o0, true);
+expect('Five steps orbit the rosette', await run(`document.querySelectorAll('#page .engine-node').length`), 5);
+await shot('home-engine', false);
+await run('window.scrollTo(0, 0)'); await sleep(900);
 expect('Sponsors shown in the hero', await run(`document.querySelectorAll('#page .hive-sponsors img, #page .hive-sponsors .sp-word').length`), 2);
 await click('[data-home-pause]'); await sleep(150); const fp = await run('HOME.scene.frames'); await sleep(500);
 expect('Pause stops the hive', await run('HOME.scene.frames'), fp);
@@ -185,11 +193,14 @@ expect('CR11 stage is not a live region', await run(`document.querySelectorAll('
 
 // 10 · Swipe: drag the step card left to advance, with momentum
 await go('obj1', 0);
+for (let i = 0; i < 40 && await run("document.getElementById('fold-layer').children.length + document.querySelectorAll('.stage.is-leaving').length"); i++) await sleep(100); // start from a settled page
 const box = await run(`(() => { const r = document.querySelector('.stage:not(.is-leaving) .stage-head').getBoundingClientRect(); return [r.left + r.width * 0.7, r.top + r.height / 2]; })()`);
+await run("window._sw = []; ['pointerdown', 'pointermove', 'pointerup', 'pointercancel'].forEach(t => document.addEventListener(t, e => window._sw.push(t[7] + Math.round(e.clientX)), { capture: true }))");
 await send('Input.dispatchMouseEvent', { type: 'mousePressed', x: box[0], y: box[1], button: 'left', clickCount: 1 });
 for (let k = 1; k <= 8; k++) { await send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: box[0] - k * 40, y: box[1] + 2, button: 'left', buttons: 1 }); await sleep(16); }
 await send('Input.dispatchMouseEvent', { type: 'mouseReleased', x: box[0] - 320, y: box[1] + 2, button: 'left', clickCount: 1 }); await sleep(900);
 expect('Swipe left advances one step', await run('S.step.obj1'), 1);
+if (checks.at(-1).startsWith('FAIL')) checks.push('INFO swipe events ' + await run('window._sw.join(" ")') + ' fold ' + await run("document.getElementById('fold-layer').children.length"));
 await shot('obj1-after-swipe', false);
 
 // Developer · CR07: a collapsed card's inputs are not reachable

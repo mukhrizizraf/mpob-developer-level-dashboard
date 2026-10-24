@@ -521,6 +521,48 @@ table.compare tbody td:last-child { border-radius: 0 calc(18px * var(--rk)) calc
 .home-pause:active { scale: .96; }
 .home-pause:focus-visible, .jb:focus-visible { outline: 3px solid color-mix(in srgb, var(--s1) 60%, transparent); outline-offset: 2px; }
 
+/* How the studio decides: a glowing palm-oil rosette at the vortex's eye, the rule's five steps orbiting it */
+.engine { position: relative; display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.4fr); align-items: center; gap: 24px; min-height: min(82vh, 720px); margin: 10px 0; }
+.engine-copy h2 { font-size: 34px; line-height: 1.15; letter-spacing: -.022em; margin: 14px 0 0; text-wrap: balance; }
+.engine-copy p { font-size: 17px; color: var(--ink-2); margin: 12px 0 0; text-wrap: pretty; }
+.engine-copy .hero-kicker { box-shadow: none; background: color-mix(in srgb, var(--card) 70%, transparent); }
+.engine-copy { position: relative; }
+.engine-copy::before { content: ""; position: absolute; z-index: -1; inset: -24% -30%; background: radial-gradient(closest-side, var(--hive-a) 50%, transparent); opacity: .85; pointer-events: none; }
+.engine-stage { position: relative; height: min(62vh, 520px); min-height: 380px; }
+.engine-lines { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.engine-lines path { fill: none; stroke-linecap: round; }
+.engine-lines .el-line { stroke: color-mix(in srgb, #6cc04a 70%, transparent); stroke-width: 1.2; stroke-dasharray: 2 7; animation: elFlow 3s linear infinite; }
+.engine-lines .el-glow { stroke: color-mix(in srgb, #9be15d 26%, transparent); stroke-width: 6; filter: blur(3px); }
+@keyframes elFlow { to { stroke-dashoffset: -36; } }
+.engine-orb { position: absolute; left: 50%; top: 50%; width: min(240px, 46%); aspect-ratio: 1; translate: -50% -50%; filter: drop-shadow(0 0 18px rgba(155,225,93,.55)) drop-shadow(0 0 42px rgba(255,214,90,.35)); }
+.engine-orb .ro { width: 100%; height: 100%; overflow: visible; }
+.ro ellipse { fill: none; stroke: url(#ro-g); stroke-width: 1.5; }
+.ro-b ellipse { stroke-width: 1.1; opacity: .8; }
+.ro-ring { fill: none; stroke: color-mix(in srgb, #8fd8c0 60%, transparent); stroke-width: .8; stroke-dasharray: 1 5; }
+.engine-orb::after { content: ""; position: absolute; inset: 22%; border-radius: 50%; background: radial-gradient(circle, rgba(255,214,90,.32), transparent 70%); animation: orbBreath 3.2s ease-in-out infinite; }
+@keyframes orbBreath { 50% { scale: 1.25; opacity: .6; } }
+.engine-node { position: absolute; left: 0; top: 0; display: grid; gap: 1px; padding: 8px 14px; border-radius: calc(14px * var(--rk)); white-space: nowrap; will-change: transform;
+  background: color-mix(in srgb, var(--card) 66%, transparent); backdrop-filter: blur(12px) saturate(150%); -webkit-backdrop-filter: blur(12px) saturate(150%);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, #6cc04a 40%, transparent), 0 8px 24px rgba(20,113,58,.14); }
+.engine-node b { font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--ink); }
+.engine-node small { font-size: 12px; color: var(--muted); }
+.engine-node[data-node="3"] b, .engine-node[data-node="4"] b { color: #1f8a3c; }
+:root[data-theme="volt"] .engine-node[data-node="3"] b, :root[data-theme="volt"] .engine-node[data-node="4"] b,
+:root[data-theme="mono"] .engine-node[data-node="3"] b, :root[data-theme="mono"] .engine-node[data-node="4"] b { color: #9be15d; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme]) .engine-node[data-node="3"] b, :root:not([data-theme]) .engine-node[data-node="4"] b { color: #9be15d; } }
+@media (max-width: 860px) {
+  .engine { grid-template-columns: minmax(0, 1fr); min-height: 0; gap: 8px; }
+  .engine-copy { padding: 18px; border-radius: calc(22px * var(--rk)); background: color-mix(in srgb, var(--card) 62%, transparent); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+  .engine-copy::before { display: none; }
+  .engine-copy h2 { font-size: 26px; }
+  .engine-stage { height: 400px; min-height: 0; }
+  .engine-node { padding: 6px 10px; } .engine-node small { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .engine-lines .el-line, .engine-orb::after { animation: none; } }
+:root[data-theme="volt"] .engine-node { border-radius: 3px; }
+:root[data-theme="mono"] .engine-node b { font-family: var(--dot-font); }
+@media print { .engine-stage { display: none; } .engine { min-height: 0; } }
+
 /* The journey: brush-stroke rings that turn slowly; the one the swarm is forming lifts and glows. */
 .journey { margin-top: 18px; padding: 22px 24px 18px; border-radius: var(--r-card); background: color-mix(in srgb, var(--card) 58%, transparent);
   backdrop-filter: blur(16px) saturate(140%); -webkit-backdrop-filter: blur(16px) saturate(140%); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--line) 60%, transparent); }
