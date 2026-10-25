@@ -474,6 +474,7 @@ const HOME = (() => {
     light: { base: [238, 247, 240], fog: [[155, 225, 93, 0.34], [30, 174, 191, 0.2], [108, 192, 74, 0.3], [245, 184, 28, 0.16], [143, 216, 192, 0.3]], hex: [20, 113, 58] },
     dark: { base: [4, 17, 10], fog: [[47, 158, 68, 0.42], [30, 174, 191, 0.26], [245, 184, 28, 0.16], [20, 113, 58, 0.5], [143, 216, 192, 0.16]], hex: [160, 230, 180] },
   };
+  const LIGHT0 = ATM.light; // Classic's light atmosphere; a look can replace it (--hive-base, --hive-fog, --hive-hex)
   function layerEl() {
     let l = document.getElementById('hive-layer');
     if (!l) { l = document.createElement('div'); l.id = 'hive-layer'; l.className = 'hive-layer'; l.setAttribute('aria-hidden', 'true'); l.innerHTML = '<canvas></canvas>'; document.body.prepend(l); }
@@ -545,7 +546,19 @@ const HOME = (() => {
     toggle.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path class="i-pause" d="M9 6v12M15 6v12"/><path class="i-play" d="M8 5.5l11 6.5-11 6.5z"/></svg><span class="sr-only">Pause the swarm</span>';
     bar?.insertBefore(toggle, bar.querySelector('#theme'));
 
-    function readTheme() { atmTo = /dark/.test(getComputedStyle(html).colorScheme || '') ? 1 : 0; if (still() || !frames) atm = atmTo; }
+    function readTheme() {
+      const cs = getComputedStyle(html);
+      atmTo = /dark/.test(cs.colorScheme || '') ? 1 : 0;
+      // A light look may bring its own ground: --hive-base "r g b", --hive-fog five "r g b a" groups, --hive-hex "r g b".
+      const nums = name => cs.getPropertyValue(name).trim().split(/[\s,]+/).filter(Boolean).map(Number).filter(n => !Number.isNaN(n));
+      const base = nums('--hive-base'), fog = nums('--hive-fog'), hex = nums('--hive-hex');
+      const next = { base: base.length === 3 ? base : LIGHT0.base, hex: hex.length === 3 ? hex : LIGHT0.hex,
+        fog: fog.length === 20 ? [0, 1, 2, 3, 4].map(i => fog.slice(i * 4, i * 4 + 4)) : LIGHT0.fog };
+      const redraw = next.hex.join() !== ATM.light.hex.join();
+      ATM.light = next;
+      if (redraw && W) buildHex();
+      if (still() || !frames) atm = atmTo;
+    }
     function layout() {
       W = Math.max(1, html.clientWidth); H = Math.max(1, html.clientHeight); // the fixed layer, without scrollbars
       dpr = Math.min(2, window.devicePixelRatio || 1);
@@ -563,7 +576,10 @@ const HOME = (() => {
         parts.forEach(p => { p.px = p.x; p.py = p.y; });
       }
       writeWords(false);
-      // Honeycomb drawn once per size and look, then blitted every frame.
+      buildHex();
+    }
+    // Honeycomb drawn once per size and look, then blitted every frame.
+    function buildHex() {
       const hs = wide ? 36 : 26, hw = hs * Math.sqrt(3);
       hexes = [];
       for (let row = -1, y = 0; y < H + hs * 2; row++, y = row * hs * 1.5) for (let col = -1, x = 0; x < W + hw; col++, x = col * hw + (row % 2 ? hw / 2 : 0)) hexes.push([x, y, hs]);
@@ -698,7 +714,7 @@ const HOME = (() => {
       // The vortex core: a soft glow where the swirl turns, in the step colour.
       if (vtx.init) {
         const cr = Math.min(W, H) * 0.42 * vtx.zoom, gr = ctx.createRadialGradient(vtx.x, vtx.y, 0, vtx.x, vtx.y, cr);
-        const base = atm > 0.5 ? [255, 214, 90] : [155, 225, 93], c = base.map((v, k) => Math.round(mix(v, tint.c[k], tint.amt)));
+        const base = atm > 0.5 ? [255, 214, 90] : ATM.light.fog[0].slice(0, 3), c = base.map((v, k) => Math.round(mix(v, tint.c[k], tint.amt)));
         gr.addColorStop(0, `rgba(${c.join(',')},${(atm > 0.5 ? 0.22 * atm : 0.32 * (1 - atm)).toFixed(3)})`);
         gr.addColorStop(0.45, atm > 0.5 ? `rgba(30,174,191,${(0.12 * atm).toFixed(3)})` : `rgba(30,174,191,${(0.1 * (1 - atm)).toFixed(3)})`);
         gr.addColorStop(1, 'rgba(0,0,0,0)');
@@ -717,7 +733,7 @@ const HOME = (() => {
         if (glow < 0.08) continue;
         hexPath(ctx, x, y, s);
         ctx.strokeStyle = `rgba(${hc.join(',')},${(glow * (0.14 + atm * 0.08)).toFixed(3)})`; ctx.lineWidth = 1; ctx.stroke();
-        if (glow > 0.6) { ctx.fillStyle = atm > 0.5 ? `rgba(255,214,90,${((glow - 0.6) * 0.12).toFixed(3)})` : `rgba(108,192,74,${((glow - 0.6) * 0.14).toFixed(3)})`; ctx.fill(); }
+        if (glow > 0.6) { ctx.fillStyle = atm > 0.5 ? `rgba(255,214,90,${((glow - 0.6) * 0.12).toFixed(3)})` : `rgba(${ATM.light.fog[2].slice(0, 3).join(',')},${((glow - 0.6) * 0.14).toFixed(3)})`; ctx.fill(); }
       }
       // The swarm. Near particles (larger z) are bigger and brighter: depth without 3D. Free bees are softer dots.
       ctx.globalCompositeOperation = atm > 0.5 ? 'lighter' : 'source-over';

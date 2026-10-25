@@ -8,9 +8,9 @@ const THEME = (() => {
   const ALL = [
     { id: 'system', name: 'Classic', note: 'Follows the device, light or dark' },
     { id: 'dark', name: 'Classic dark', note: 'The classic look, always dark', dark: true },
-    { id: 'bloom', name: 'Bloom', note: 'Soft, big and rounded' },
-    { id: 'tonal', name: 'Tonal', note: 'Calm tones, organic shapes' },
-    { id: 'citrus', name: 'Citrus', note: 'Crisp, bright, chunky sliders' },
+    { id: 'bloom', name: 'Bloom', note: 'Petals and glass, soft and bouncy' },
+    { id: 'tonal', name: 'Tonal', note: 'Paper and earth tones, calm and slow' },
+    { id: 'citrus', name: 'Citrus', note: 'Bold outlines and bright pops, quick' },
     { id: 'mono', name: 'Mono', note: 'Dot-matrix minimal, dark', dark: true },
   ];
   const KEY = 'mpob-theme';

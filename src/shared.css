@@ -630,3 +630,89 @@ table.compare tbody td:last-child { border-radius: 0 calc(18px * var(--rk)) calc
   #print-summary th, #print-summary td { border: 1px solid #bbb; padding: 4px 6px; text-align: left; }
   #print-summary .ps-result { font-size: 14px; }
 }
+
+/* ── Looks, second layer: each light look is its own world. Bloom, Tonal and Citrus used to share a near-white ground and the
+   same step colours, so they read as one page in three accents. Each now sets its own ground, step palette, type, surfaces
+   and pace. --tempo scales the step pictures' motion (art.js): above 1 is slower and floatier, below 1 is quicker. ── */
+
+/* Bloom: petals and glass. A blush-to-lilac sky, frosted cards, pastel-bright steps, heavy round type; floaty and bouncy. */
+:root[data-theme="bloom"] {
+  --bg: #fbf0f6; --card: rgba(255,255,255,.74); --card-2: rgba(255,255,255,.56); --ink: #2a1630; --ink-2: #4a3552; --muted: #7a6680;
+  --line: rgba(122,80,140,.16); --track: #f2e2f0; --glass: rgba(251,240,246,.72);
+  --shadow: 0 2px 8px rgba(140,60,140,.06); --shadow-lg: 0 24px 56px -26px rgba(140,60,140,.42), 0 2px 8px rgba(140,60,140,.06);
+  --s1: #8b6cf6; --s1-ink: #6a4fd8; --s1-on: #ffffff; --s2: #ff6f9f; --s2-ink: #c23a6c; --s2-on: #2a0716;
+  --s3: #36b9d6; --s3-ink: #147d96; --s3-on: #06222a; --s4: #ffab4a; --s4-ink: #9c5a08; --s4-on: #2a1600;
+  --s5: #c06cf0; --s5-ink: #8f3fc0; --s5-on: #ffffff; --s6: #3fc596; --s6-ink: #187f5d; --s6-on: #062018;
+  --look: #ff5c9a; --look-on: #ffffff; --rk: 1.5; --tempo: 1.35;
+}
+:root[data-theme="bloom"] body { background:
+  radial-gradient(1100px 720px at 8% -12%, #ffd3e7 0%, transparent 62%),
+  radial-gradient(900px 700px at 102% 6%, #e1d8ff 0%, transparent 60%),
+  radial-gradient(1000px 640px at 50% 112%, #ffe6d3 0%, transparent 62%), var(--bg) fixed; }
+:root[data-theme="bloom"] .aurora i:first-child { background: #ffb0d0; }
+:root[data-theme="bloom"] .aurora i:last-child { background: #c6b5ff; }
+:root[data-theme="bloom"] .stage { background: var(--card); border: 1px solid rgba(255,255,255,.85); box-shadow: var(--shadow-lg);
+  backdrop-filter: blur(22px) saturate(1.5); -webkit-backdrop-filter: blur(22px) saturate(1.5); }
+:root[data-theme="bloom"] .btn-primary { background: linear-gradient(135deg, var(--c, var(--look)), color-mix(in srgb, var(--c, var(--look)) 55%, #ff9cc4));
+  box-shadow: 0 12px 26px -12px var(--c, var(--look)); }
+:root[data-theme="bloom"] :is(.btn, .chip, .tab, .seg button, .node .ring) { transition-timing-function: cubic-bezier(.34, 1.8, .64, 1); transition-duration: .55s; }
+:root[data-theme="bloom"] .btn:active { scale: .92; }
+:root[data-theme="bloom"] .has-hall .node:hover .ring { transform: translateY(-9px) scale(1.05) rotate(-1.5deg); }
+:root[data-theme="bloom"] .has-hall .node-value { background: rgba(255,255,255,.7); color: var(--ink-2); }
+
+/* Tonal: paper and earth. Oat paper with a fine grain, moss, terracotta, ochre and slate steps, serif headings, leaf-shaped
+   cards, thin outlines instead of shadows; calm and slow, no overshoot. */
+:root[data-theme="tonal"] {
+  --bg: #e9e6d9; --card: #f7f5ec; --card-2: #efecdf; --ink: #22261d; --ink-2: #434a3c; --muted: #676c5d; --line: #cdc9b5; --track: #dcd8c5;
+  --glass: rgba(233,230,217,.88);
+  --s1: #4f6b52; --s1-ink: #3b553f; --s1-on: #ffffff; --s2: #b5562f; --s2-ink: #93401d; --s2-on: #ffffff;
+  --s3: #3f7a78; --s3-ink: #2b5e5c; --s3-on: #ffffff; --s4: #c08a2a; --s4-ink: #835a10; --s4-on: #1d1400;
+  --s5: #72608c; --s5-ink: #574672; --s5-on: #ffffff; --s6: #6a8f3a; --s6-ink: #4b6b24; --s6-on: #ffffff;
+  --look: #4f6b52; --look-on: #f7f5ec; --rk: 1; --tempo: 1.75;
+  --tonal-serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+}
+:root[data-theme="tonal"] body { background:
+  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .25 0 0 0 0 .23 0 0 0 0 .15 0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+  linear-gradient(180deg, #eeebdf 0%, #e3dfcf 100%) fixed; }
+:root[data-theme="tonal"] .aurora i:first-child { background: #cfc59a; }
+:root[data-theme="tonal"] .aurora i:last-child { background: #a9bf98; }
+:root[data-theme="tonal"] :is(.hero h1, .stage-head h2, .out-big, .verdict-blend, .ss-h) { font-family: var(--tonal-serif); font-weight: 500; letter-spacing: -.012em; }
+:root[data-theme="tonal"] .stage { background: var(--card); border: 1px solid var(--line); box-shadow: none; }
+:root[data-theme="tonal"] .has-hall .ring, :root[data-theme="tonal"] .has-hall .node .ring { border-radius: 34px 10px 34px 10px; box-shadow: 0 0 0 1px rgba(34,38,29,.25); }
+:root[data-theme="tonal"] .has-hall .node.is-active .ring { box-shadow: 0 0 0 2px var(--c), 0 18px 30px -20px rgba(34,38,29,.6); }
+:root[data-theme="tonal"] :is(.btn, .chip, .tab, .seg button, .node .ring, .stage) { transition-timing-function: cubic-bezier(.22, 1, .36, 1); transition-duration: .9s; }
+:root[data-theme="tonal"] .has-hall .node:hover .ring { transform: translateY(-3px); }
+:root[data-theme="tonal"] .has-hall .node-title { font-family: var(--tonal-serif); font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: none; font-style: italic; }
+
+/* Citrus: bold pop. Warm white with a halftone dot screen, cobalt, orange, teal, yellow, violet and lime steps, black 2px
+   outlines and hard offset shadows, heavy tight type, nearly square corners; quick and snappy, presses push in. */
+:root[data-theme="citrus"] {
+  --bg: #fffbef; --card: #ffffff; --card-2: #fff4d6; --ink: #111111; --ink-2: #262626; --muted: #4f4f4f; --line: #111111; --track: #f1ecdc;
+  --glass: rgba(255,251,239,.92);
+  --s1: #2b59ff; --s1-ink: #1c3fd0; --s1-on: #ffffff; --s2: #ff5a1f; --s2-ink: #c23a05; --s2-on: #111111;
+  --s3: #00b3a4; --s3-ink: #00776d; --s3-on: #111111; --s4: #ffc300; --s4-ink: #7f6200; --s4-on: #111111;
+  --s5: #b23cff; --s5-ink: #8a1fd6; --s5-on: #ffffff; --s6: #2fc23a; --s6-ink: #1b7a23; --s6-on: #111111;
+  --look: #ff5a1f; --look-on: #111111; --rk: .45; --r-card: 14px; --tempo: .7;
+}
+:root[data-theme="citrus"] body { background:
+  radial-gradient(rgba(17,17,17,.09) 1.1px, transparent 1.4px) 0 0 / 15px 15px,
+  radial-gradient(760px 520px at -4% -8%, #ffd2b3 0%, transparent 62%),
+  radial-gradient(700px 520px at 104% 4%, #fff0a6 0%, transparent 60%), var(--bg) fixed; }
+:root[data-theme="citrus"] .aurora i:first-child { background: #ffb38a; }
+:root[data-theme="citrus"] .aurora i:last-child { background: #ffe066; }
+:root[data-theme="citrus"] :is(.hero h1, .stage-head h2) { font-weight: 900; letter-spacing: -.045em; }
+:root[data-theme="citrus"] .stage { border: 2.5px solid var(--ink); border-top-width: 2.5px; box-shadow: 8px 8px 0 var(--ink); }
+:root[data-theme="citrus"] :is(.btn, .chip, .node-value, .step-pill) { border: 2px solid var(--ink); box-shadow: 3px 3px 0 var(--ink); }
+:root[data-theme="citrus"] :is(.btn, .chip):active { translate: 3px 3px; box-shadow: 0 0 0 var(--ink); }
+:root[data-theme="citrus"] .has-hall .node .ring { border: 2.5px solid var(--ink); box-shadow: 6px 6px 0 var(--ink); }
+:root[data-theme="citrus"] .has-hall .node.is-active .ring { box-shadow: 9px 9px 0 var(--ink); }
+:root[data-theme="citrus"] .has-hall .node-title { color: var(--ink); font-weight: 800; }
+:root[data-theme="citrus"] :is(.btn, .chip, .tab, .seg button, .node .ring) { transition-timing-function: cubic-bezier(.2, 0, 0, 1); transition-duration: .16s; }
+:root[data-theme="citrus"] .has-hall .node:hover .ring { transform: translate(-3px, -3px); }
+
+/* The hive behind every page paints the ground, so each light look hands it its own atmosphere (home.js reads these). */
+:root[data-theme="bloom"] { --hive-base: 252 240 246; --hive-fog: 255 170 205 .38, 196 178 255 .32, 255 206 182 .3, 255 140 190 .18, 222 204 255 .32; --hive-hex: 150 70 140; }
+:root[data-theme="tonal"] { --hive-base: 232 229 215; --hive-fog: 200 188 138 .3, 118 148 106 .26, 181 112 72 .16, 204 160 72 .2, 158 178 136 .26; --hive-hex: 84 76 46; }
+:root[data-theme="citrus"] { --hive-base: 255 251 239; --hive-fog: 255 158 96 .36, 255 222 60 .34, 255 90 31 .16, 43 89 255 .1, 255 198 118 .3; --hive-hex: 17 17 17; }
+/* Bloom sets its tabs in bold, which is wider: tighter tab padding keeps "Decision now" whole on a 1280px laptop. */
+:root[data-theme="bloom"] .tab { padding-inline: 12px; letter-spacing: -.005em; }

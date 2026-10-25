@@ -1075,6 +1075,7 @@ function renderPage(dir = 0) {
   const tab = tabById(S.tab);
   const host = $('#page');
   const old = $('.page', host);
+  const leaving = typeof MORPH === 'undefined' ? [] : MORPH.capture(old); // the old step cards, before they move
   const el = document.createElement('div');
   el.className = 'page';
   el.innerHTML = pageHtml(tab);
@@ -1103,10 +1104,12 @@ function renderPage(dir = 0) {
     glow.to({ x: -dir * 60 }, { response: 0.5 }).then(() => glow.to({ x: 0 }, { response: 1.4 }));
   }
   if (dir) window.scrollTo({ top: 0, behavior: 'auto' });
+  if (dir) SOUND.page(dir); // two soft glass notes as the page opens (only once sound is on)
   HOME.start(el); // the swarm carries on as this page's background
-  HALL.mount(tab.home ? null : $('.flow-wrap', el)); // the steps as a Mirror Hall of liquid cards
+  ART.mount(tab.home ? null : $('.flow-wrap', el), tab.id); // each step box shows a moving picture of its step
   if (tab.home) writeHash(); else renderStage(0);
   sweepAnims();
+  if (typeof MORPH !== 'undefined') MORPH.play(tab.home ? null : el, leaving); // old cards turn to dust; new cards spin, fly and drop into place
 }
 
 const QIDS = new Set(Object.keys(Q));
@@ -1314,10 +1317,16 @@ function writeText(el, text, n) {
   el.animate([{ transform: `translateY(${up ? 0.32 : -0.32}em)`, opacity: 0.25, filter: 'blur(2px)' }, { transform: 'none', opacity: 1, filter: 'blur(0)' }],
     { duration: 240, easing: 'cubic-bezier(.23, 1, .32, 1)' });
 }
+// What the step pictures show: the balance tips by the price gap; the shield, stamp, ladder and drop follow the checks.
+const artState = (c, tab) => tab.id === 'decision'
+  ? { gap: c.dp.gap, fundSafe: c.dp.fundSafe, auth: c.dc.b30Auth, mandate: c.dp.mandate, capture: S.capture }
+  : { gap: c.p.gap, fundSafe: c.p.fundSafe, auth: S.b30Auth, mandate: c.p.mandate, capture: S.capture };
 function refresh(initial = false) {
   const c = compute();
   const tab = tabById(S.tab);
   $$('#page [data-chip]').forEach(el => { const v = tab.steps[Number(el.dataset.chip)].chip(c); if (el.textContent !== v) el.textContent = v; });
+  const art = artState(c, tab); ART.update(art);
+  if (tab.id === 'obj4' || tab.id === 'decision') SOUND.verdict(tab.id, art.mandate); // a short chord when the blend changes
   updateScenario();
   const root = $('#stage-shell');
   if (!root) return;
@@ -1607,9 +1616,10 @@ document.addEventListener('click', event => {
   if (t.hasAttribute('data-prov-open')) return openProvenance();
   if (t.id === 'prov-close') return closeProvenance();
   if (t.dataset.tab) { if (t.closest('dialog')) closeProvenance(); return goTab(t.dataset.tab, t.dataset.step !== undefined ? { step: Number(t.dataset.step) } : {}); } // Home links can open a given step
-  if (t.dataset.go !== undefined) return goStep(Number(t.dataset.go));
-  if (t.hasAttribute('data-back')) return goStep(S.step[S.tab] - 1);
+  if (t.dataset.go !== undefined) { SOUND.tap(); return goStep(Number(t.dataset.go)); } // a step box clicks like a phone key
+  if (t.hasAttribute('data-back')) { SOUND.tap('back'); return goStep(S.step[S.tab] - 1); }
   if (t.hasAttribute('data-next')) {
+    SOUND.tap('next');
     const tab = tabById(S.tab); const i = S.step[tab.id];
     if (i < tab.steps.length - 1) return goStep(i + 1);
     const nextTab = TABS[TABS.indexOf(tab) + 1];

@@ -122,9 +122,8 @@ expect('The swarm becomes the page background', await run('document.querySelecto
 await sleep(1500);
 expect('The swarm writes the step in hand under the objective', await run('HOME.scene.words + ":" + HOME.scene.writing'), 'See how fund moves:true');
 await shot('obj2-swarm-words', false);
-expect('The steps stand in a Mirror Hall of liquid cards', await run("document.querySelectorAll('#page .flow-wrap.has-hall').length + ':' + document.querySelectorAll('#page .hall-gl').length + ':' + HALL.scene.cards"), '1:1:' + await run("document.querySelectorAll('#page .node').length"));
-const hf0 = await run('HALL.scene.frames'); await sleep(600);
-expect('The liquid keeps flowing', (await run('HALL.scene.frames')) > hf0, true);
+expect('Every step box shows a drawn picture of its step', await run("document.querySelectorAll('#page .flow-wrap.has-art').length + ':' + document.querySelectorAll('#page .node .ring > .step-art').length"), '1:' + await run("document.querySelectorAll('#page .node').length"));
+expect('The pictures move', await run("[...document.querySelectorAll('#page .step-art')].every(s => s.getAnimations({ subtree: true }).length > 0)"), true);
 expect('Each card carries its number and value, not a ring arrow', await run("getComputedStyle(document.querySelector('#page .has-hall .ring'), '::after').display"), 'none');
 await click('.node[data-go="1"]'); await sleep(1800);
 expect('A new step: the swarm writes its words', await run('HOME.scene.words'), 'Choose oil-price case');
