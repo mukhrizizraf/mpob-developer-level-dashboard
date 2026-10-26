@@ -5,10 +5,12 @@
 // nothing is clipped by the row's sideways scroll; the real buttons stay in place and usable the whole time.
 // The hive and its writing (home.js) are not touched. Under Reduce motion nothing moves and the cards simply appear.
 // The flight is a first welcome: each page plays it once per visit to the studio. Going back to a page already seen,
-// the cards stay still and the page just folds in, so moving back and forth between objectives is quick.
+// the cards only pop up in place (a 10px rise from 94% size on a spring with a small overshoot, 30ms apart, about
+// half a second), so moving back and forth between objectives is quick but still alive.
 // Self-contained: it brings its own small stylesheet, so shared.css stays identical across the two levels.
 // API:  MORPH.capture(oldPage) -> boxes   (call before the old page starts to move)
-//       MORPH.play(newPage | null, boxes, key)  (null for Home: the old cards just turn to dust; key names the page)
+//       MORPH.play(newPage | null, boxes, key, { quiet })  (null for Home: the old cards just turn to dust; key names
+//       the page; quiet: the page opened without a click, so the cards pop and the flight is kept for the first click)
 
 const MORPH = (() => {
   const TAU = Math.PI * 2;
@@ -16,6 +18,9 @@ const MORPH = (() => {
   const reduce = () => Boolean(M() ? M().reduce : window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
   // Timing (seconds). Card i starts STAGGER * i after card 0.
   const T = { spin: 0.85, fly: 0.62, swap: 0.34, fade: 0.24, stagger: 0.1 };
+  // The revisit pop: a damped spring (damping ratio 0.75, launched at 8 units/s) sampled for CSS linear(): halfway in
+  // a tenth of its time, 5% overshoot. The cubic-bezier written before it is the fallback for browsers without linear().
+  const POP_SPRING = 'linear(0, 0.142, 0.275, 0.398, 0.51, 0.61, 0.697, 0.771, 0.835, 0.888, 0.931, 0.966, 0.993, 1.013, 1.028, 1.038, 1.045, 1.048, 1.049, 1.048, 1.046, 1.043, 1.039, 1.035, 1.031, 1.027, 1.023, 1.019, 1.016, 1.013, 1.01, 1.008, 1.006, 1.004, 1.003, 1.002, 1)';
 
   const CSS = `
 .morph-dust { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 18; pointer-events: none; }
@@ -38,7 +43,10 @@ const MORPH = (() => {
   transition: opacity .45s ease, transform .6s var(--spring, cubic-bezier(.2, .9, .3, 1.2)); }
 .flow-wrap.is-morphing .node.morph-wait .node-title, .flow-wrap.is-morphing .node.morph-wait .node-value { opacity: 0; transform: translateY(10px); }
 :root .flow-wrap .node.morph-snap .ring { transition: none !important; }
-.flow-wrap.morph-seen .node { animation: none; }`;
+.flow-wrap.morph-seen .node { animation: morphPop .5s cubic-bezier(.3, 1.3, .5, 1) backwards, morphFade .16s ease-out backwards;
+  animation-timing-function: ${POP_SPRING}, ease-out; animation-delay: calc(var(--i, 0) * 30ms); }
+@keyframes morphPop { from { transform: translateY(10px) scale(.94); } to { transform: none; } }
+@keyframes morphFade { from { opacity: 0; } to { opacity: 1; } }`;
 
   let layer = null, cv = null, ctx = null, W = 0, H = 0, dpr = 1, raf = 0, last = 0, clock = 0;
   let run = null;
@@ -114,10 +122,12 @@ const MORPH = (() => {
     return { x: (x0 + x1) / 2, y: n ? y / n : wr.top + wr.height / 2, R: Math.min(210, Math.max(90, (x1 - x0) * 0.28)) };
   }
 
-  function play(page, leaving = [], key = null) {
+  function play(page, leaving = [], key = null, { quiet = false } = {}) {
     const wrap = page?.querySelector('.flow-wrap');
     const nodes = wrap ? [...wrap.querySelectorAll('.flow .node')] : [];
-    if (key != null && seen.has(key) && wrap) { // seen before: no flight, no dust, the cards just sit in their places
+    // Seen before, or a quiet arrival (the studio opening on this page, a key press, an address change): no flight and no
+    // dust, the cards just pop up in place. A quiet arrival does not count as the visit, so the first click still flies.
+    if (wrap && (quiet || (key != null && seen.has(key)))) {
       ensure(); finish(false); wrap.classList.add('morph-seen'); return;
     }
     if (!wrap || !nodes.length || reduce()) { finish(false); dissolve(leaving, null); return; }

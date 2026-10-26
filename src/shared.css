@@ -716,3 +716,29 @@ table.compare tbody td:last-child { border-radius: 0 calc(18px * var(--rk)) calc
 :root[data-theme="citrus"] { --hive-base: 255 251 239; --hive-fog: 255 158 96 .36, 255 222 60 .34, 255 90 31 .16, 43 89 255 .1, 255 198 118 .3; --hive-hex: 17 17 17; }
 /* Bloom sets its tabs in bold, which is wider: tighter tab padding keeps "Decision now" whole on a 1280px laptop. */
 :root[data-theme="bloom"] .tab { padding-inline: 12px; letter-spacing: -.005em; }
+/* ── Step jump: numbered buttons between Back and Next go straight to any step of the objective.
+   The current step is filled in its own colour; steps already passed keep their colour in the number. ── */
+.step-jump { display: flex; align-items: center; gap: 4px; padding: 4px; border-radius: var(--r-pill); background: var(--track); }
+.jump { width: 34px; height: 34px; padding: 0; border: 0; border-radius: var(--r-pill); cursor: pointer; background: transparent;
+  font: inherit; font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--muted);
+  transition-property: scale, background-color, color, box-shadow; transition-duration: var(--spring-ui-ms, 220ms);
+  transition-timing-function: var(--spring-ui, cubic-bezier(.23, 1, .32, 1)); }
+.jump.is-done { color: var(--c-ink); }
+.jump:hover:not(.is-current) { background: color-mix(in srgb, var(--c) 20%, transparent); color: var(--ink); }
+.jump.is-current { background: var(--c); color: var(--c-on, #fff); cursor: default; box-shadow: 0 4px 14px color-mix(in srgb, var(--c) 38%, transparent); }
+.jump:active { scale: .9; transition-duration: 90ms; transition-timing-function: ease-out; }
+.jump:focus-visible { outline: 3px solid color-mix(in srgb, var(--c) 60%, transparent); outline-offset: 2px; }
+:root[data-theme="mono"] .jump { font-family: var(--dot-font); }
+:root[data-theme="mono"] .jump.is-current { background: transparent; color: var(--c-ink); box-shadow: inset 0 0 0 1.5px var(--c); }
+/* Back, the numbers and Next sit in three columns, so the numbers stay centred on the card whatever Next says. */
+@media (min-width: 561px) {
+  .stage-foot:has(.step-jump) { display: grid; grid-template-columns: 1fr auto 1fr; }
+  .stage-foot [data-back] { justify-self: start; }
+  .stage-foot [data-next] { justify-self: end; }
+}
+/* A phone has no room for all three in a row: the numbers take their own centred row above Back and Next. */
+@media (max-width: 560px) {
+  .stage-foot { flex-wrap: wrap; }
+  .step-jump { order: -1; flex: 1 0 100%; justify-content: center; background: none; padding: 0 0 4px; }
+}
+@media (prefers-reduced-motion: reduce) { .jump:active { scale: 1; } }

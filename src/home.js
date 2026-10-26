@@ -535,6 +535,7 @@ const HOME = (() => {
     let clock = 9, time = 0, frames = 0, raf = 0, last = 0, paused = false, roam = true;
     let anchor = null, storyEl = null, story = null, page = null;
     let words = '', lh = 160, cur = []; // the words being written, the band's shape in canvas units, their points
+    let sayRaf = 0; // the next frame, when new words are sampled
     let atm = 0, atmTo = 0; // 0 = light atmosphere, 1 = dark
     const pointer = { x: -9999, y: -9999, on: false, nx: 0, ny: 0 };
     const tint = { to: null, c: [224, 161, 14], amt: 0, clock: 9 }; // the step colour the swarm takes on
@@ -622,8 +623,11 @@ const HOME = (() => {
       const w = phrase(text);
       if (w === words) return;
       words = w; anchor?.setAttribute('data-hive-say', w);
-      writeWords(true);
-      if (still()) draw(); else kick();
+      cancelAnimationFrame(sayRaf); clearTimeout(sayRaf); sayRaf = 0;
+      if (still()) { writeWords(true); draw(); return; }
+      // Sampled just after the next frame is painted, so a tab or step change shows first: the text sampling is the
+      // slow part of a click. (A frame callback alone runs before that frame paints, so it would still hold it up.)
+      sayRaf = requestAnimationFrame(() => { sayRaf = setTimeout(() => { sayRaf = 0; writeWords(true); kick(); }, 0); });
     }
     const burst = (cx, cy, power, radius) => parts.forEach(p => {
       const dx = p.x - cx, dy = p.y - cy, d = Math.hypot(dx, dy) || 1;
@@ -814,6 +818,7 @@ const HOME = (() => {
       html.classList.toggle('home-on', Boolean(storyEl));
       html.classList.toggle('home-night-end', Boolean(storyEl && !storyEl.nextElementSibling)); // the page ends in the journey's night
       under = null; syncBar();
+      cancelAnimationFrame(sayRaf); clearTimeout(sayRaf); sayRaf = 0;
       words = ''; cur = []; parts.forEach(p => { p.t = -1; });
       readTint();
       if (fresh) { swirl(); if (still()) settle(); else kick(); }

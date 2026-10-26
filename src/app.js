@@ -1109,7 +1109,7 @@ function renderPage(dir = 0) {
   ART.mount(tab.home ? null : $('.flow-wrap', el), tab.id); // each step box shows a moving picture of its step
   if (tab.home) writeHash(); else renderStage(0);
   sweepAnims();
-  if (typeof MORPH !== 'undefined') MORPH.play(tab.home ? null : el, leaving, tab.id); // first visit: old cards turn to dust, new cards spin, fly and drop into place; later visits: still
+  if (typeof MORPH !== 'undefined') MORPH.play(tab.home ? null : el, leaving, tab.id, { quiet: !dir }); // first click into a page: old cards turn to dust, new cards spin, fly and drop into place; later visits, and opening without a click: a slight pop
 }
 
 const QIDS = new Set(Object.keys(Q));
@@ -1129,6 +1129,10 @@ function stackHtml(key, cards) {
   </section>`;
 }
 
+// Step jump: the numbered buttons between Back and Next go straight to any step of this objective.
+function jumpHtml(tab, i) {
+  return `<nav class="step-jump" aria-label="Go to step">${tab.steps.map((s, k) => `<button type="button" class="jump c${k + 1}${k === i ? ' is-current' : k < i ? ' is-done' : ''}" data-go="${k}" title="Step ${k + 1}: ${s.short}" aria-label="Step ${k + 1}: ${s.short}"${k === i ? ' aria-current="step"' : ''}>${k + 1}</button>`).join('')}</nav>`;
+}
 function stageHtml(tab, i) {
   const step = tab.steps[i];
   const last = i === tab.steps.length - 1;
@@ -1137,7 +1141,7 @@ function stageHtml(tab, i) {
   return `<div class="stage-head"><span class="step-pill">Step ${i + 1} of ${tab.steps.length}</span><h2 tabindex="-1">${step.title}</h2></div>
     <div class="stage-body ${step.single ? 'single' : ''}">${step.body()}</div>
     ${step.stack ? stackHtml(`${tab.id}:${i}`, step.stack()) : ''}
-    <div class="stage-foot"><button type="button" class="btn btn-ghost" data-back ${i === 0 ? 'disabled' : ''}>${ICON.chevL}<span>Back</span></button><button type="button" class="btn btn-primary" data-next>${nextLabel}${ICON.chev}</button></div>`;
+    <div class="stage-foot"><button type="button" class="btn btn-ghost" data-back ${i === 0 ? 'disabled' : ''}>${ICON.chevL}<span>Back</span></button>${jumpHtml(tab, i)}<button type="button" class="btn btn-primary" data-next>${nextLabel}${ICON.chev}</button></div>`;
 }
 // Step change: the card slides along the direction of travel. After a swipe the outgoing card keeps the
 // finger's velocity and the incoming one arrives beside it, like a carousel; after a tap both move a short way.

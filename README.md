@@ -28,7 +28,7 @@ that open like an iPhone notification stack.
 ## Using it
 
 Everything in the User level (swipe between steps, exact-value boxes that reject bad input, "Your scenario" labelling, reset
-scopes, the six looks, `#obj4-5` links, print summary, the Home journey (scroll, swipe or Play) with the sponsor marks, the living hive behind every page that writes the step in hand, the step pictures (a moving drawing of each step, five following the live numbers), the step morph, the slide-to-start guide and sound, and the tabs at the top), plus:
+scopes, the six looks, `#obj4-5` links, print summary, the Home journey (scroll, swipe or Play) with the sponsor marks, the living hive behind every page that writes the step in hand, the step pictures (a moving drawing of each step, five following the live numbers), the step morph (first click only, then a slight pop), the numbered step buttons in the footer, the slide-to-start guide and sound, and the tabs at the top), plus:
 
 - **Detail stacks.** Tap a stack to fan the cards out, then open any card. Collapsed cards cannot be reached with Tab.
 - **Charts.** Hover or tap to read a point, or focus a chart and use the arrow keys (Shift for a year, Home and End for the ends).
@@ -80,7 +80,7 @@ npm run shoot -- shots   # optional: headless Chrome/Edge walk-through + the rev
 | `src/home.js` | Shared: the biodiesel journey on Home (one long camera move, sponsor marks) and the living hive behind every page, which writes the step in hand |
 | `src/hall.js` | Shared: the Mirror Hall step cards (marbled liquid, WebGL); still built, no longer mounted |
 | `src/art.js` | Shared: step pictures, a moving drawing of each step in its box (extra pictures for the long-run link, starting-money search and five-year stress test) |
-| `src/morph.js` | Shared: step morph, old cards turn to dust, new cards spin out of a vortex and drop into place (first visit to each page only) |
+| `src/morph.js` | Shared: step morph, old cards turn to dust, new cards spin out of a vortex and drop into place (first visit to each page; later visits a slight pop) |
 | `src/sound.js` | Shared: quiet Web Audio cues (clicks, slider ticks, page notes, card pops, verdict chords, look shimmer, journey bells and kalimba notes); round mute button at the bottom right of every page, and a Sound switch in the Appearance menu |
 | `src/guide.js` | Shared: "Slide to start the journey" on Home, and a "carry on" hint when a visitor stops part-way |
 | `brand/` | Sponsor logos `mpob.svg` and `ukm.png`, embedded small on the journey's last screen at build time. The MPOB and UKM logos are the trademarks of the Malaysian Palm Oil Board and Universiti Kebangsaan Malaysia, shown only to credit their support of this study. |
