@@ -4,9 +4,11 @@
 // over to the real liquid cards (hall.js) underneath. The flying cards are copies in a fixed layer above the page, so
 // nothing is clipped by the row's sideways scroll; the real buttons stay in place and usable the whole time.
 // The hive and its writing (home.js) are not touched. Under Reduce motion nothing moves and the cards simply appear.
+// The flight is a first welcome: each page plays it once per visit to the studio. Going back to a page already seen,
+// the cards stay still and the page just folds in, so moving back and forth between objectives is quick.
 // Self-contained: it brings its own small stylesheet, so shared.css stays identical across the two levels.
 // API:  MORPH.capture(oldPage) -> boxes   (call before the old page starts to move)
-//       MORPH.play(newPage | null, boxes)  (null for Home: the old cards just turn to dust)
+//       MORPH.play(newPage | null, boxes, key)  (null for Home: the old cards just turn to dust; key names the page)
 
 const MORPH = (() => {
   const TAU = Math.PI * 2;
@@ -35,10 +37,12 @@ const MORPH = (() => {
 .flow-wrap.is-morphing .node .node-title, .flow-wrap.is-morphing .node .node-value {
   transition: opacity .45s ease, transform .6s var(--spring, cubic-bezier(.2, .9, .3, 1.2)); }
 .flow-wrap.is-morphing .node.morph-wait .node-title, .flow-wrap.is-morphing .node.morph-wait .node-value { opacity: 0; transform: translateY(10px); }
-:root .flow-wrap .node.morph-snap .ring { transition: none !important; }`;
+:root .flow-wrap .node.morph-snap .ring { transition: none !important; }
+.flow-wrap.morph-seen .node { animation: none; }`;
 
   let layer = null, cv = null, ctx = null, W = 0, H = 0, dpr = 1, raf = 0, last = 0, clock = 0;
   let run = null;
+  const seen = new Set(); // pages whose cards have already flown in
   const parts = [], ripples = [];
 
   function ensure() {
@@ -110,13 +114,17 @@ const MORPH = (() => {
     return { x: (x0 + x1) / 2, y: n ? y / n : wr.top + wr.height / 2, R: Math.min(210, Math.max(90, (x1 - x0) * 0.28)) };
   }
 
-  function play(page, leaving = []) {
+  function play(page, leaving = [], key = null) {
     const wrap = page?.querySelector('.flow-wrap');
     const nodes = wrap ? [...wrap.querySelectorAll('.flow .node')] : [];
+    if (key != null && seen.has(key) && wrap) { // seen before: no flight, no dust, the cards just sit in their places
+      ensure(); finish(false); wrap.classList.add('morph-seen'); return;
+    }
     if (!wrap || !nodes.length || reduce()) { finish(false); dissolve(leaving, null); return; }
     ensure(); finish(false); // cards still in the air were already captured as dust
     const wr = wrap.getBoundingClientRect();
     if (wr.bottom < 0 || wr.top > innerHeight) { dissolve(leaving, null); return; }
+    if (key != null) seen.add(key);
 
     nodes.forEach(node => { const ring = node.querySelector('.ring'); node._rx = ring.offsetLeft + ring.offsetWidth / 2; node._ry = ring.offsetTop + ring.offsetHeight / 2; node._rh = ring.offsetHeight; });
     const v = vortexOf(wrap, nodes);

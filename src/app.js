@@ -1109,7 +1109,7 @@ function renderPage(dir = 0) {
   ART.mount(tab.home ? null : $('.flow-wrap', el), tab.id); // each step box shows a moving picture of its step
   if (tab.home) writeHash(); else renderStage(0);
   sweepAnims();
-  if (typeof MORPH !== 'undefined') MORPH.play(tab.home ? null : el, leaving); // old cards turn to dust; new cards spin, fly and drop into place
+  if (typeof MORPH !== 'undefined') MORPH.play(tab.home ? null : el, leaving, tab.id); // first visit: old cards turn to dust, new cards spin, fly and drop into place; later visits: still
 }
 
 const QIDS = new Set(Object.keys(Q));

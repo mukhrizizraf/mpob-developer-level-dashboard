@@ -485,6 +485,7 @@ const HOME = (() => {
   const phrase = s => String(s ?? '').replace(/<[^>]*>/g, '').replace(/&[a-z]+;/g, ' ').replace(/^\s*to\s+/i, '').replace(/\b(the|a|an)\s+/gi, '').replace(/\s+/g, ' ').trim().replace(/^./, c => c.toUpperCase());
   // The words, drawn once in the step colour on a canvas shaped like the band, then sampled into points.
   const LW = 1000, textCache = new Map();
+  const WRITE = 0.3; // seconds from the first letter of a step's words setting off to the last
   function sampleText(text, lh, rgb, want) {
     const key = `${text}|${lh}|${rgb}|${want}`;
     if (textCache.has(key)) return textCache.get(key);
@@ -569,7 +570,7 @@ const HOME = (() => {
         N = want;
         parts = Array.from({ length: N }, () => {
           const z = 0.45 + Math.random() * 1.0;
-          return { x: Math.random() * W, y: Math.random() * H, vx: 0, vy: 0, px: 0, py: 0, t: -1, z,
+          return { x: Math.random() * W, y: Math.random() * H, vx: 0, vy: 0, px: 0, py: 0, t: -1, wd: 0, z,
             r: 90, g: 190, b: 120, k: 0.6 + Math.random() * 0.8, seed: Math.random() * 100, size: 0.7 + Math.random() * 1.1,
             vr: 0.05 + 0.95 * Math.sqrt(Math.random()), arm: Math.floor(Math.random() * 3), th: Math.random() * 6.283, jit: (Math.random() - 0.5) * 0.55 };
         });
@@ -606,10 +607,14 @@ const HOME = (() => {
       readTint();
       lh = Math.max(60, Math.round(LW * r.height / r.width));
       cur = sampleText(words, lh, tint.to ?? [61, 74, 143], Math.round(N * 0.72));
-      const order = parts.map((p, j) => j).sort(() => Math.random() - 0.5);
-      order.forEach((j, n) => { parts[j].t = n < cur.length ? n : -1; });
+      // Bees are matched to letters from left to right, so each flies a short way and the words write from the left:
+      // a letter's bees set off WRITE * (its place along the line) seconds after the first letter's.
+      const byX = parts.map((p, j) => j).sort((a, b) => parts[a].x - parts[b].x);
+      const pts = cur.map((q, n) => n).sort((a, b) => cur[a][0] - cur[b][0]);
+      parts.forEach(p => { p.t = -1; });
+      pts.forEach((n, m) => { const p = parts[byX[Math.floor(m * N / pts.length)]]; p.t = n; p.wd = WRITE * cur[n][0] / LW + Math.random() * 0.06; });
       clock = 0;
-      if (scatter && !still()) parts.forEach(p => { const a = Math.random() * 6.283, s = 90 + Math.random() * 300; p.vx += Math.cos(a) * s; p.vy += Math.sin(a) * s; });
+      if (scatter && !still()) parts.forEach(p => { const a = Math.random() * 6.283, s = 60 + Math.random() * 160; p.vx += Math.cos(a) * s; p.vy += Math.sin(a) * s; });
       if (still()) settlePoints();
     }
     function settlePoints() { placeWords(); parts.forEach(p => { if (p.t >= 0 && cur[p.t] && !roam) { const q = cur[p.t]; p.x = p.px = place.x + q[0] * place.s; p.y = p.py = place.y + q[1] * place.s; p.r = q[2]; p.g = q[3]; p.b = q[4]; } }); }
@@ -651,7 +656,7 @@ const HOME = (() => {
       const te = Math.min(1, dt * 1.6);
       tint.amt += ((tint.to ? 1 : 0) - tint.amt) * te;
       if (tint.to) for (let k = 0; k < 3; k++) tint.c[k] += (tint.to[k] - tint.c[k]) * te;
-      const swirlN = Math.max(0, 1 - clock / 0.9); // the bees swarm hardest just after new words are sent
+      const swirlN = Math.max(0, 1 - clock / 0.5); // the bees swarm hardest just after new words are sent
       const sy = scrollY;
       // The vortex turns around the words while they show, or the middle of the screen once the page scrolls on.
       const tcx = roam ? W * 0.5 : place.x + LW * place.s / 2, tcy = roam ? H * 0.5 : place.y + lh * place.s / 2;
@@ -667,10 +672,11 @@ const HOME = (() => {
       for (const p of parts) {
         p.px = p.x; p.py = p.y;
         let tx, ty, k;
-        const formed = p.t >= 0 && cur[p.t] && !roam;
+        const formed = p.t >= 0 && cur[p.t] && !roam && clock >= p.wd;
         if (formed) {
-          const q = cur[p.t]; tx = place.x + q[0] * place.s; ty = place.y + q[1] * place.s; k = 7 * p.k;
-          const e = Math.min(1, dt * 3); p.r += (q[2] - p.r) * e; p.g += (q[3] - p.g) * e; p.b += (q[4] - p.b) * e;
+          // A stiff, nearly critically damped spring: a letter lands in about half a second and barely overshoots.
+          const q = cur[p.t]; tx = place.x + q[0] * place.s; ty = place.y + q[1] * place.s; k = 13 * (0.85 + 0.25 * p.k);
+          const e = Math.min(1, dt * 6); p.r += (q[2] - p.r) * e; p.g += (q[3] - p.g) * e; p.b += (q[4] - p.b) * e;
         } else {
           // The vortex: every free particle orbits on one of three spiral arms, tilted like a galaxy seen at an angle;
           // inner particles turn faster and glow in the step colour, outer ones cool to teal. Slow, behind a working page.
@@ -690,7 +696,7 @@ const HOME = (() => {
           if (d2 < R * R) { const d = Math.sqrt(d2) || 1, f = (1 - d / R) * 5600; ax += dx / d * f; ay += dy / d * f; }
           else if (!formed && d2 < 260 * 260) { ax -= dx * 0.6; ay -= dy * 0.6; } // curious bees circle the pointer
         }
-        const damp = Math.exp(-dt * (formed ? 4.2 * p.k : 1.7));
+        const damp = Math.exp(-dt * (formed ? 15 * (0.85 + 0.25 * p.k) : 1.7));
         p.vx = (p.vx + ax * dt) * damp; p.vy = (p.vy + ay * dt) * damp;
         p.x += p.vx * dt; p.y += p.vy * dt;
       }

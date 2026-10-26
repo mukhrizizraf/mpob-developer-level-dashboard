@@ -80,7 +80,7 @@ npm run shoot -- shots   # optional: headless Chrome/Edge walk-through + the rev
 | `src/home.js` | Shared: the biodiesel journey on Home (one long camera move, sponsor marks) and the living hive behind every page, which writes the step in hand |
 | `src/hall.js` | Shared: the Mirror Hall step cards (marbled liquid, WebGL); still built, no longer mounted |
 | `src/art.js` | Shared: step pictures, a moving drawing of each step in its box (extra pictures for the long-run link, starting-money search and five-year stress test) |
-| `src/morph.js` | Shared: step morph, old cards turn to dust, new cards spin out of a vortex and drop into place |
+| `src/morph.js` | Shared: step morph, old cards turn to dust, new cards spin out of a vortex and drop into place (first visit to each page only) |
 | `src/sound.js` | Shared: quiet Web Audio cues (clicks, slider ticks, page notes, card pops, verdict chords, look shimmer, journey bells and kalimba notes); round mute button at the bottom right of every page, and a Sound switch in the Appearance menu |
 | `src/guide.js` | Shared: "Slide to start the journey" on Home, and a "carry on" hint when a visitor stops part-way |
 | `brand/` | Sponsor logos `mpob.svg` and `ukm.png`, embedded small on the journey's last screen at build time. The MPOB and UKM logos are the trademarks of the Malaysian Palm Oil Board and Universiti Kebangsaan Malaysia, shown only to credit their support of this study. |
