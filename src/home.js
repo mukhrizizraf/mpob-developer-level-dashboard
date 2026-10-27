@@ -533,6 +533,12 @@ const HOME = (() => {
     const vtx = { x: 0, y: 0, zoom: 1, spin: 0, kick: 0, init: false };
     let W = 0, H = 0, dpr = 1, N = 0, parts = [], wide = true, place = { x: 0, y: 0, s: 1 }, hexLayer = { light: null, dark: null }, hexes = [];
     let clock = 9, time = 0, frames = 0, raf = 0, last = 0, paused = false, roam = true;
+    // The ground, fog and vortex glow are soft, so they are painted on a quarter-size canvas and stretched to the screen.
+    const fog = document.createElement('canvas'), fctx = fog.getContext('2d'), FOG = 0.25;
+    // Pacing: the swarm draws at most about 60 times a second (a 120 Hz screen would double the work for nothing), drops
+    // to about 30 for good when the machine averages slower than about 45 (lite), and holds still while a page changes.
+    let gap = 1000 / 60 - 2, lite = false, beat = 0, beats = 0, tick = 0, holdUntil = 0, fdt = 1 / 60;
+    const born = performance.now(); // the first seconds (building the studio) are not a fair test of the machine
     let anchor = null, storyEl = null, story = null, page = null;
     let words = '', lh = 160, cur = []; // the words being written, the band's shape in canvas units, their points
     let sayRaf = 0; // the next frame, when new words are sampled
@@ -563,8 +569,9 @@ const HOME = (() => {
     }
     function layout() {
       W = Math.max(1, html.clientWidth); H = Math.max(1, html.clientHeight); // the fixed layer, without scrollbars
-      dpr = Math.min(2, window.devicePixelRatio || 1);
+      dpr = Math.min(lite ? 1 : 2, window.devicePixelRatio || 1);
       canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
+      fog.width = Math.ceil(W * FOG); fog.height = Math.ceil(H * FOG);
       wide = W >= 860;
       const want = Math.round(Math.min(3200, Math.max(wide ? 900 : 1100, W * H / 470)));
       if (want !== N) {
@@ -706,32 +713,33 @@ const HOME = (() => {
       }
     }
     function draw() {
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      fctx.setTransform(FOG, 0, 0, FOG, 0, 0);
       const L = ATM.light, D = ATM.dark;
-      ctx.fillStyle = `rgb(${L.base.map((v, i) => Math.round(mix(v, D.base[i], atm))).join(',')})`;
-      ctx.fillRect(0, 0, W, H);
+      fctx.fillStyle = `rgb(${L.base.map((v, i) => Math.round(mix(v, D.base[i], atm))).join(',')})`;
+      fctx.fillRect(0, 0, W, H);
       // Fog: large soft glows drifting slowly, the light and dark palettes cross-faded by the atmosphere.
       for (let i = 0; i < 5; i++) {
         const fx = W * (0.5 + 0.42 * Math.sin(time * (0.05 + i * 0.013) + i * 1.9)), fy = H * (0.5 + 0.38 * Math.cos(time * (0.04 + i * 0.011) + i * 2.7));
         const rad = Math.max(W, H) * (0.38 + 0.08 * Math.sin(time * 0.2 + i));
         for (const [pal, wgt] of [[L, 1 - atm], [D, atm]]) {
           if (wgt < 0.02) continue;
-          const [r, g, b, a] = pal.fog[i]; const gr = ctx.createRadialGradient(fx, fy, 0, fx, fy, rad);
+          const [r, g, b, a] = pal.fog[i]; const gr = fctx.createRadialGradient(fx, fy, 0, fx, fy, rad);
           gr.addColorStop(0, `rgba(${r},${g},${b},${(a * wgt).toFixed(3)})`); gr.addColorStop(1, `rgba(${r},${g},${b},0)`);
-          ctx.fillStyle = gr; ctx.fillRect(0, 0, W, H);
+          fctx.fillStyle = gr; fctx.fillRect(0, 0, W, H);
         }
       }
       // The vortex core: a soft glow where the swirl turns, in the step colour.
       if (vtx.init) {
-        const cr = Math.min(W, H) * 0.42 * vtx.zoom, gr = ctx.createRadialGradient(vtx.x, vtx.y, 0, vtx.x, vtx.y, cr);
+        const cr = Math.min(W, H) * 0.42 * vtx.zoom, gr = fctx.createRadialGradient(vtx.x, vtx.y, 0, vtx.x, vtx.y, cr);
         const base = atm > 0.5 ? [255, 214, 90] : ATM.light.fog[0].slice(0, 3), c = base.map((v, k) => Math.round(mix(v, tint.c[k], tint.amt)));
         gr.addColorStop(0, `rgba(${c.join(',')},${(atm > 0.5 ? 0.22 * atm : 0.32 * (1 - atm)).toFixed(3)})`);
         gr.addColorStop(0.45, atm > 0.5 ? `rgba(30,174,191,${(0.12 * atm).toFixed(3)})` : `rgba(30,174,191,${(0.1 * (1 - atm)).toFixed(3)})`);
         gr.addColorStop(1, 'rgba(0,0,0,0)');
-        ctx.fillStyle = gr; ctx.fillRect(0, 0, W, H);
+        fctx.fillStyle = gr; fctx.fillRect(0, 0, W, H);
       }
-      // Honeycomb, lit around the words and where the pointer is.
       ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.drawImage(fog, 0, 0, canvas.width, canvas.height);
+      // Honeycomb, lit around the words and where the pointer is.
       if (hexLayer.light && 1 - atm > 0.02) { ctx.globalAlpha = 1 - atm; ctx.drawImage(hexLayer.light, 0, 0); }
       if (hexLayer.dark && atm > 0.02) { ctx.globalAlpha = atm; ctx.drawImage(hexLayer.dark, 0, 0); }
       ctx.globalAlpha = 1; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -748,12 +756,13 @@ const HOME = (() => {
       // The swarm. Near particles (larger z) are bigger and brighter: depth without 3D. Free bees are softer dots.
       ctx.globalCompositeOperation = atm > 0.5 ? 'lighter' : 'source-over';
       ctx.lineCap = 'round';
+      const sc = Math.min(1, 1 / 60 / fdt); // a streak keeps its 60 fps length when the swarm draws less often (lite)
       for (const p of parts) {
         const formed = p.t >= 0 && cur[p.t] && !roam;
         const col = `rgb(${p.r | 0},${p.g | 0},${p.b | 0})`, size = formed ? 0.95 + p.size * 0.3 : p.size * p.z; // even dots keep the letters crisp
-        const sp = Math.abs(p.x - p.px) + Math.abs(p.y - p.py);
+        const mx = (p.x - p.px) * sc, my = (p.y - p.py) * sc, sp = Math.abs(mx) + Math.abs(my);
         ctx.globalAlpha = (formed ? 0.92 : 0.25) * (0.55 + 0.45 * p.z / 1.45);
-        if (sp > (formed ? 1.2 : 2.4)) { ctx.strokeStyle = col; ctx.lineWidth = size * 1.6; ctx.beginPath(); ctx.moveTo(p.px, p.py); ctx.lineTo(p.x, p.y); ctx.stroke(); }
+        if (sp > (formed ? 1.2 : 2.4)) { ctx.strokeStyle = col; ctx.lineWidth = size * 1.6; ctx.beginPath(); ctx.moveTo(p.x - mx, p.y - my); ctx.lineTo(p.x, p.y); ctx.stroke(); }
         else { ctx.fillStyle = col; ctx.beginPath(); ctx.arc(p.x, p.y, size * 1.2, 0, 6.283); ctx.fill(); }
       }
       ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
@@ -761,11 +770,18 @@ const HOME = (() => {
     }
     function frame(now) {
       raf = 0;
-      const dt = last ? Math.min(0.05, (now - last) / 1000) : 1 / 60; last = now;
-      if (!document.hidden && !still() && !story?.covers) { step(dt); draw(); } // rests while the journey fills the screen
       if (!still()) raf = requestAnimationFrame(frame);
+      // How often the browser really delivers a frame, leaving out one-off stalls (a page being built) and page changes.
+      const iv = tick ? now - tick : 0; tick = now;
+      if (iv && iv < 100 && now >= holdUntil && now - born > 2000) { beat = beat ? beat * 0.95 + iv * 0.05 : iv; if (!lite && ++beats > 90 && beat > 22) goLite(); }
+      // Rests while the journey fills the screen and while a page changes.
+      if (document.hidden || still() || story?.covers || now < holdUntil) { last = 0; return; }
+      if (last && now - last < gap) return;
+      const dt = last ? Math.min(0.05, (now - last) / 1000) : 1 / 60; last = now; fdt = dt;
+      step(dt); draw();
     }
-    const kick = () => { if (!raf && !still()) { last = 0; raf = requestAnimationFrame(frame); } };
+    const kick = () => { if (!raf && !still()) { last = 0; tick = 0; raf = requestAnimationFrame(frame); } };
+    function goLite() { lite = true; gap = 1000 / 30 - 4; if ((window.devicePixelRatio || 1) > 1) layout(); }
     function settle() { atm = atmTo; readTint(); tint.amt = tint.to ? 1 : 0; if (tint.to) tint.c = tint.to.slice(); settlePoints(); draw(); }
 
     // Touch the hive: the pointer parts the swarm and the drifting bees circle it; a tap on open ground sends a ripple.
@@ -821,7 +837,7 @@ const HOME = (() => {
       cancelAnimationFrame(sayRaf); clearTimeout(sayRaf); sayRaf = 0;
       words = ''; cur = []; parts.forEach(p => { p.t = -1; });
       readTint();
-      if (fresh) { swirl(); if (still()) settle(); else kick(); }
+      if (fresh) { holdUntil = performance.now() + 450; swirl(); if (still()) settle(); else kick(); }
     }
     function stop() {
       story?.stop(); story = null; sbwRo?.disconnect();
@@ -843,7 +859,7 @@ const HOME = (() => {
     if (still()) settle(); else kick();
     const api = { stop, attach, say, pause: setPaused,
       get words() { return words; }, get frames() { return frames; }, get particles() { return N; }, get roaming() { return roam; },
-      get writing() { return Boolean(cur.length) && !roam; }, get paused() { return paused; },
+      get writing() { return Boolean(cur.length) && !roam; }, get paused() { return paused; }, get lite() { return lite; },
       get tint() { return tint.to && tint.amt > 0.5 ? `rgb(${tint.to.join(', ')})` : null; },
       get story() { return story?.stats; }, chapter: (i, instant) => story?.go(i, instant), play: () => story?.play() };
     current = api;

@@ -1037,8 +1037,21 @@ const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
 function renderTabs() {
   $('#tabs').innerHTML = `<div class="tabs-track" role="tablist" aria-label="Objectives"><span class="tab-pill" id="tab-pill" aria-hidden="true"></span>${TABS.map(t =>
     `<button type="button" role="tab" id="tab-${t.id}" aria-controls="page" class="tab ${t.id === 'decision' ? 'is-decision' : ''}" data-tab="${t.id}" aria-selected="${t.id === S.tab}" tabindex="${t.id === S.tab ? 0 : -1}">${t.label}${t.sub ? `<small>${t.sub}</small>` : ''}</button>`).join('')}</div>`;
+  fitRo?.disconnect(); [$('.topbar-inner'), ...$$('.topbar-inner > *'), ...$$('.tab')].forEach(n => fitRo?.observe(n));
+  fitTabs();
   requestAnimationFrame(() => movePill(false));
 }
+// Every tab must show whole. When they do not fit beside the brand and status (a narrower window, a wider look, the
+// "Your scenario" badge), they take their own row under the brand instead of hiding off the end of the strip.
+function fitTabs() {
+  const bar = $('.topbar'), track = $('.tabs-track');
+  if (!bar || !track) return;
+  bar.classList.remove('is-stacked');
+  bar.classList.toggle('is-stacked', track.scrollWidth > track.clientWidth + 1);
+  movePill(false);
+}
+let fitRaf = 0;
+const fitRo = 'ResizeObserver' in window ? new ResizeObserver(() => { cancelAnimationFrame(fitRaf); fitRaf = requestAnimationFrame(fitTabs); }) : null;
 // The selection pill is two springs, one per edge. The leading edge is quicker than the trailing one,
 // so the pill stretches toward the new tab and settles (motion hints where it is going).
 const pill = { l: null, r: null };
@@ -1089,7 +1102,7 @@ function renderPage(dir = 0) {
       if (rect.height > vh * 2) Object.assign(old.style, { clipPath: `inset(${Math.max(0, -rect.top)}px 0 ${Math.max(0, rect.bottom - vh)}px 0)`, transformOrigin: `${dir > 0 ? '0%' : '100%'} ${Math.max(0, -rect.top) + vh * 0.3}px` });
       old.classList.add('is-leaving'); old.inert = true; old.setAttribute('aria-hidden', 'true');
       $('#fold-layer').appendChild(old);
-      f.to({ x: -dir * rect.width * 0.3, ry: dir * 16, s: 0.9, o: 0, blur: 3 }, { response: 0.4, damping: 1 }).then(() => { old.remove(); sweepAnims(); });
+      f.to({ x: -dir * rect.width * 0.3, ry: dir * 16, s: 0.9, o: 0 }, { response: 0.4, damping: 1 }).then(() => { old.remove(); sweepAnims(); });
     } else if (dir && reduced()) {
       old.remove();
       el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 180, easing: 'ease' });
@@ -1098,13 +1111,14 @@ function renderPage(dir = 0) {
   host.appendChild(el);
   if (dir && !reduced()) {
     el.style.transformOrigin = dir > 0 ? '100% 30%' : '0% 30%';
-    const f = MOTION.fluid(el).set({ x: dir * Math.min(260, el.offsetWidth * 0.24), ry: -dir * 14, s: 0.94, o: 0, blur: 4 });
-    f.to({ x: 0, ry: 0, s: 1, o: 1, blur: 0 }, { response: 0.5, damping: 1, ry: { response: 0.56 }, blur: { response: 0.3 } }).then(done => { if (done) { f.clear(); el.style.transformOrigin = ''; } });
+    // No blur on the fold: re-blurring a whole page every frame was the costliest part of a tab change on laptop graphics.
+    const f = MOTION.fluid(el).set({ x: dir * Math.min(260, el.offsetWidth * 0.24), ry: -dir * 14, s: 0.94, o: 0 });
+    f.to({ x: 0, ry: 0, s: 1, o: 1 }, { response: 0.5, damping: 1, ry: { response: 0.56 } }).then(done => { if (done) { f.clear(); el.style.transformOrigin = ''; } });
     const glow = MOTION.fluid($('#aurora'));
     glow.to({ x: -dir * 60 }, { response: 0.5 }).then(() => glow.to({ x: 0 }, { response: 1.4 }));
   }
   if (dir) window.scrollTo({ top: 0, behavior: 'auto' });
-  if (dir) SOUND.page(dir); // two soft glass notes as the page opens (only once sound is on)
+  if (dir) SOUND.page(dir, TABS.indexOf(tab)); // a marimba note pitched by the tab's place (only once sound is on)
   HOME.start(el); // the swarm carries on as this page's background
   ART.mount(tab.home ? null : $('.flow-wrap', el), tab.id); // each step box shows a moving picture of its step
   if (tab.home) writeHash(); else renderStage(0);

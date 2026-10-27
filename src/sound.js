@@ -3,7 +3,7 @@
 //   a step box, Back or Next ...... a crisp click, like a phone keyboard (Back a shade lower, Next a shade brighter)
 //   a choice, chip or switch ....... a softer, lower click
 //   dragging a slider .............. light detent ticks, higher as the value rises, like a picker wheel
-//   a page opens (tab) ............. two glass notes, rising going forward, falling going back
+//   a page opens (tab) ............. one wooden marimba note, higher for each tab to the right (Home lowest)
 //   a step card lands .............. a soft low pop
 //   the blend verdict changes ...... B30 a bright rising chord, B20 two calm notes, B15 a low soft pair (OBJ4, Decision now)
 //   a new look ..................... a short shimmer
@@ -113,11 +113,25 @@ const SOUND = (() => {
   }
 
   // Events.
-  function page(dir = 1) {
+  // A page opens: one soft wooden marimba note, pitched by the tab's place in the top bar (Home lowest, Decision now
+  // highest), so the ear knows where it landed. A marimba bar is a sine with a bright 4x overtone that dies fast, plus the
+  // knock of the mallet.
+  const TAB_NOTES = [329.63, 369.99, 440, 493.88, 554.37, 659.26]; // E4 up to E5 on the same A major scale
+  function page(dir = 1, index = 0) {
     if (!live()) return;
-    const [a, b] = dir < 0 ? [987.77, 659.26] : [659.26, 987.77];
-    note(a, { gain: 0.045, decay: 0.5, type: 'triangle', pan: -0.2 * dir, octave: 0.15 });
-    note(b, { at: 0.07, gain: 0.04, decay: 0.7, type: 'sine', pan: 0.2 * dir, octave: 0.2 });
+    const k = Math.max(0, Math.min(TAB_NOTES.length - 1, index)), f = TAB_NOTES[k], t = ctx.currentTime;
+    const bus = ctx.createGain(); bus.gain.value = 1;
+    let out = bus;
+    if (ctx.createStereoPanner) { const p = ctx.createStereoPanner(); p.pan.value = (k / (TAB_NOTES.length - 1) - 0.5) * 0.5; bus.connect(p); out = p; }
+    out.connect(master);
+    const send = ctx.createGain(); send.gain.value = 0.12; out.connect(send); send.connect(room);
+    [[f, 0.085, 0.55], [f * 4, 0.03, 0.12], [f * 9.2, 0.008, 0.04]].forEach(([fr, level, decay]) => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = 'sine'; o.frequency.value = fr;
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(level, t + 0.004); g.gain.exponentialRampToValueAtTime(0.0001, t + decay);
+      o.connect(g); g.connect(bus); o.start(t); o.stop(t + decay + 0.05);
+    });
+    clickAt(Math.min(4000, f * 5), { gain: 0.14, q: 2.2 });
   }
   function land() {
     if (!live()) return;

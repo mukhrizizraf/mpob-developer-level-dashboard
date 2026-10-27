@@ -460,8 +460,13 @@ table.compare tbody td:last-child { border-radius: 0 calc(18px * var(--rk)) calc
 :root .has-hall .node.is-active .ring { transform: translateY(-6px) scale(1.07); box-shadow: 0 30px 56px -18px color-mix(in srgb, var(--c) 90%, transparent), inset 0 0 0 1px rgba(255,255,255,.3); }
 :root .has-hall .node.is-future .ring { filter: none; opacity: 1; transform: scale(.94); }
 .has-hall .node.is-future .disc { opacity: .72; }
-.has-hall .node:hover .ring { transform: translateY(-4px) scale(1.02); }
-:root .has-hall .node.is-active:hover .ring { transform: translateY(-8px) scale(1.08); }
+/* Hover lifts every card toward the pointer, the steps ahead included (.is-future used to outrank the hover and hold them
+   down). Precise pointers only, so a tap on a phone does not leave a card stuck up. The looks keep their own hover below. */
+@media (hover: hover) and (pointer: fine) {
+  :root .has-hall .node:hover .ring { transform: translateY(-10px) scale(1.04); }
+  :root .has-hall .node.is-active:hover .ring { transform: translateY(-12px) scale(1.09); }
+  .has-hall .node:hover .disc { opacity: 1; }
+}
 :root .has-hall .node:focus-visible .ring.ring { box-shadow: 0 0 0 3px var(--bg), 0 0 0 6px var(--c); }
 @media (max-width: 860px) {
   .has-hall .node { --cw: 104px; --ch: 140px; }

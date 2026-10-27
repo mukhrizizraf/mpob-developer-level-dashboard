@@ -78,8 +78,12 @@ button { font: inherit; color: inherit; }
   border-bottom: 1px solid var(--line);
 }
 .topbar-inner {
-  max-width: 1240px; margin: 0 auto; padding: 10px 32px; display: flex; align-items: center; gap: 20px;
+  max-width: 1600px; margin: 0 auto; padding: 10px 32px; display: flex; align-items: center; gap: 20px;
 }
+/* When the tabs do not fit on one row (app.js fitTabs), they take their own row under the brand, whole and centred. */
+.topbar.is-stacked .topbar-inner { flex-wrap: wrap; row-gap: 6px; }
+.topbar.is-stacked .tabs { order: 3; flex-basis: 100%; }
+.topbar.is-stacked .status { margin-left: auto; }
 .brand { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 0 0 auto; }
 .brand-mark {
   width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; color: #fff;
