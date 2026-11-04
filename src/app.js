@@ -1054,7 +1054,7 @@ let fitRaf = 0;
 const fitRo = 'ResizeObserver' in window ? new ResizeObserver(() => { cancelAnimationFrame(fitRaf); fitRaf = requestAnimationFrame(fitTabs); }) : null;
 // The selection pill is two springs, one per edge. The leading edge is quicker than the trailing one,
 // so the pill stretches toward the new tab and settles (motion hints where it is going).
-const pill = { l: null, r: null };
+const pill = { x: null, w: 0, anim: null };
 function movePill(animate = true) {
   const active = $(`.tab[data-tab="${S.tab}"]`); const el = $('#tab-pill');
   if (!active || !el) return;
@@ -1062,12 +1062,19 @@ function movePill(animate = true) {
   $('#page').setAttribute('aria-labelledby', `tab-${S.tab}`);
   el.classList.toggle('is-decision', S.tab === 'decision');
   const L = active.offsetLeft, R = L + active.offsetWidth;
-  const write = () => { el.style.left = `${pill.l.x}px`; el.style.width = `${Math.max(0, pill.r.x - pill.l.x)}px`; };
-  if (!pill.l) { pill.l = new MOTION.Spring(L, write); pill.r = new MOTION.Spring(R, write); }
-  if (!animate || reduced()) { pill.l.set(L); pill.r.set(R); return; }
-  const right = L > pill.l.x;
-  pill.l.to(L, { response: right ? 0.42 : 0.28, damping: 0.86, precision: 0.2 });
-  pill.r.to(R, { response: right ? 0.28 : 0.42, damping: 0.86, precision: 0.2 });
+  // Two springs, one for each end, so the pill stretches as it travels. They are worked out in advance and played as a
+  // transform on the compositor, so the pill answers the tap at once, even while the new page is being built.
+  const shown = pill.x === null ? null : new DOMMatrix(getComputedStyle(el).transform);
+  const fromL = shown ? pill.x + shown.e : L, fromR = shown ? fromL + pill.w * shown.a : R;
+  pill.anim?.cancel(); pill.anim = null;
+  pill.x = L; pill.w = Math.max(0, R - L); el.style.left = `${L}px`; el.style.width = `${pill.w}px`;
+  if (!animate || reduced()) return;
+  const right = L > fromL;
+  const ls = MOTION.springPath(fromL, L, { response: right ? 0.42 : 0.28, damping: 0.86 });
+  const rs = MOTION.springPath(fromR, R, { response: right ? 0.28 : 0.42, damping: 0.86 });
+  const n = Math.max(ls.length, rs.length), at = (list, k) => list[Math.min(k, list.length - 1)];
+  el.style.transformOrigin = '0 50%';
+  if (pill.w && n > 1) pill.anim = el.animate(Array.from({ length: n }, (_, k) => ({ transform: `translateX(${(at(ls, k) - L).toFixed(2)}px) scaleX(${(Math.max(0, at(rs, k) - at(ls, k)) / pill.w).toFixed(4)})` })), { duration: (n - 1) / 60 * 1000, easing: 'linear' });
   const track = $('.tabs-track');
   if (track && track.scrollWidth > track.clientWidth) track.scrollTo({ left: L - track.clientWidth / 2 + active.offsetWidth / 2, behavior: 'smooth' });
 }
@@ -1084,46 +1091,63 @@ function pageHtml(tab) {
     <div class="hive-say" data-hive-anchor aria-hidden="true"></div>
     <div class="stage-shell" id="stage-shell"></div>`;
 }
+// A tab change has two parts. The tap is answered first: the old page starts to fold away and that first frame reaches the
+// screen. Only then is the new page built, which is the slow part on a phone; the fold keeps moving meanwhile, because it
+// runs on the compositor. pageBuild is the page waiting for that first frame.
+let pageBuild = null;
 function renderPage(dir = 0) {
-  const tab = tabById(S.tab);
   const host = $('#page');
   const old = $('.page', host);
-  const leaving = typeof MORPH === 'undefined' ? [] : MORPH.capture(old); // the old step cards, before they move
-  const el = document.createElement('div');
-  el.className = 'page';
-  el.innerHTML = pageHtml(tab);
+  const leaving = [...(pageBuild?.leaving || []), ...(typeof MORPH === 'undefined' ? [] : MORPH.capture(old))]; // the old step cards, before they move
+  if (pageBuild) { cancelAnimationFrame(pageBuild.raf); clearTimeout(pageBuild.timer); clearTimeout(pageBuild.late); pageBuild = null; }
   if (old) {
     if (dir && !reduced()) {
-      const f = MOTION.fluid(old);
-      old.style.transform = ''; const rect = old.getBoundingClientRect(); f.write();
+      // It leaves from wherever it is on screen, even if it is still arriving.
+      const seen = getComputedStyle(old), fromX = { transform: seen.transform === 'none' ? 'translate3d(0, 0, 0)' : seen.transform, opacity: seen.opacity };
+      old.getAnimations().forEach(a => a.cancel()); MOTION.fluid(old).clear();
+      const rect = old.getBoundingClientRect();
       Object.assign(old.style, { position: 'absolute', top: `${rect.top}px`, left: `${rect.left}px`, width: `${rect.width}px`, margin: '0', transformOrigin: dir > 0 ? '0% 30%' : '100% 30%' });
       // A page much taller than the screen (Home's long story) folds only the part on screen, around its middle.
       const vh = innerHeight;
       if (rect.height > vh * 2) Object.assign(old.style, { clipPath: `inset(${Math.max(0, -rect.top)}px 0 ${Math.max(0, rect.bottom - vh)}px 0)`, transformOrigin: `${dir > 0 ? '0%' : '100%'} ${Math.max(0, -rect.top) + vh * 0.3}px` });
       old.classList.add('is-leaving'); old.inert = true; old.setAttribute('aria-hidden', 'true');
       $('#fold-layer').appendChild(old);
-      f.to({ x: -dir * rect.width * 0.3, ry: dir * 16, s: 0.9, o: 0 }, { response: 0.4, damping: 1 }).then(() => { old.remove(); sweepAnims(); });
-    } else if (dir && reduced()) {
-      old.remove();
-      el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 180, easing: 'ease' });
+      MOTION.glide(old, fromX, { transform: `translate3d(${-dir * rect.width * 0.3}px, 0, 0) rotateY(${dir * 16}deg) scale(0.9)`, opacity: 0 }, { response: 0.4, fill: 'forwards' })
+        .finished.then(() => { old.remove(); sweepAnims(); }, () => {});
     } else old.remove();
   }
+  if (dir) SOUND.page(dir, TABS.indexOf(tabById(S.tab))); // a marimba note pitched by the tab's place (only once sound is on)
+  if (dir && old && !reduced() && !document.hidden) {
+    const job = pageBuild = { leaving };
+    const start = () => { if (pageBuild === job) { pageBuild = null; buildPage(dir, leaving); } };
+    job.raf = requestAnimationFrame(() => { job.timer = setTimeout(start, 0); }); // a timer set in a frame callback runs after that frame is painted
+    job.late = setTimeout(start, 150);
+  } else buildPage(dir, leaving);
+}
+function buildPage(dir, leaving) {
+  const tab = tabById(S.tab);
+  const host = $('#page');
+  const el = document.createElement('div');
+  el.className = 'page';
+  el.innerHTML = pageHtml(tab);
   host.appendChild(el);
-  if (dir && !reduced()) {
-    el.style.transformOrigin = dir > 0 ? '100% 30%' : '0% 30%';
-    // No blur on the fold: re-blurring a whole page every frame was the costliest part of a tab change on laptop graphics.
-    const f = MOTION.fluid(el).set({ x: dir * Math.min(260, el.offsetWidth * 0.24), ry: -dir * 14, s: 0.94, o: 0 });
-    f.to({ x: 0, ry: 0, s: 1, o: 1 }, { response: 0.5, damping: 1, ry: { response: 0.56 } }).then(done => { if (done) { f.clear(); el.style.transformOrigin = ''; } });
-    const glow = MOTION.fluid($('#aurora'));
-    glow.to({ x: -dir * 60 }, { response: 0.5 }).then(() => glow.to({ x: 0 }, { response: 1.4 }));
-  }
+  if (dir && reduced()) el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 180, easing: 'ease' });
   if (dir) window.scrollTo({ top: 0, behavior: 'auto' });
-  if (dir) SOUND.page(dir, TABS.indexOf(tab)); // a marimba note pitched by the tab's place (only once sound is on)
   HOME.start(el); // the swarm carries on as this page's background
   ART.mount(tab.home ? null : $('.flow-wrap', el), tab.id); // each step box shows a moving picture of its step
   if (tab.home) writeHash(); else renderStage(0);
   sweepAnims();
   if (typeof MORPH !== 'undefined') MORPH.play(tab.home ? null : el, leaving, tab.id, { quiet: !dir }); // first click into a page: old cards turn to dust, new cards spin, fly and drop into place; later visits, and opening without a click: a slight pop
+  // The new page folds in last, so that the step cards above measure it at rest. Both folds run on the compositor, so the
+  // work of building a page cannot make them stutter. No blur: re-blurring a whole page was the costliest part of a tab change.
+  if (dir && !reduced()) {
+    el.style.transformOrigin = dir > 0 ? '100% 30%' : '0% 30%';
+    MOTION.glide(el, { transform: `translate3d(${dir * Math.min(260, el.offsetWidth * 0.24)}px, 0, 0) rotateY(${-dir * 14}deg) scale(0.94)`, opacity: 0 }, { transform: 'translate3d(0, 0, 0) rotateY(0deg) scale(1)', opacity: 1 })
+      .finished.then(() => { el.style.transformOrigin = ''; }, () => {});
+    // Ambient layer: the glow drifts a little the other way, then settles (counter-motion). Hidden while the swarm is on.
+    const glow = $('#aurora');
+    if (getComputedStyle(glow).display !== 'none') { const f = MOTION.fluid(glow); f.to({ x: -dir * 60 }, { response: 0.5 }).then(() => f.to({ x: 0 }, { response: 1.4 })); }
+  }
 }
 
 const QIDS = new Set(Object.keys(Q));
@@ -1160,20 +1184,21 @@ function stageHtml(tab, i) {
 // Step change: the card slides along the direction of travel. After a swipe the outgoing card keeps the
 // finger's velocity and the incoming one arrives beside it, like a carousel; after a tap both move a short way.
 function renderStage(dir = 0, handoff = null) {
+  if (pageBuild) return; // the new page is about to be built, and it will open on this step
   const tab = tabById(S.tab);
   const i = S.step[tab.id];
   const shell = $('#stage-shell');
   const old = $('.stage:not(.is-leaving)', shell);
   const hadFocus = Boolean(old?.contains(document.activeElement));
-  const h0 = shell.offsetHeight;
+  const h0 = dir ? shell.offsetHeight : 0; // measured only if something will move: each forced layout costs a phone real time
   const el = document.createElement('section');
   el.className = `stage c${i + 1}`;
   el.setAttribute('aria-label', `Step ${i + 1} of ${tab.steps.length}`);
   el.innerHTML = stageHtml(tab, i);
   $('#page').style.setProperty('--accent', `var(--s${i + 1})`);
   HOME.say(tab.steps[i].short); // the swarm writes this step in the band under the objective
-  const width = old?.offsetWidth || shell.offsetWidth;
   const motion = dir && !reduced();
+  const width = motion ? old?.offsetWidth || shell.offsetWidth : 0;
   if (old) {
     if (motion) {
       old.classList.add('is-leaving'); old.inert = true; old.setAttribute('aria-hidden', 'true');
@@ -1205,8 +1230,7 @@ function renderStage(dir = 0, handoff = null) {
     }
   }
   if (hadFocus) $('h2', el).focus({ preventScroll: true });
-  const top = el.getBoundingClientRect().top;
-  if (dir && top < 64) window.scrollTo({ top: window.scrollY + top - 96, behavior: reduced() ? 'auto' : 'smooth' });
+  if (dir) { const top = el.getBoundingClientRect().top; if (top < 64) window.scrollTo({ top: window.scrollY + top - 96, behavior: reduced() ? 'auto' : 'smooth' }); }
   $$('#page .node').forEach((node, k) => {
     node.classList.toggle('is-active', k === i);
     node.classList.toggle('is-done', k < i);

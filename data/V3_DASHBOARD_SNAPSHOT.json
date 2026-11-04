@@ -1,8 +1,8 @@
 {
   "surface": "dashboard",
   "title": "Malaysia Biodiesel Mandate Decision Studio",
-  "generatedAt": "2026-09-11T22:50:56+08:00",
-  "status": "analytical-snapshot",
+  "generatedAt": "2026-10-30T18:55:44+08:00",
+  "status": "analytical snapshot",
   "filters": [],
   "queries": {
     "model_registry": {
@@ -16,8 +16,8 @@
           "dataThrough": "2026-04",
           "dataThroughLabel": "2026-04",
           "sampleSize": 195,
-          "estimatedAt": "2026-09-11T22:50:56+08:00",
-          "estimatedAtLabel": "2026-09-11",
+          "estimatedAt": "2026-10-30T18:55:44+08:00",
+          "estimatedAtLabel": "2026-10-30",
           "refreshMode": "Codex V3 authorised Python refresh",
           "operationalMaster": "MPOB_V3_Codex_Master.xlsx",
           "inputVariableCount": 20,
@@ -3236,8 +3236,46 @@
         ],
         "metricDefinitions": []
       }
+    },
+    "rq1_proposal_tests": {
+      "rows": [
+        {
+          "test": "Pesaran-Shin-Smith bounds F (Case III)",
+          "statistic": "Not available",
+          "threshold": "Not available",
+          "result": "Review required",
+          "interpretation": "Diagnostic did not run: AttributeError: 'BoundsTestResult' object has no attribute 'crit_vals'"
+        },
+        {
+          "test": "Zivot-Andrews PME cost",
+          "statistic": -4.503,
+          "threshold": -5.073,
+          "result": "Break candidate 2020-11",
+          "interpretation": "Single endogenous-break screen; review alongside the specified 2021-2026 episodes."
+        },
+        {
+          "test": "Zivot-Andrews MOPS Diesel",
+          "statistic": -3.872,
+          "threshold": -5.073,
+          "result": "Break candidate 2020-11",
+          "interpretation": "Single endogenous-break screen; review alongside the specified 2021-2026 episodes."
+        }
+      ],
+      "source": {
+        "label": "RQ1 cointegration and structural-break diagnostics",
+        "files": [
+          "codex_pipeline/rq1_apm_bio.py"
+        ],
+        "filters": [
+          "Codex V3 authorised refresh"
+        ],
+        "caveats": [
+          "ANALYTICAL SNAPSHOT; no output becomes OFFICIAL through this pipeline."
+        ],
+        "metricDefinitions": []
+      }
     }
   },
-  "releaseFingerprint": "4b6a78ac3f6009bc72857a260f5e44ba384a48b4e183ff9669139c37f1727a5a",
+  "releaseFingerprint": "cbd4e7d075aaeae1983628cc1682be5efecda5d66d6ef94e463fc04164170f34",
   "buildStatus": "complete"
 }

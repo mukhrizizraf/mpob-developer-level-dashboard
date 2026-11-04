@@ -56,7 +56,7 @@ input[type=range]:active::-moz-range-thumb { transform: scale(1.22); }
 /* ── Page and step transitions (springs in motion.js) ── */
 #page { perspective: 1600px; position: relative; }
 .fold-layer { position: fixed; inset: 0; pointer-events: none; z-index: 15; perspective: 1600px; overflow: hidden; }
-.fold-layer .page { position: absolute; will-change: transform, opacity, filter; }
+.fold-layer .page { position: absolute; will-change: transform, opacity; }
 .aurora { position: fixed; inset: 0 0 auto; height: 680px; z-index: -1; will-change: transform; }
 .aurora i { animation: none; }
 .page { --accent: var(--s1); }
@@ -457,6 +457,8 @@ table.compare tbody td:last-child { border-radius: 0 calc(18px * var(--rk)) calc
   font-size: 10.5px; font-weight: 700; line-height: 1.25; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
 .has-hall .node.is-active .node-title { color: var(--ink); }
 .has-hall .node-value { margin-top: 18px; font-size: 12.5px; padding: 3px 11px; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); background: color-mix(in srgb, var(--card) 70%, transparent); }
+/* On touch screens the chip is plain: a blur per card is costly on a phone while a page or a card moves behind it. */
+@media (hover: none) { .has-hall .node-value { backdrop-filter: none; -webkit-backdrop-filter: none; background: color-mix(in srgb, var(--card) 92%, transparent); } }
 :root .has-hall .node.is-active .ring { transform: translateY(-6px) scale(1.07); box-shadow: 0 30px 56px -18px color-mix(in srgb, var(--c) 90%, transparent), inset 0 0 0 1px rgba(255,255,255,.3); }
 :root .has-hall .node.is-future .ring { filter: none; opacity: 1; transform: scale(.94); }
 .has-hall .node.is-future .disc { opacity: .72; }

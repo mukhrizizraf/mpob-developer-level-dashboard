@@ -99,6 +99,32 @@ const MOTION = (() => {
     }
   }
 
+  // The same spring as a Web Animation of transform and opacity: it runs on the compositor, so a busy main thread (a page
+  // being built) cannot slow it down or make it stutter. For one-way moves that no finger is steering.
+  const glides = new Map();
+  function glide(el, from, to, { response = 0.5, damping = 1, fill = 'none' } = {}) {
+    const key = `${response}|${damping}`;
+    if (!glides.has(key)) {
+      const s = cssSpring(response, damping);
+      glides.set(key, window.CSS?.supports?.('transition-timing-function', 'linear(0, 1)') ? s : { easing: 'cubic-bezier(.22, 1, .36, 1)', duration: s.duration });
+    }
+    const { easing, duration } = glides.get(key);
+    return el.animate([from, to], { duration, easing, fill });
+  }
+
+  // A spring worked out in advance: its value at each 1/60 s, for building a Web Animation of more than one spring.
+  function springPath(from, to, { response = 0.4, damping = 1, precision = 0.2 } = {}) {
+    const k = (2 * Math.PI / response) ** 2, c = 4 * Math.PI * damping / response, h = 1 / 600;
+    let x = from, v = 0; const out = [from];
+    for (let t = 0; t < 3; t += 1 / 60) {
+      for (let i = 0; i < 10; i++) { v += (-k * (x - to) - c * v) * h; x += v * h; }
+      out.push(x);
+      if (Math.abs(v) < precision * 10 && Math.abs(x - to) < precision) break;
+    }
+    out[out.length - 1] = to;
+    return out;
+  }
+
   /* ── Gesture helpers (Designing Fluid Interfaces sample code) ── */
   const project = (velocity, rate = 0.998) => velocity / 1000 * rate / (1 - rate);
   const rubberband = (overshoot, dimension, constant = 0.55) => overshoot * dimension * constant / (dimension + constant * Math.abs(overshoot));
@@ -164,5 +190,5 @@ const MOTION = (() => {
   // Short, meaningful haptic tick on devices that support it (never during reduced motion).
   const haptic = (ms = 8) => { if (!state.reduce) try { navigator.vibrate?.(ms); } catch {} };
 
-  return { state, watch: fn => watchers.add(fn), get reduce() { return state.reduce; }, Spring, fluid, prop, cssSpring, project, rubberband, swipe, haptic };
+  return { state, watch: fn => watchers.add(fn), get reduce() { return state.reduce; }, Spring, fluid, prop, cssSpring, glide, springPath, project, rubberband, swipe, haptic };
 })();

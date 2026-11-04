@@ -355,6 +355,54 @@ expect('A03 print summary has the blend', (await text('#print-summary .ps-result
 expect('A03 print keeps the snapshot status', await run(`getComputedStyle(document.getElementById('status')).display !== 'none'`), true);
 await media([{ name: 'prefers-color-scheme', value: scheme }]); await run(`THEME.choose('system')`);
 
+// 15 · The step-card flight runs on the compositor, lands exactly on the real card and survives being interrupted
+await send('Page.reload');
+for (let i = 0; i < 100 && !(await run("typeof S !== 'undefined' && document.readyState === 'complete'")); i++) await sleep(100);
+await size(390, 844); await sleep(900);
+expect('Flight: the tap is answered first, the page is built after that frame', await run(`(() => { document.querySelector('.tab[data-tab="obj1"]').click(); return pageBuild !== null && document.querySelectorAll('#page .page').length === 0; })()`), true);
+for (let i = 0; i < 100 && !(await run(`document.querySelectorAll('.morph-card').length > 0`)); i++) await sleep(20);
+const flight = await run(`(() => {
+  const cards = [...document.querySelectorAll('.morph-card')], all = document.getAnimations().filter(a => a.effect?.target?.closest?.('.morph-card'));
+  const props = [...new Set(all.flatMap(a => a.effect.getKeyframes().flatMap(k => Object.keys(k))))].filter(k => !['offset', 'computedOffset', 'easing', 'composite'].includes(k)).sort().join(',');
+  document.querySelector('#page .page').getAnimations().forEach(a => a.finish()); // compare against the page at rest, not in mid-fold
+  all.forEach(a => { a.pause(); a.currentTime = a.effect.getComputedTiming().endTime - 0.5; });
+  const box = e => e.getBoundingClientRect();
+  const off = cards.map((c, i) => {
+    const n = document.querySelectorAll('#page .flow .node')[i]; n.classList.remove('morph-wait'); n.classList.add('morph-snap');
+    const a = box(c.querySelector('.ring')), b = box(n.querySelector('.ring')); n.classList.add('morph-wait'); n.classList.remove('morph-snap');
+    return Math.max(Math.abs(a.left - b.left), Math.abs(a.top - b.top), Math.abs(a.width - b.width), Math.abs(a.height - b.height));
+  });
+  const moving = cards.flatMap(c => [...c.querySelectorAll('.step-art, .step-art *')]).filter(e => getComputedStyle(e).animationName !== 'none').length;
+  const worst = Math.max(...off);
+  all.forEach(a => a.play());
+  return { cards: cards.length, props, moving, close: worst < 1, worst: Number(worst.toFixed(2)) };
+})()`);
+expect('Flight: every card is in the air', flight.cards, await run(`document.querySelectorAll('#page .flow .node').length`));
+expect('Flight: only transform and opacity animate, so the compositor can run it', flight.props, 'opacity,transform');
+expect('Flight: the flying pictures hold still', flight.moving, 0);
+expect(`Flight: each copy lands on its real card (worst ${flight.worst}px)`, flight.close, true);
+const cleared = `document.querySelectorAll('.morph-card, .morph-wait, .is-morphing').length + document.getElementById('fold-layer').children.length`;
+for (let i = 0; i < 60 && await run(cleared); i++) await sleep(50);
+expect('Flight: nothing is left behind after landing', await run(cleared), 0);
+expect('Flight: the landed cards stay put, their own entrance does not replay', await run(`[...document.querySelectorAll('#page .flow .node')].flatMap(n => n.getAnimations().map(a => a.animationName)).filter(n => n === 'nodeIn').length + (getComputedStyle(document.querySelector('#page .flow .node')).opacity === '1' ? 0 : 100)`), 0);
+expect('Flight: the real cards are back, with their moving pictures', await run(`getComputedStyle(document.querySelector('#page .flow .node .step-art')).visibility`), 'visible');
+await run(`document.querySelector('.tab[data-tab="obj2"]').click(); document.querySelector('.tab[data-tab="obj3"]').click(); true`); // two tabs inside one frame
+for (let i = 0; i < 100 && !(await run(`document.querySelectorAll('.morph-card').length > 0`)); i++) await sleep(20);
+await sleep(200);
+expect('Flight: two quick tabs open the last one', await run(`S.tab + document.querySelectorAll('#page .page').length`), 'obj31');
+await click('.tab[data-tab="decision"]'); await sleep(300); await click('.tab[data-tab="home"]'); // change of mind in mid-air, then Home
+await sleep(1500);
+for (let i = 0; i < 60 && await run(cleared); i++) await sleep(50);
+expect('Flight: changing tab in mid-air leaves nothing behind', await run(cleared), 0);
+expect('Flight: Home opens after it', await run(`S.tab + document.querySelectorAll('#page .page').length`), 'home1');
+await click('.tab[data-tab="obj1"]'); await sleep(1200);
+expect('Flight: a page already seen only pops', await run(`document.querySelectorAll('.morph-card').length + (document.querySelector('#page .flow-wrap').classList.contains('morph-seen') ? 0 : 100)`), 0);
+await media([{ name: 'prefers-color-scheme', value: scheme }, { name: 'prefers-reduced-motion', value: 'reduce' }]); await sleep(200);
+await click('.tab[data-tab="obj4"]'); await sleep(100);
+expect('Flight: under Reduce motion the cards simply appear', await run(`document.querySelectorAll('.morph-card').length + (pageBuild ? 100 : 0) + (document.querySelector('#page .flow .node') ? 0 : 100)`), 0);
+await media([{ name: 'prefers-color-scheme', value: scheme }]); await sleep(200);
+await size(1440);
+
 console.log(checks.join('\n'));
 const failed = checks.filter(c => c.startsWith('FAIL')).length;
 console.log(`${checks.length - failed} of ${checks.length} checks pass.`);
