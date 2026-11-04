@@ -62,8 +62,8 @@ input[type=range]:active::-moz-range-thumb { transform: scale(1.22); }
 .page { --accent: var(--s1); }
 .stage-shell { position: relative; }
 .stage-shell:empty { min-height: 70vh; } /* a tab change builds the step just after the cards start */
-.page, .stage, .hero, .hive-say, .story, .story * { touch-action: pan-y; } /* sideways drags reach the swipe between tabs, from anywhere on the page */
-.flow-wrap { touch-action: auto; } /* the row of step boxes keeps its own sideways scroll */
+body, .page, .stage, .hero, .hive-say, .story, .story * { touch-action: pan-y pinch-zoom; } /* sideways drags reach the swipe between tabs, from anywhere on the screen */
+.flow-wrap, .tabs-track, .map-wrap, .compare-wrap, dialog { touch-action: auto; } /* these keep their own sideways scroll */
 .stage { will-change: transform; }
 .stage.is-dragging { cursor: grabbing; user-select: none; -webkit-user-select: none; }
 .stage.is-leaving { z-index: 0; }

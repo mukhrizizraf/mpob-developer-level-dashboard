@@ -1081,10 +1081,11 @@ function movePill(animate = true) {
 
 // Tab change: the old page folds away toward the side it leaves by, the new one unfolds from the other side
 // (a foldable phone's hinge). Both are springs, so a second tap mid-fold retargets from where things are.
+const SWIPE_HINT = window.matchMedia?.('(pointer: coarse)').matches ? ' Swipe sideways to change objective.' : ' Or drag the card.';
 function pageHtml(tab) {
   if (tab.home) return HOME.html(homeConfig());
   const n = tab.steps.length;
-  return `<section class="hero"><div class="hero-kicker">${tab.kicker}</div><h1>${tab.title}</h1><div class="hero-meta">${n} steps. ${tab.id === 'decision' ? 'Changes here stay on this page.' : 'Open Detail under each step for the evidence, or swipe the card.'}</div></section>
+  return `<section class="hero"><div class="hero-kicker">${tab.kicker}</div><h1>${tab.title}</h1><div class="hero-meta">${n} steps. ${tab.id === 'decision' ? 'Changes here stay on this page.' : 'Open Detail under each step for the evidence, ${SWIPE_HINT}'}</div></section>
     <div class="flow-wrap"><nav class="flow" data-n="${n}" aria-label="Steps">${tab.steps.map((s, i) => `<button type="button" class="node c${i + 1}" data-go="${i}" style="--i:${i}">
       <span class="ring"><span class="disc">${ICON[s.icon]}<span class="n">${String(i + 1).padStart(2, '0')}</span></span><span class="check">${ICON.check}</span></span>
       <span class="node-label">Step ${i + 1}</span><span class="node-title">${s.short}</span><span class="node-value" data-chip="${i}"></span></button>`).join('')}</nav></div>
@@ -1702,13 +1703,14 @@ window.addEventListener('resize', () => {
 window.addEventListener('hashchange', () => { const h = readHash(); if (h && (h.tab !== S.tab || h.step !== S.step[h.tab])) goTab(h.tab, { step: h.step, instant: true }); });
 
 // Swipe the step card: 1:1 tracking, rubber-band at the first and last step, momentum decides.
-// Sideways swipes. On the step card: the next or previous step, and past either end the next or previous tab. Anywhere else
-// on the page (the heading, the background, the Home journey): the next or previous tab, Home to Decision now. The row of
-// step boxes keeps its own sideways scroll.
+// Sideways swipes. On a touch screen a swipe anywhere on the page changes tab, the same in both directions: Home to Decision
+// now. It used to change step first on the step card, so from Step 1 a swipe right changed tab but a swipe left did not.
+// The row of step boxes keeps its own sideways scroll. With a mouse, dragging the step card still changes step.
 const tabBeside = dir => TABS[tabIndex(S.tab) + dir];
 MOTION.swipe(document, {
   surface: '.stage:not(.is-leaving)',
   ignore: 'input, textarea, select, summary, .map-wrap, .compare-wrap, .dstack, .chart, .tbl-wrap, [data-no-swipe]',
+  mouseOnly: true,
   can: dir => { const i = S.step[S.tab] + dir; return (i >= 0 && i < tabById(S.tab).steps.length) || Boolean(tabBeside(dir)); },
   onMove: (el, offset, width) => MOTION.fluid(el).set({ x: offset, s: 1 - Math.min(0.02, Math.abs(offset) / width * 0.04) }),
   onEnd: (el, { commit, dir, offset, velocity }) => {
@@ -1722,10 +1724,12 @@ MOTION.swipe(document, {
   },
 });
 MOTION.swipe(document, {
-  surface: '.page:not(.is-leaving)',
-  ignore: '.stage, .flow-wrap, button, a, input, textarea, select, summary, [data-no-swipe]',
+  // The whole screen, margins too: a thumb swiping left usually starts close to the right edge, outside the page's own box.
+  surface: event => (event.target.closest?.('.topbar, dialog, .theme-pop, .sound-fab, .fold-layer') ? null : $('#page > .page:not(.is-leaving)')),
+  ignore: '.flow-wrap, .guide-knob, input, textarea, select, summary, .map-wrap, .compare-wrap, .dstack, .chart, .tbl-wrap, [data-no-swipe]',
   touchOnly: true,
-  edge: 24,
+  edge: 24, // the left edge is the phone's back gesture
+  edgeRight: 6,
   can: dir => Boolean(tabBeside(dir)),
   onMove: (el, offset) => MOTION.fluid(el).set({ x: offset }),
   onEnd: (el, { commit, dir, velocity }) => {

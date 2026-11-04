@@ -131,13 +131,14 @@ const MOTION = (() => {
 
   // Horizontal swipe with hysteresis, 1:1 tracking, rubber-band at the ends and velocity hand-off.
   // ignore: selector of children that keep their own gestures (sliders, tables, charts, inputs).
-  function swipe(root, { surface, ignore, can, onMove, onEnd, touchOnly = false, edge = 0 }) {
+  function swipe(root, { surface, ignore, can, onMove, onEnd, touchOnly = false, mouseOnly = false, edge = 0, edgeRight = 0 }) {
     let g = null;
     root.addEventListener('pointerdown', event => {
       if (event.button !== 0 || !event.isPrimary) return;
       if (touchOnly && event.pointerType !== 'touch') return;
-      if (event.clientX < edge || event.clientX > innerWidth - edge) return; // the phone's own back gesture starts here
-      const el = event.target.closest?.(surface);
+      if (mouseOnly && event.pointerType === 'touch') return;
+      if (event.clientX < edge || event.clientX > innerWidth - edgeRight) return; // the phone's own back gesture starts at the left edge
+      const el = typeof surface === 'function' ? surface(event) : event.target.closest?.(surface); // surface: a selector, or a function that picks the element
       if (!el || event.target.closest(ignore)) return;
       g = { el, id: event.pointerId, x0: event.clientX, y0: event.clientY, axis: null, hist: [[event.timeStamp, event.clientX]], width: el.offsetWidth };
     });
