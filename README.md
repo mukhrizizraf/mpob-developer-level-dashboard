@@ -27,7 +27,7 @@ that open like an iPhone notification stack.
 
 ## Using it
 
-Everything in the User level (swipe between steps, exact-value boxes that reject bad input, "Your scenario" labelling, reset
+Everything in the User level (swipe between steps and tabs, exact-value boxes that reject bad input, "Your scenario" labelling, reset
 scopes, the six looks, `#obj4-5` links, print summary, the Home journey (scroll, swipe or Play) with the sponsor marks, the living hive behind every page that writes the step in hand, the step pictures (a moving drawing of each step, five following the live numbers), the step morph (first click only, then a slight pop), the numbered step buttons in the footer, the slide-to-start guide and sound, and the tabs at the top), plus:
 
 - **Detail stacks.** Tap a stack to fan the cards out, then open any card. Collapsed cards cannot be reached with Tab.

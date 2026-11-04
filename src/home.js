@@ -776,9 +776,9 @@ const HOME = (() => {
       if (iv && iv < 100 && now >= holdUntil && now - born > 2000) { beat = beat ? beat * 0.95 + iv * 0.05 : iv; if (!lite && ++beats > 90 && beat > 22) goLite(); }
       // Rests while the journey fills the screen and while a page changes.
       if (document.hidden || still() || story?.covers || now < holdUntil) { last = 0; return; }
-      // The step cards are in the air: the swarm draws at about 30 fps until they land, to leave the GPU to them.
-      const flying = typeof MORPH !== 'undefined' && MORPH.busy;
-      if (last && now - last < (flying ? Math.max(gap, 1000 / 30 - 4) : gap)) return;
+      // The step cards are being dealt: on a phone the swarm holds still until they are down, to leave the GPU to them.
+      if (typeof MORPH !== 'undefined' && MORPH.busy && window.matchMedia?.('(pointer: coarse)').matches) { last = 0; return; }
+      if (last && now - last < gap) return;
       const dt = last ? Math.min(0.05, (now - last) / 1000) : 1 / 60; last = now; fdt = dt;
       step(dt); draw();
     }

@@ -102,14 +102,14 @@ const MOTION = (() => {
   // The same spring as a Web Animation of transform and opacity: it runs on the compositor, so a busy main thread (a page
   // being built) cannot slow it down or make it stutter. For one-way moves that no finger is steering.
   const glides = new Map();
-  function glide(el, from, to, { response = 0.5, damping = 1, fill = 'none' } = {}) {
+  function glide(el, from, to, { response = 0.5, damping = 1, fill = 'none', delay = 0 } = {}) {
     const key = `${response}|${damping}`;
     if (!glides.has(key)) {
       const s = cssSpring(response, damping);
       glides.set(key, window.CSS?.supports?.('transition-timing-function', 'linear(0, 1)') ? s : { easing: 'cubic-bezier(.22, 1, .36, 1)', duration: s.duration });
     }
     const { easing, duration } = glides.get(key);
-    return el.animate([from, to], { duration, easing, fill });
+    return el.animate([from, to], { duration, easing, fill, delay });
   }
 
   // A spring worked out in advance: its value at each 1/60 s, for building a Web Animation of more than one spring.
@@ -131,10 +131,12 @@ const MOTION = (() => {
 
   // Horizontal swipe with hysteresis, 1:1 tracking, rubber-band at the ends and velocity hand-off.
   // ignore: selector of children that keep their own gestures (sliders, tables, charts, inputs).
-  function swipe(root, { surface, ignore, can, onMove, onEnd }) {
+  function swipe(root, { surface, ignore, can, onMove, onEnd, touchOnly = false, edge = 0 }) {
     let g = null;
     root.addEventListener('pointerdown', event => {
       if (event.button !== 0 || !event.isPrimary) return;
+      if (touchOnly && event.pointerType !== 'touch') return;
+      if (event.clientX < edge || event.clientX > innerWidth - edge) return; // the phone's own back gesture starts here
       const el = event.target.closest?.(surface);
       if (!el || event.target.closest(ignore)) return;
       g = { el, id: event.pointerId, x0: event.clientX, y0: event.clientY, axis: null, hist: [[event.timeStamp, event.clientX]], width: el.offsetWidth };

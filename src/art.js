@@ -109,6 +109,12 @@ const ART = (() => {
   .ring > .step-art, .step-art * { transition: none !important; }
   .ring > .step-art { transform: none; }
 }
+@media (hover: none) {
+  .ring:has(> .step-art), .has-art .ring { -webkit-box-reflect: none; }
+  .ring > .step-art { transform: scale(1.04); transition: filter .45s ease; }
+  /* Only the step in hand keeps moving: iPhone Safari repaints moving SVG on the main thread, so five at once slow everything. */
+  .node:not(.is-active) .step-art, .node:not(.is-active) .step-art * { animation: none !important; }
+}
 @media print { .ring > .step-art * { animation: none !important; } }`;
 
   let uid = 0, wrap = null, io = null, last = null, styled = false;

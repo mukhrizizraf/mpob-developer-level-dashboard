@@ -64,7 +64,7 @@ async function typeInto(numKey, value) {
 }
 const checks = [];
 const expect = (label, actual, wanted) => checks.push(`${actual === wanted ? 'PASS' : 'FAIL'} ${label}: ${JSON.stringify(actual)}${actual === wanted ? '' : ` (wanted ${JSON.stringify(wanted)})`}`);
-const go = async (tab, step) => { await click(`.tab[data-tab="${tab}"]`); await sleep(900); if (step !== undefined) { await click(`.node[data-go="${step}"]`); await sleep(700); } };
+const go = async (tab, step) => { await click(`.tab[data-tab="${tab}"]`); await sleep(900); for (let i = 0; tab !== 'home' && i < 60 && !(await run(`Boolean(document.querySelector('#page .stage'))`)); i++) await sleep(50); if (step !== undefined) { await click(`.node[data-go="${step}"]`); await sleep(700); } };
 
 // 0 · Home: opens first, straight into the journey (no preloader), and is the journey only: one long camera move, few words
 expect('Home opens first', await run('S.tab'), 'home');
@@ -401,6 +401,50 @@ await media([{ name: 'prefers-color-scheme', value: scheme }, { name: 'prefers-r
 await click('.tab[data-tab="obj4"]'); await sleep(100);
 expect('Flight: under Reduce motion the cards simply appear', await run(`document.querySelectorAll('.morph-card').length + (pageBuild ? 100 : 0) + (document.querySelector('#page .flow .node') ? 0 : 100)`), 0);
 await media([{ name: 'prefers-color-scheme', value: scheme }]); await sleep(200);
+await size(1440);
+
+// 16 · Swiping between tabs on a phone
+await send('Emulation.setTouchEmulationEnabled', { enabled: true });
+await size(390, 844); await run(`window.scrollTo(0, 0); true`);
+const touchSwipe = async (x0, y, dx) => {
+  await send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: x0, y }] });
+  for (let k = 1; k <= 8; k++) { await send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: x0 + dx * k / 8, y: y + 1 }] }); await sleep(16); }
+  await send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }); await sleep(1100);
+};
+const spot = sel => run(`(() => { const r = document.querySelector(${JSON.stringify(sel)}).getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; })()`);
+await go('home'); await sleep(500);
+await touchSwipe(320, 500, -240);
+expect('Swipe: left on Home opens OBJ1', await run('S.tab'), 'obj1');
+await sleep(400); let at = await spot('#page .hero h1');
+await touchSwipe(320, at[1], -240);
+expect('Swipe: left on the heading opens the next tab', await run('S.tab'), 'obj2');
+await sleep(400); at = await spot('#page .hero h1');
+await touchSwipe(70, at[1], 240);
+expect('Swipe: right on the heading goes back a tab', await run('S.tab'), 'obj1');
+await sleep(400); at = await spot('#page .hero h1');
+await touchSwipe(320, at[1], -40);
+expect('Swipe: a small drag stays on the page and settles back', await run(`S.tab + '|' + document.querySelector('#page .page').style.transform`), 'obj1|');
+at = await spot('#page .flow-wrap');
+const left0 = await run(`document.querySelector('#page .flow-wrap').scrollLeft`);
+await touchSwipe(320, at[1], -200);
+expect('Swipe: the row of step boxes keeps its own scroll', await run(`S.tab + (document.querySelector('#page .flow-wrap').scrollLeft > ${left0})`), 'obj1true');
+await run(`document.querySelector('#page .flow-wrap').scrollLeft = 0; true`);
+at = await spot('#page .stage:not(.is-leaving) .stage-head');
+await run(`document.querySelector('#page .stage:not(.is-leaving) .stage-head').scrollIntoView({ block: 'center' }); true`); await sleep(300);
+at = await spot('#page .stage:not(.is-leaving) .stage-head');
+await touchSwipe(320, at[1], -240);
+expect('Swipe: on the step card it still changes step', await run(`S.tab + S.step.obj1`), 'obj11');
+await go('decision', 3); await sleep(300);
+await run(`document.querySelector('#page .stage:not(.is-leaving) .stage-head').scrollIntoView({ block: 'center' }); true`); await sleep(300);
+at = await spot('#page .stage:not(.is-leaving) .stage-head');
+await touchSwipe(320, at[1], -240);
+expect('Swipe: Decision now is the last tab', await run('S.tab'), 'decision');
+await go('obj1'); await sleep(200); await run(`S.step.obj1 = 0; true`); await run(`renderStage(0); true`); await sleep(200);
+await run(`document.querySelector('#page .stage:not(.is-leaving) .stage-head').scrollIntoView({ block: 'center' }); true`); await sleep(300);
+at = await spot('#page .stage:not(.is-leaving) .stage-head');
+await touchSwipe(70, at[1], 240);
+expect('Swipe: right on the first step goes back a tab', await run('S.tab'), 'home');
+await send('Emulation.setTouchEmulationEnabled', { enabled: false });
 await size(1440);
 
 console.log(checks.join('\n'));

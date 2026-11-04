@@ -27,6 +27,7 @@
 //       MORPH.play(newPage | null, boxes, key, { quiet })  (null for Home: the old cards just turn to dust; key names
 //       the page; quiet: the page opened without a click, so the cards pop and the flight is kept for the first click)
 //       Call play() before the new page starts its own fold: it measures the row at rest.
+//       MORPH.stageAfter: milliseconds after the flight starts when the step below the row can be built.
 
 const MORPH = (() => {
   const TAU = Math.PI * 2;
@@ -36,6 +37,7 @@ const MORPH = (() => {
   const T = { spin: 0.5, fly: 0.52, hop: 0.2, fade: 0.14, stagger: 0.06 };
   const LAND = T.spin + T.fly, REST = LAND + T.hop;
   const TURNS = 720; // the spin, in degrees, across the whole flight
+  const STAGE_AFTER = 500; // milliseconds after the cards start when the step below the row can be built: they run on the compositor
   // How much dust. Touch screens get less: the look is the same at phone size and the GPU has far less to do.
   const COARSE = Boolean(window.matchMedia?.('(pointer: coarse)').matches);
   const DUST = COARSE ? { max: 380, card: 36, feed: 50, burst: 12, trail: 0.3, air: 30 } : { max: 1200, card: 80, feed: 110, burst: 22, trail: 0.7, air: 60 };
@@ -357,5 +359,5 @@ const MORPH = (() => {
     ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
   }
 
-  return { capture, play, dissolve, finish: () => finish(true), get busy() { return Boolean(run); } };
+  return { capture, play, dissolve, finish: () => finish(true), stageAfter: STAGE_AFTER, get busy() { return Boolean(run); } };
 })();

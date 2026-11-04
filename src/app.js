@@ -1094,8 +1094,9 @@ function pageHtml(tab) {
 // A tab change has two parts. The tap is answered first: the old page starts to fold away and that first frame reaches the
 // screen. Only then is the new page built, which is the slow part on a phone; the fold keeps moving meanwhile, because it
 // runs on the compositor. pageBuild is the page waiting for that first frame.
-let pageBuild = null;
+let pageBuild = null, stageLater = 0;
 function renderPage(dir = 0) {
+  clearTimeout(stageLater); stageLater = 0;
   const host = $('#page');
   const old = $('.page', host);
   const leaving = [...(pageBuild?.leaving || []), ...(typeof MORPH === 'undefined' ? [] : MORPH.capture(old))]; // the old step cards, before they move
@@ -1112,7 +1113,7 @@ function renderPage(dir = 0) {
       if (rect.height > vh * 2) Object.assign(old.style, { clipPath: `inset(${Math.max(0, -rect.top)}px 0 ${Math.max(0, rect.bottom - vh)}px 0)`, transformOrigin: `${dir > 0 ? '0%' : '100%'} ${Math.max(0, -rect.top) + vh * 0.3}px` });
       old.classList.add('is-leaving'); old.inert = true; old.setAttribute('aria-hidden', 'true');
       $('#fold-layer').appendChild(old);
-      MOTION.glide(old, fromX, { transform: `translate3d(${-dir * rect.width * 0.3}px, 0, 0) rotateY(${dir * 16}deg) scale(0.9)`, opacity: 0 }, { response: 0.4, fill: 'forwards' })
+      MOTION.glide(old, fromX, { transform: `translate3d(${-dir * rect.width * 0.3}px, 0, 0) rotateY(${dir * 16}deg) scale(0.9)`, opacity: 0 }, { response: 0.32, fill: 'forwards' })
         .finished.then(() => { old.remove(); sweepAnims(); }, () => {});
     } else old.remove();
   }
@@ -1130,24 +1131,36 @@ function buildPage(dir, leaving) {
   const el = document.createElement('div');
   el.className = 'page';
   el.innerHTML = pageHtml(tab);
+  if (dir) window.scrollTo({ top: 0, behavior: 'auto' });
   host.appendChild(el);
   if (dir && reduced()) el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 180, easing: 'ease' });
-  if (dir) window.scrollTo({ top: 0, behavior: 'auto' });
-  HOME.start(el); // the swarm carries on as this page's background
   ART.mount(tab.home ? null : $('.flow-wrap', el), tab.id); // each step box shows a moving picture of its step
-  if (tab.home) writeHash(); else renderStage(0);
+  // On a tab change the row comes first and the step just after, so that the cards can start at once. The step is the slow
+  // part to build, and building it cannot disturb the cards, which run on the compositor. The pictures go in before the swarm
+  // looks at the page, so that a phone lays it out once rather than twice.
+  const stepLater = dir && !tab.home && !reduced();
+  if (stepLater) { $('#page').style.setProperty('--accent', `var(--s${S.step[tab.id] + 1})`); markSteps(S.step[tab.id]); refresh(); }
+  HOME.start(el); // the swarm carries on as this page's background
+  if (tab.home) writeHash();
+  else if (!stepLater) renderStage(0);
   sweepAnims();
   if (typeof MORPH !== 'undefined') MORPH.play(tab.home ? null : el, leaving, tab.id, { quiet: !dir }); // first click into a page: old cards turn to dust, new cards spin, fly and drop into place; later visits, and opening without a click: a slight pop
   // The new page folds in last, so that the step cards above measure it at rest. Both folds run on the compositor, so the
   // work of building a page cannot make them stutter. No blur: re-blurring a whole page was the costliest part of a tab change.
   if (dir && !reduced()) {
     el.style.transformOrigin = dir > 0 ? '100% 30%' : '0% 30%';
-    MOTION.glide(el, { transform: `translate3d(${dir * Math.min(260, el.offsetWidth * 0.24)}px, 0, 0) rotateY(${-dir * 14}deg) scale(0.94)`, opacity: 0 }, { transform: 'translate3d(0, 0, 0) rotateY(0deg) scale(1)', opacity: 1 })
+    MOTION.glide(el, { transform: `translate3d(${dir * Math.min(260, el.offsetWidth * 0.24)}px, 0, 0) rotateY(${-dir * 14}deg) scale(0.94)`, opacity: 0 }, { transform: 'translate3d(0, 0, 0) rotateY(0deg) scale(1)', opacity: 1 }, { response: 0.38 })
       .finished.then(() => { el.style.transformOrigin = ''; }, () => {});
     // Ambient layer: the glow drifts a little the other way, then settles (counter-motion). Hidden while the swarm is on.
     const glow = $('#aurora');
     if (getComputedStyle(glow).display !== 'none') { const f = MOTION.fluid(glow); f.to({ x: -dir * 60 }, { response: 0.5 }).then(() => f.to({ x: 0 }, { response: 1.4 })); }
   }
+  if (stepLater) stageLater = setTimeout(() => {
+    stageLater = 0;
+    renderStage(0);
+    const stage = $('.stage:not(.is-leaving)');
+    if (stage) MOTION.glide(stage, { transform: 'translate3d(0, 14px, 0)', opacity: 0 }, { transform: 'translate3d(0, 0, 0)', opacity: 1 }, { response: 0.34 });
+  }, MORPH.busy ? MORPH.stageAfter : 30);
 }
 
 const QIDS = new Set(Object.keys(Q));
@@ -1183,8 +1196,17 @@ function stageHtml(tab, i) {
 }
 // Step change: the card slides along the direction of travel. After a swipe the outgoing card keeps the
 // finger's velocity and the incoming one arrives beside it, like a carousel; after a tap both move a short way.
+function markSteps(i) {
+  $$('#page .node').forEach((node, k) => {
+    node.classList.toggle('is-active', k === i);
+    node.classList.toggle('is-done', k < i);
+    node.classList.toggle('is-future', k > i);
+    if (k === i) node.setAttribute('aria-current', 'step'); else node.removeAttribute('aria-current');
+  });
+}
 function renderStage(dir = 0, handoff = null) {
   if (pageBuild) return; // the new page is about to be built, and it will open on this step
+  clearTimeout(stageLater); stageLater = 0;
   const tab = tabById(S.tab);
   const i = S.step[tab.id];
   const shell = $('#stage-shell');
@@ -1231,12 +1253,7 @@ function renderStage(dir = 0, handoff = null) {
   }
   if (hadFocus) $('h2', el).focus({ preventScroll: true });
   if (dir) { const top = el.getBoundingClientRect().top; if (top < 64) window.scrollTo({ top: window.scrollY + top - 96, behavior: reduced() ? 'auto' : 'smooth' }); }
-  $$('#page .node').forEach((node, k) => {
-    node.classList.toggle('is-active', k === i);
-    node.classList.toggle('is-done', k < i);
-    node.classList.toggle('is-future', k > i);
-    if (k === i) node.setAttribute('aria-current', 'step'); else node.removeAttribute('aria-current');
-  });
+  markSteps(i);
   const active = $('#page .node.is-active'); const wrap = $('#page .flow-wrap');
   if (active && wrap && wrap.scrollWidth > wrap.clientWidth) wrap.scrollTo({ left: active.offsetLeft - wrap.clientWidth / 2 + active.offsetWidth / 2, behavior: reduced() ? 'auto' : 'smooth' });
   for (const id of Object.keys(CH)) if (!document.querySelector(`[data-chart="${id}"]`)) delete CH[id];
@@ -1685,14 +1702,36 @@ window.addEventListener('resize', () => {
 window.addEventListener('hashchange', () => { const h = readHash(); if (h && (h.tab !== S.tab || h.step !== S.step[h.tab])) goTab(h.tab, { step: h.step, instant: true }); });
 
 // Swipe the step card: 1:1 tracking, rubber-band at the first and last step, momentum decides.
+// Sideways swipes. On the step card: the next or previous step, and past either end the next or previous tab. Anywhere else
+// on the page (the heading, the background, the Home journey): the next or previous tab, Home to Decision now. The row of
+// step boxes keeps its own sideways scroll.
+const tabBeside = dir => TABS[tabIndex(S.tab) + dir];
 MOTION.swipe(document, {
   surface: '.stage:not(.is-leaving)',
   ignore: 'input, textarea, select, summary, .map-wrap, .compare-wrap, .dstack, .chart, .tbl-wrap, [data-no-swipe]',
-  can: dir => { const i = S.step[S.tab] + dir; return i >= 0 && i < tabById(S.tab).steps.length; },
+  can: dir => { const i = S.step[S.tab] + dir; return (i >= 0 && i < tabById(S.tab).steps.length) || Boolean(tabBeside(dir)); },
   onMove: (el, offset, width) => MOTION.fluid(el).set({ x: offset, s: 1 - Math.min(0.02, Math.abs(offset) / width * 0.04) }),
   onEnd: (el, { commit, dir, offset, velocity }) => {
-    if (commit) { MOTION.haptic(8); return goStep(S.step[S.tab] + dir, { handoff: { offset, velocity } }); }
+    if (commit) {
+      MOTION.haptic(8);
+      const i = S.step[S.tab] + dir;
+      if (i >= 0 && i < tabById(S.tab).steps.length) return goStep(i, { handoff: { offset, velocity } });
+      return goTab(tabBeside(dir).id);
+    }
     MOTION.fluid(el).to({ x: 0, s: 1 }, { response: 0.38, damping: 0.8, velocity: { x: velocity } });
+  },
+});
+MOTION.swipe(document, {
+  surface: '.page:not(.is-leaving)',
+  ignore: '.stage, .flow-wrap, button, a, input, textarea, select, summary, [data-no-swipe]',
+  touchOnly: true,
+  edge: 24,
+  can: dir => Boolean(tabBeside(dir)),
+  onMove: (el, offset) => MOTION.fluid(el).set({ x: offset }),
+  onEnd: (el, { commit, dir, velocity }) => {
+    if (commit) { MOTION.haptic(8); return goTab(tabBeside(dir).id); }
+    const f = MOTION.fluid(el);
+    f.to({ x: 0 }, { response: 0.38, damping: 0.8, velocity: { x: velocity } }).then(done => { if (done) f.clear(); });
   },
 });
 
