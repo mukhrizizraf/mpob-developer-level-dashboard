@@ -145,11 +145,13 @@ await click('#page [data-ss="3"] button[data-tab="obj4"][data-step="1"]'); await
 expect('A step link in the journey opens that exact step', await run('S.tab + ":" + S.step.obj4'), 'obj4:1');
 
 // 1 · Tour every step
+let placeholderLeaks = 0;
 const tabs = { obj1: 6, obj2: 6, obj3: 5, obj4: 7, decision: 4 };
 for (const [tab, steps] of Object.entries(tabs)) {
   await go(tab);
-  for (let s = 0; s < steps; s++) { await click(`.node[data-go="${s}"]`); await sleep(750); await shot(`${tab}-step${s + 1}`); }
+  for (let s = 0; s < steps; s++) { await click(`.node[data-go="${s}"]`); await sleep(750); await shot(`${tab}-step${s + 1}`); placeholderLeaks += await run(`document.body.innerText.includes('$' + '{') ? 1 : 0`); }
 }
+expect('No unfilled code placeholder on any step', placeholderLeaks, 0);
 const nanCount = await run(`[...document.querySelectorAll('[data-out]')].filter(el => /NaN|undefined/.test(el.textContent)).length`);
 expect('No NaN/undefined in outputs on the last step', nanCount, 0);
 

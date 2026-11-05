@@ -1083,11 +1083,11 @@ function movePill(animate = true) {
 
 // Tab change: the old page folds away toward the side it leaves by, the new one unfolds from the other side
 // (a foldable phone's hinge). Both are springs, so a second tap mid-fold retargets from where things are.
-const SWIPE_HINT = window.matchMedia?.('(pointer: coarse)').matches ? ' Swipe sideways to change objective.' : ' Or drag the card.';
+const SWIPE_HINT = window.matchMedia?.('(pointer: coarse)').matches ? ' Swipe sideways to change objective.' : ' Drag the card to change step.';
 function pageHtml(tab) {
   if (tab.home) return HOME.html(homeConfig());
   const n = tab.steps.length;
-  return `<section class="hero"><div class="hero-kicker">${tab.kicker}</div><h1>${tab.title}</h1><div class="hero-meta">${n} steps. ${tab.id === 'decision' ? 'Changes here stay on this page.' : 'Open Detail under each step for the evidence, ${SWIPE_HINT}'}</div></section>
+  return `<section class="hero"><div class="hero-kicker">${tab.kicker}</div><h1>${tab.title}</h1><div class="hero-meta">${n} steps. ${tab.id === 'decision' ? 'Changes here stay on this page.' : `Open Detail under each step for the evidence.${SWIPE_HINT}`}</div></section>
     <div class="flow-wrap"><nav class="flow" data-n="${n}" aria-label="Steps">${tab.steps.map((s, i) => `<button type="button" class="node c${i + 1}" data-go="${i}" style="--i:${i}">
       <span class="ring"><span class="disc">${ICON[s.icon]}<span class="n">${String(i + 1).padStart(2, '0')}</span></span><span class="check">${ICON.check}</span></span>
       <span class="node-label">Step ${i + 1}</span><span class="node-title">${s.short}</span><span class="node-value" data-chip="${i}"></span></button>`).join('')}</nav></div>
