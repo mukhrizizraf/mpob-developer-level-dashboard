@@ -129,6 +129,7 @@ body, .page, .stage, .hero, .hive-say, .story, .story * { touch-action: pan-y pi
 .basis { font-size: 13px; color: var(--muted); margin-top: 12px; font-weight: 500; }
 .basis::before { content: ""; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--hold); margin-right: 7px; vertical-align: 1px; }
 .run-badge { display: inline-block; font-size: 12px; font-weight: 600; color: var(--ink-2); background: var(--track); border-radius: 999px; padding: 5px 12px; margin-bottom: 4px; }
+.note .btn-link { font-size: inherit; text-decoration: underline; text-underline-offset: 2px; color: inherit; font-weight: 700; }
 .limit { font-size: 13px; line-height: 1.45; color: var(--ink-2); background: var(--hold-bg); border-radius: 14px; padding: 10px 14px; margin-top: 14px; }
 .term { font-size: 13px; color: var(--muted); margin-top: 12px; }
 .term b { display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: .04em; color: var(--c-ink); background: color-mix(in srgb, var(--c) 14%, transparent); border-radius: 6px; padding: 1px 6px; margin-right: 6px; }

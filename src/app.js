@@ -316,7 +316,7 @@ const B = {
   solword: c => !c.e.row ? 'No saved run for this choice' : num(c.e.solvency) >= num(A.solvencyTarget) ? `Meets the ${pct(A.solvencyTarget, 0)} target` : `Below the ${pct(A.solvencyTarget, 0)} target`,
   rq2Head: c => surviveHeadline(c.e),
   rq2State: c => !c.e.row ? 'na' : surviveHeadline(c.e) === 'Passes both tests' ? 'good' : num(c.e.survival6m) >= 0.9 ? 'hold' : 'bad',
-  rq2Sub: () => `${scenarioName(S.scenario)} · ${pct(S.capture, 0)} of savings paid in · ${periodLabel(S.horizon)}`,
+  rq2Sub: () => `B20 · ${scenarioName(S.scenario)} · ${pct(S.capture, 0)} of savings paid in · ${periodLabel(S.horizon)}`,
   rq2Query: c => c.e.row ? c.e.queryId : noRun,
   capUntested: c => !c.e.row,
   hasStats: c => fullStats(c),
@@ -448,7 +448,8 @@ const basisLine = out => `<p class="basis" data-out="${out}"></p>`;
 const formula = () => `PME = ${coef('const').toFixed(4)} + ${coef('cpo_lag1').toFixed(4)} × CPO(last month) + ${coef('meoh_rm').toFixed(4)} × Methanol − ${Math.abs(coef('gly_rm')).toFixed(4)} × Glycerol`;
 const fundBar = (bar, state) => `<div class="bar" style="margin-top:22px"><i data-w="${bar}" data-state-of="${state}"></i><em style="left:${FUND_LIMIT / SL.fund.max * 100}%"><b>Limit</b></em></div>`;
 const fundLimit = `Must be above ${rmMn(FUND_LIMIT, 2)} (${num(A.fundSafetyMultiple)} × recent average drawdown of ${rmMn(A.rolling12AvgB20DrawdownRmMn, 2)}).`;
-const savedRun = `Saved run · opening fund ${rmMn(A.seedCapitalRmMn)} · levy ${rmT(BASE.bslRateRmT)} · ${num(A.mcPaths).toLocaleString('en-MY')} price paths`;
+const blendTestNote = `<p class="note"><b>Tested on B20 only.</b> A pass means the fund lasts while the blend stays at B20. It is not a move to B30: Objective 4 decides that with the price gap, the fund balance and government approval. <button type="button" class="btn-link" data-tab="obj4" data-step="3">See the rule</button></p>`;
+const savedRun = `Saved run · B20 · opening fund ${rmMn(A.seedCapitalRmMn)} · levy ${rmT(BASE.bslRateRmT)} · ${num(A.mcPaths).toLocaleString('en-MY')} price paths`;
 
 // Developer fragments
 const tbl = (cols, rows, { hl, cls = '', caption = '' } = {}) => `<div class="tbl-wrap" tabindex="0" role="region" aria-label="${esc(caption || 'Table')}"><table class="tbl ${cls}">${caption ? `<caption class="sr-only">${esc(caption)}</caption>` : ''}<thead><tr>${cols.map(c => `<th scope="col" class="${c.n ? 'n' : ''}">${c.h}</th>`).join('')}</tr></thead>
@@ -719,14 +720,14 @@ const TABS = [
           <div class="cyc on" style="--k:var(--s6-ink);animation-delay:.5s"><b>+</b><strong>Money in</strong><span>Levy and savings</span></div><div class="cyc-op">−</div>
           <div class="cyc on" style="--k:var(--s2-ink);animation-delay:1s"><b>−</b><strong>Support paid</strong><span>When biodiesel costs more</span></div><div class="cyc-op">=</div>
           <div class="cyc on" style="--k:var(--s3-ink);animation-delay:1.5s"><b>F′</b><strong>Closing balance</strong><span>Next month’s start</span></div></div>
-          <p class="loop-note">Repeated every month across ${num(A.mcPaths).toLocaleString('en-MY')} simulated oil-price paths. The balance cannot fall below RM 0.
+          <p class="loop-note">Repeated every month on B20 across ${num(A.mcPaths).toLocaleString('en-MY')} simulated oil-price paths. The balance cannot fall below RM 0.
             <button type="button" class="btn-link replay" data-replay>${ICON.replay}<span>Replay</span></button></p>
           ${term('BSF', 'Biodiesel Stabilisation Fund: money set aside to pay the gap when biodiesel costs more than diesel.')}`,
         stack: () => [
           { icon: 'code', title: 'Implemented rule', src: 'rq2 · Python model', body: () => code('F(t) = max(0, F(t−1) + savings(t) + levy(t) − support(t))\nsolvent  if  F(t) > 0 in every month')
             + `<p class="note">Unpaid support after the fund empties is not carried forward.</p>` },
           { icon: 'grid', title: 'Run settings', src: 'model_assumptions', body: () => kv([
-            ['Simulated paths', num(A.mcPaths).toLocaleString('en-MY')], ['Opening fund', rmMn(A.seedCapitalRmMn)], ['Levy in the runs', rmT(BASE.bslRateRmT)],
+            ['Blend in the runs', 'B20 · no switching'], ['Simulated paths', num(A.mcPaths).toLocaleString('en-MY')], ['Opening fund', rmMn(A.seedCapitalRmMn)], ['Levy in the runs', rmT(BASE.bslRateRmT)],
             ['Full-period target', pct(A.solvencyTarget, 0)], ['Six-month target', '90%'], ['Test periods', `${A.headlineMonths} and ${A.robustnessMonths} months`]])
             + `<p class="note">Saved runs use these values, not the sliders.</p>` },
           { icon: 'alert', title: 'Review flag', src: 'V3 note', body: () => alertBox('The monthly price step needs checking.', 'Prices change monthly, then get a second yearly-to-monthly adjustment. Review before policy use.') },
@@ -773,7 +774,7 @@ const TABS = [
           <div class="gauge" style="margin-top:28px"><div class="gauge-top"><span data-out="fullLabel"></span><strong data-out="sol"></strong></div><div class="bar"><i data-w="solw" data-state-of="solstate"></i><em style="left:${num(A.solvencyTarget) * 100}%"><b>${pct(A.solvencyTarget, 0)}</b></em></div><small data-out="solword"></small></div>
           <div class="mini-cases" role="group" aria-label="Oil-price case">${SCENARIOS.map(id => `<button type="button" class="mini-case" data-set="scenario" data-val="${id}"><div class="col"><i data-h="mc_${id}" data-state-of="mcs_${id}"></i></div><strong data-out="mcv_${id}"></strong><span>${scenarioName(id)}</span></button>`).join('')}</div>
           <p class="note">Chance the fund lasts the whole period, for each oil-price case.</p></div>
-          <div><div class="out" data-state-of="rq2State"><div class="out-label">Answer</div><div class="out-big md" data-out="rq2Head"></div><div class="out-sub" data-out="rq2Sub"></div><div class="out-sub">Saved run: <code data-out="rq2Query"></code></div></div>
+          <div><div class="out" data-state-of="rq2State"><div class="out-label">Answer</div><div class="out-big md" data-out="rq2Head"></div><div class="out-sub" data-out="rq2Sub"></div><div class="out-sub">Saved run: <code data-out="rq2Query"></code></div>${blendTestNote}</div>
             <p class="limit"><b>Read with care.</b> Saved model runs with their own assumptions. The monthly price step gets a second yearly-to-monthly scaling and is under review, so treat these probabilities as indicative.</p>
             <details class="disclose"><summary>What changes this result?</summary><p class="note">It changes with the oil-price case, the test period and the savings share, because each picks a different saved run. The levy rate, CPO production and starting money in Objective 3, and the fund balance in Objective 4, do <b>not</b> rerun this model.</p></details></div>`,
         stack: () => [
@@ -799,7 +800,8 @@ const TABS = [
             <div class="kcard" style="--k:var(--b20)"><span>B20 · low oil</span><strong>${rmMn(b20)}</strong><small>5-year search</small></div>
             <div class="kcard" style="--k:var(--b30)"><span>B30 · low oil</span><strong>${rmMn(b30)}</strong><small>5-year search</small></div>
             <div class="kcard" style="--k:var(--s5)"><span>B30 minus B20</span><strong>${rmMn(Math.max(0, b30 - b20))}</strong><small>both at the largest amount tested</small></div></div>
-          <div class="out" data-state="hold"><div class="out-label">Answer</div><div class="out-big md">${SEED_ALL_AT_MAX ? 'Search cap reached' : 'Mixed search results'}</div><div class="out-sub">${rmMn(SEED_MAX)} is the largest amount tested, not a confirmed minimum. The saved table has no search-status column, so “cap reached” is inferred from every result sitting at that amount.</div></div>`; },
+          <div class="out" data-state="hold"><div class="out-label">Answer</div><div class="out-big md">${SEED_ALL_AT_MAX ? 'Search cap reached' : 'Mixed search results'}</div><div class="out-sub">${rmMn(SEED_MAX)} is the largest amount tested, not a confirmed minimum. The saved table has no search-status column, so “cap reached” is inferred from every result sitting at that amount.</div></div>
+          <p class="note">Each blend is searched on its own and stays at that blend for all 5 years, with no switching.</p>`; },
         stack: () => [
           { icon: 'table', title: 'All starting-money tests', src: 'rq2_seed', body: () => tbl([
             { h: 'Blend', v: r => r.Mandate }, { h: 'Case', v: r => scenarioName(r.Scenario) }, { h: 'Levy', v: r => rmT(r['BSL rate (RM/t)']), n: 1 },
@@ -902,7 +904,7 @@ const TABS = [
         ] },
       { icon: 'flag', short: 'To apply the rule', title: 'To apply the B20 / B30 rule', chip: c => mandateLabel(c.p.mandate),
         body: () => `<div class="lights" style="grid-template-columns:1fr">${light('1 · Price gap', 'priceState', 'priceWord', '@gapShort')}${light('2 · Fund balance', 'fundState', 'fundWord', `Above ${rmMn(FUND_LIMIT)}`)}${light('3 · B30 approval', 'approvalState', 'approvalWord', 'Government decision')}</div>
-          <div>${verdict('mandate', 'mandateState', 'mandateTag', 'reason')}${basisLine('basis')}</div>`,
+          <div>${verdict('mandate', 'mandateState', 'mandateTag', 'reason')}${basisLine('basis')}<p class="note">The Objective 2 survival answer is not one of these checks.</p></div>`,
         stack: () => [
           { icon: 'code', title: 'Rule logic', src: 'policyState', body: () => code(`if VG > ${num(A.b30GapThreshold)} and fund > ${fx(FUND_LIMIT, 2)} and approved:\n    B30\nelif VG < ${num(A.b15GapFloor)} and not fund > ${fx(FUND_LIMIT, 2)}:\n    B15   # proposed safeguard only\nelse:\n    B20`) },
           { icon: 'grid', title: 'Price map', src: 'rq4_map', body: () => policyMap() + `<p class="note">Price check only. Each cell lists the PME and MOPS behind it.</p>` },
@@ -1007,7 +1009,7 @@ const TABS = [
             <div>${verdict('dMandate', 'dMandateState', 'dMandateTag', 'dReason')}${basisLine('dBasis')}</div></div>
           <div class="summary4">
             <button type="button" class="sum" data-tab="obj1" style="--k:var(--s1-ink)"><span>OBJ1 · Price</span><strong data-out="dGapShort"></strong><small>Viability gap</small></button>
-            <button type="button" class="sum" data-tab="obj2" style="--k:var(--s2-ink)"><span>OBJ2 · Shock test</span><strong>${fiveYearPasses} of ${Q.rq2_scenarios_60m.rows.length} cases</strong><small>last 5 years · baseline saved cases at 100% savings share</small></button>
+            <button type="button" class="sum" data-tab="obj2" style="--k:var(--s2-ink)"><span>OBJ2 · Shock test</span><strong>${fiveYearPasses} of ${Q.rq2_scenarios_60m.rows.length} cases</strong><small>last 5 years on B20 · baseline saved cases at 100% savings share</small></button>
             <button type="button" class="sum" data-tab="obj3" style="--k:var(--s3-ink)"><span>OBJ3 · Money sources</span><strong data-out="dFunding"></strong><small>Levy + savings · illustrative</small></button>
             <button type="button" class="sum" data-tab="obj4" style="--k:var(--s4-ink)"><span>OBJ4 · Rule</span><strong data-out="dChecks"></strong><small>B30 needs all three</small></button></div>
           <div class="reset-row">

@@ -204,10 +204,16 @@ await click('.reset-row [data-restore]'); await sleep(300);
 await go('obj2', 2); await click('[data-set="horizon"][data-val="9"]'); await sleep(200);
 await click('.node[data-go="4"]'); await sleep(900);
 expect('OBJ2 9-month low-oil six-month survival', await text('.stage:not(.is-leaving) .gauge strong'), '32.0%');
+expect('OBJ2 answer line names B20', (await text('.stage:not(.is-leaving) [data-out="rq2Sub"]'))?.startsWith('B20 · '), true);
+expect('OBJ2 saved-run label names B20', (await text('.stage:not(.is-leaving) .run-badge'))?.startsWith('Saved run · B20 · '), true);
+expect('OBJ2 answer says a pass is not a move to B30', await run(`[...document.querySelectorAll('.stage:not(.is-leaving) .out .note')].some(n => n.textContent.includes('Tested on B20 only.') && n.textContent.includes('It is not a move to B30'))`), true);
 await run(`set('capture', 0.5)`); await sleep(200);
 expect('CR12 untested share shows "Not tested"', await text('.stage:not(.is-leaving) .gauge strong'), 'Not tested');
 expect('CR12 untested share has no failure colour', await run(`document.querySelector('.stage:not(.is-leaving) .bar > i').dataset.state`), 'na');
 await run(`set('capture', 1); set('horizon', '60')`);
+await sleep(200); await click('.stage:not(.is-leaving) .out .note [data-tab="obj4"]'); await sleep(1200);
+expect('OBJ2 "See the rule" opens the Objective 4 rule step', await run('S.tab + ":" + S.step.obj4'), 'obj4:3');
+expect('OBJ4 rule step says the survival answer is not a check', await run(`document.querySelector('.stage:not(.is-leaving)').textContent.includes('The Objective 2 survival answer is not one of these checks.')`), true);
 
 // 7 · CR05: funding is labelled by period, never "money available"
 await go('obj3', 4);
