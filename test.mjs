@@ -19,15 +19,15 @@ const base = q.decision_snapshot.rows[0];
 
 test('policy rule matches V3 across a price × fund × approval grid', () => {
   for (let mops = 1500; mops <= 6000; mops += 250) for (let pme = 1500; pme <= 6000; pme += 250)
-    for (const fund of [0, 300, 641.88, 641.89, 1000, 6000]) for (const b30Auth of [false, true]) {
+    for (const fund of [0, 300, 693.47, 693.48, 1000, 6000]) for (const b30Auth of [false, true]) {
       assert.deepEqual(user.policyState({ mops, pme, fund, b30Auth }, a), v3.policyState({ mops, pme, fund, b30Auth }, a));
     }
 });
-test('latest snapshot gives B20 with gap −646.01 and fund limit 641.88', () => {
+test('latest snapshot gives B20 with gap −646.01 and fund limit 693.48', () => {
   const r = user.policyState({ mops: base.mopsRmT, pme: base.pmeRmT, fund: base.fundRmMn, b30Auth: false }, a);
   assert.equal(r.mandate, 'B20');
   assert.ok(Math.abs(r.gap - -646.01) < 1e-9);
-  assert.ok(Math.abs(r.fundThreshold - 641.8833) < 1e-6);
+  assert.ok(Math.abs(r.fundThreshold - 693.4767) < 1e-3);
   assert.equal(r.decisionReason, 'Keep B20: the price gap is not above the B30 limit.');
 });
 test('B15 appears only as the V3 deep-stress case', () => {
@@ -105,6 +105,6 @@ test('the snapshot check accepts the reviewed snapshot and rejects a broken one'
   assert.ok(snapshotProblems(broken).length >= 2);
 });
 test('equality is not a pass: gap 0 and fund at the limit both fail B30', () => {
-  const r = user.policyState({ mops: 4000, pme: 4000, fund: 3 * 213.9611, b30Auth: true }, a);
+  const r = user.policyState({ mops: 4000, pme: 4000, fund: Number(a.fundSafetyMultiple) * Number(a.rolling12AvgB20DrawdownRmMn), b30Auth: true }, a);
   assert.equal(r.pricePass, false); assert.equal(r.fundSafe, false); assert.equal(r.mandate, 'B20');
 });

@@ -36,7 +36,7 @@ const HOME = (() => {
     { n: '03', short: 'B20', side: 'l', k: 'From 2020, phased', h: 'Twenty, today.',
       p: 'B20 began in 2020 and was rolled out in phases, by region and sector. In a B20 litre, one fifth is palm biodiesel.', links: [['See today’s decision', 'decision', 3]] },
     { n: '04', short: 'Three checks', side: 'r', k: 'The rule for B30', h: 'Three checks before thirty.',
-      p: 'B30 starts only when biodiesel is cheaper than diesel, the fund is above its safety limit and the government has approved it.', links: [['Price gap', 'obj4', 0], ['Fund', 'obj4', 1], ['Approval', 'obj4', 2]] },
+      p: 'B30 starts only when biodiesel is cheaper than diesel, the fund is above its safety limit and the government has approved it.', links: [['Viability gap', 'obj4', 0], ['Fund', 'obj4', 1], ['Approval', 'obj4', 2]] },
     { n: '05', short: 'Fund', side: 'l', k: 'Biodiesel Stabilisation Fund', h: 'A fund for the hard months.',
       p: 'When biodiesel costs more than diesel, the fund pays the gap. When it costs less, the savings go back in.', links: [['Test the fund', 'obj3', 0]] },
     { n: '06', short: 'Decide', side: 'l', k: 'Your turn', h: 'Make the next call.',

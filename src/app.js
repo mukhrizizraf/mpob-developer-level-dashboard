@@ -150,6 +150,7 @@ const bslNow = () => (S.bslOn ? S.bslRate : 0);
 const fundIsDefault = () => same(bslNow(), DEFAULTS.bslRate) && same(S.capture, BASE_CAPTURE) && same(S.governmentSeed, DEFAULTS.governmentSeed);
 // The default money mix reads the full saved run; any other mix reads the saved grid. Unsaved mixes come back with no row.
 const fundPick = id => (fundIsDefault() ? selectRq2(Q, S.horizon, id, BASE_CAPTURE, BASE_CAPTURE) : selectFund(Q, S.horizon, id, bslNow(), S.capture, S.governmentSeed));
+const gapWords = text => String(text).replace(/price gap/g, 'viability gap');
 const fixedNow = c => FIXED_EXPORT + FIXED_PROD * num(c.productionPct) / 100;
 const funding = c => fundingAmounts({ baseProductionMt: A.annualCpoProductionMt, productionPct: c.productionPct, bslRate: c.bslRate,
   savingsEstimate: SAVINGS_ANNUAL, savingsShare: c.capture, startingMoney: c.governmentSeed });
@@ -389,7 +390,7 @@ const B = {
   mandate: c => mandateLabel(c.p.mandate),
   mandateState: c => c.p.mandate,
   mandateTag: c => mandateTag(c.p.mandate),
-  reason: c => c.p.decisionReason,
+  reason: c => gapWords(c.p.decisionReason),
   gapShort: c => signedRmT(c.p.gap),
   geoLabel: c => c.g.label,
   geoNote: c => c.g.note,
@@ -421,7 +422,7 @@ const B = {
   dMandate: c => mandateLabel(c.dp.mandate),
   dMandateState: c => c.dp.mandate,
   dMandateTag: c => mandateTag(c.dp.mandate),
-  dReason: c => c.dp.decisionReason,
+  dReason: c => gapWords(c.dp.decisionReason),
   dChecks: c => `${Number(c.dp.pricePass) + Number(c.dp.fundSafe) + Number(Boolean(c.dc.b30Auth))} of 3 checks pass`,
   dBasis: () => {
     const local = decEdits(), shared = sharedEdits();
@@ -438,7 +439,7 @@ const B = {
   dCapSrc: () => Object.hasOwn(S.dec, 'capture') ? 'This page' : 'OBJ2',
   dProd: c => `${c.dc.productionPct}% of base`,
   dSeed: c => rmMn(c.dc.governmentSeed),
-  dReport: c => `At diesel ${rmT(c.dc.mops, 2)} and biodiesel ${rmT(c.dc.pme, 2)} the gap is ${signedRmT(c.dp.gap)}. The fund of ${rmMn(c.dc.fund)} is ${c.dp.fundSafe ? 'above' : 'not above'} the ${rmMn(c.dp.fundThreshold, 2)} limit. B30 approval is ${c.dc.b30Auth ? 'assumed' : 'not assumed'}. The rule gives ${c.dp.mandate === 'B15' ? 'B15, a proposed safeguard only' : c.dp.mandate}. Data through ${DATA_THROUGH}${decEdits().length || sharedEdits().length ? ', with values changed from the snapshot' : ''}.`,
+  dReport: c => `At diesel ${rmT(c.dc.mops, 2)} and biodiesel ${rmT(c.dc.pme, 2)} the viability gap is ${signedRmT(c.dp.gap)}. The fund of ${rmMn(c.dc.fund)} is ${c.dp.fundSafe ? 'above' : 'not above'} the ${rmMn(c.dp.fundThreshold, 2)} limit. B30 approval is ${c.dc.b30Auth ? 'assumed' : 'not assumed'}. The rule gives ${c.dp.mandate === 'B15' ? 'B15, a proposed safeguard only' : c.dp.mandate}. Data through ${DATA_THROUGH}${decEdits().length || sharedEdits().length ? ', with values changed from the snapshot' : ''}.`,
 };
 for (const id of SCENARIOS) {
   const pick = () => fundPick(id);
@@ -475,7 +476,7 @@ const basisLine = out => `<p class="basis" data-out="${out}"></p>`;
 const formula = () => `PME = ${coef('const').toFixed(4)} + ${coef('cpo_lag1').toFixed(4)} × CPO(last month) + ${coef('meoh_rm').toFixed(4)} × Methanol − ${Math.abs(coef('gly_rm')).toFixed(4)} × Glycerol`;
 const fundBar = (bar, state) => `<div class="bar" style="margin-top:22px"><i data-w="${bar}" data-state-of="${state}"></i><em style="left:${FUND_LIMIT / SL.fund.max * 100}%"><b>Limit</b></em></div>`;
 const fundLimit = `Must be above ${rmMn(FUND_LIMIT, 2)} (${num(A.fundSafetyMultiple)} × recent average drawdown of ${rmMn(A.rolling12AvgB20DrawdownRmMn, 2)}).`;
-const blendTestNote = `<p class="note"><b>Tested on B20 only.</b> A pass means the fund lasts while the blend stays at B20. It is not a move to B30: Objective 4 decides that with the price gap, the fund balance and government approval. <button type="button" class="btn-link" data-tab="obj4" data-step="3">See the rule</button></p>`;
+const blendTestNote = `<p class="note"><b>Tested on B20 only.</b> A pass means the fund lasts while the blend stays at B20. It is not a move to B30: Objective 4 decides that with the viability gap, the fund balance and government approval. <button type="button" class="btn-link" data-tab="obj4" data-step="3">See the rule</button></p>`;
 const fixedNote = `Export-point levy and production tax are counted as already in place. This assumes the government pays them into the fund. ${rmT(FIXED_RATE)} is a placeholder rate, not the actual rate.`;
 const seedOptions = () => FUND_SEEDS.map(v => `<option value="${v}">${v === 0 ? 'None' : rmMn(v)}</option>`).join('');
 const seedChips = () => `<div class="control-label">Government starting money (paid once)</div><div class="chips" role="group" aria-label="Saved starting money">${FUND_SEEDS.map(v => `<button type="button" class="chip" data-set="governmentSeed" data-type="num" data-val="${v}">${v === 0 ? 'None' : rmMn(v)}</button>`).join('')}</div>`;
@@ -559,7 +560,7 @@ function policyMap() {
   const rows = Q.rq4_map.rows.map(row => ({ cpo: num(row['CPO (RM/t)']), brent: num(row['Brent (USD/bbl)']), mandate: row.Mandate, vg: num(row['VG (RM/t)']), pme: num(row['PME (RM/t)']), mops: num(row['MOPS (RM/t)']) }));
   const brents = [...new Set(rows.map(r => r.brent))].sort((a, b) => a - b);
   const cpos = [...new Set(rows.map(r => r.cpo))].sort((a, b) => a - b);
-  return `<div class="map-wrap"><table class="map"><caption>Price check by CPO price (rows) and Brent crude (columns): blend passing the price check, viability gap, and the PME and MOPS behind it.</caption>
+  return `<div class="map-wrap"><table class="map"><caption>Viability gap check by CPO price (rows) and Brent crude (columns): blend passing the check, viability gap, and the PME and MOPS behind it.</caption>
     <thead><tr><th scope="col">CPO \\ Brent</th>${brents.map(b => `<th scope="col">USD ${b}</th>`).join('')}</tr></thead>
     <tbody>${cpos.map(cpo => `<tr><th scope="row">${rm(cpo)}</th>${brents.map(b => { const cell = rows.find(r => r.cpo === cpo && r.brent === b);
       return cell ? `<td class="cell ${cell.mandate}">${cell.mandate}<small>${signedRmT(cell.vg)}</small><small class="map-extra">PME ${fx(cell.pme, 0)} · MOPS ${fx(cell.mops, 0)}</small></td>` : '<td class="cell none">No saved value</td>'; }).join('')}</tr>`).join('')}</tbody>
@@ -616,7 +617,7 @@ const PROPOSAL = {
 };
 const FINDINGS = {
   obj1: { head: 'Biodiesel cost equation built', status: 'Cost equation needs an independent data check', items: [
-    { o: 'yes', t: 'The cost equation and price gap are built.', d: 'Lagged CPO, methanol and glycerol. The gap is reported separately.' },
+    { o: 'yes', t: 'The cost equation and viability gap are built.', d: 'Lagged CPO, methanol and glycerol. The gap is reported separately.' },
     { o: 'partial', t: 'The saved long-run test uses a different price set.', d: `Export value, CPO and Brent (MYR). ${JOH_REJ} of ${JOH0.length} lag settings reject rank zero.` },
     { o: 'partial', t: 'Check the equation against independent cost data.', d: 'The PME cost series is a constructed proxy.' },
     { o: 'partial', t: 'H1 (PME, MOPS Diesel, Brent) is a separate test.', d: 'The saved test uses CPO in place of MOPS Diesel.' },
@@ -656,7 +657,7 @@ const TABS = [
   },
   {
     id: 'obj1', label: 'OBJ1', sub: 'Price', kicker: 'Objective 1',
-    title: 'To develop an automatic pricing mechanism for biodiesel (APM-Bio).',
+    title: 'To develop an Automatic Pricing Formula for biodiesel (APM-Bio).',
     steps: [
       { icon: 'pump', short: 'To set the diesel price', title: 'To set the diesel price', chip: () => rmT(S.mops),
         body: () => `<div>${slider('mops', 'Diesel price (MOPS)')}${term('MOPS', 'Mean of Platts Singapore: the regional diesel benchmark price.')}</div>${outCard('Diesel price', 'mops', '@mopsSub')}`,
@@ -709,7 +710,7 @@ const TABS = [
             { icon: 'grid', title: 'Gap summary', src: 'rq1_monthly', body: () => kv([
               ['Months with savings', `${positive} of ${gaps.length}`], ['Below the B15 floor', `${deep} months`],
               ['Lowest', signedRmT(Math.min(...gaps))], ['Highest', signedRmT(Math.max(...gaps))]]) },
-            { icon: 'code', title: 'Formula', src: 'decision_snapshot', body: () => code(`VG = MOPS − PME\nB30 price check: VG > ${rmT(A.b30GapThreshold)}\nB15 floor:       VG < ${rmT(A.b15GapFloor)}`) },
+            { icon: 'code', title: 'Formula', src: 'decision_snapshot', body: () => code(`VG = MOPS − PME\nB30 check: viability gap (VG) > ${rmT(A.b30GapThreshold)}\nB15 floor:       VG < ${rmT(A.b15GapFloor)}`) },
           ];
         } },
       { icon: 'target', short: 'To find the break-even CPO price', title: 'To find the break-even CPO price', chip: c => `USD ${c.be.brent} → ${rm(c.be.cpo)}`,
@@ -744,10 +745,10 @@ const TABS = [
               ['Saved test', 'Biodiesel export value · CPO · Brent (MYR)'], ['Proposal H1', 'PME · MOPS Diesel · Brent'], ['Cost equation', 'PME cost · CPO (t−1) · Methanol · Glycerol']], { caption: 'Variable sets' })
             + `<p class="note">This result does not confirm the other two.</p>` },
         ] },
-      { icon: 'flag', short: 'To report the price signal', title: 'To report the price signal', chip: c => c.p.gap > 0 ? 'Savings' : c.p.gap < 0 ? 'Support needed' : 'Equal',
-        body: () => `<div>${outCard('APM-Bio price signal', 'gap', '@gapSentence', 'gapState')}${basisLine('basis')}</div>
-          <div><div class="lights" style="grid-template-columns:1fr">${light('B30 price check', 'priceState', 'priceWord', 'The gap must be above RM 0/t')}</div>
-          <div class="handoff"><div class="handoff-arrow" data-lottie-flow aria-hidden="true"></div><span>This gap feeds the Objective 4 price check and Decision now.</span></div>
+      { icon: 'flag', short: 'To report the viability gap', title: 'To report the viability gap', chip: c => c.p.gap > 0 ? 'Savings' : c.p.gap < 0 ? 'Support needed' : 'Equal',
+        body: () => `<div>${outCard('Viability gap from APM-Bio', 'gap', '@gapSentence', 'gapState')}${basisLine('basis')}</div>
+          <div><div class="lights" style="grid-template-columns:1fr">${light('B30 viability gap check', 'priceState', 'priceWord', 'The viability gap must be above RM 0/t')}</div>
+          <div class="handoff"><div class="handoff-arrow" data-lottie-flow aria-hidden="true"></div><span>This viability gap feeds the Objective 4 check and Decision now.</span></div>
           <div class="chips"><button type="button" class="btn btn-primary" data-tab="obj4">Use in Objective 4${ICON.chev}</button><button type="button" class="btn btn-ghost" data-tab="decision">Decision now</button></div></div>`,
         stack: () => evidenceCards('obj1') },
     ],
@@ -802,7 +803,7 @@ const TABS = [
             <div class="legend legend-values"><span style="--k:var(--s2)" data-out="legExp"></span><span style="--k:var(--s3)" data-out="legProd"></span><span style="--k:var(--s1)" data-out="legBsl"></span><span style="--k:var(--s6)" data-out="legSav"></span><span style="--k:var(--s4)" data-out="legSeed"></span></div></div>
           <div style="margin-top:22px">${financingCompare()}${term('CV', 'Coefficient of variation: how much yearly income swings. Lower is steadier.')}</div>
           <div class="out" data-state="good" style="margin-top:18px"><div class="out-label">Result</div><div class="out-big md" style="font-size:28px">Export-point levy and BSL carry a lower grower burden than a production tax.</div>
-            <div class="out-sub">Steadier income is not yet shown: their income swings are similar to a production tax. Subsidy savings has no direct grower burden, but its income depends on the price gap. Starting money is paid once, not every year. WPL is a baseline reference only. The table uses the saved RM 25/t comparison.</div></div>
+            <div class="out-sub">Steadier income is not yet shown: their income swings are similar to a production tax. Subsidy savings has no direct grower burden, but its income depends on the viability gap. Starting money is paid once, not every year. WPL is a baseline reference only. The table uses the saved RM 25/t comparison.</div></div>
           <p class="note">${fixedNote}</p>
           <div class="chips"><button type="button" class="btn btn-primary" data-tab="obj3" data-step="4">Test this money in Objective 3${ICON.chev}</button></div>`,
         stack: () => [
@@ -926,12 +927,12 @@ const TABS = [
     id: 'obj4', label: 'OBJ4', sub: 'Mandate rule', kicker: 'Objective 4',
     title: 'To develop a dynamic rule for moving between B20 and B30.',
     steps: [
-      { icon: 'scale', short: 'To check the price gap', title: 'To check the price gap', chip: c => c.p.pricePass ? 'Pass' : 'Fail',
+      { icon: 'scale', short: 'To check the viability gap', title: 'To check the viability gap', chip: c => c.p.pricePass ? 'Pass' : 'Fail',
         body: () => `<div>${slider('mops', 'Diesel price (MOPS)')}<div data-show="pmeLatest">${slider('pme', 'Biodiesel cost (PME)')}</div>
           <p class="note" data-show="pmeFormula">Biodiesel cost comes from the ingredient formula in Objective 1.</p></div>
           <div>${outCard('Viability gap', 'gap', 'Must be above RM 0/t for B30', 'gapState')}<span class="badge" data-state-of="priceState" data-out="priceWord"></span></div>`,
         stack: () => [
-          { icon: 'grid', title: 'Price limits', src: 'model_assumptions', body: () => kv([['B30 price check', `VG > ${rmT(A.b30GapThreshold)}`], ['B15 floor', `VG < ${rmT(A.b15GapFloor)}`], ['Source of VG', 'OBJ1']]) },
+          { icon: 'grid', title: 'Price limits', src: 'model_assumptions', body: () => kv([['B30 viability gap check', `VG > ${rmT(A.b30GapThreshold)}`], ['B15 floor', `VG < ${rmT(A.b15GapFloor)}`], ['Source of VG', 'OBJ1']]) },
         ] },
       { icon: 'shield', short: 'To check the fund balance', title: 'To check the fund balance', chip: c => c.p.fundSafe ? 'Pass' : 'Fail',
         body: () => `<div>${slider('fund', 'Fund balance (BSF)')}<p class="note">Enter the current balance. It is not calculated from Objective 2.</p></div>
@@ -947,11 +948,11 @@ const TABS = [
             <p class="note">* Proposed safeguard only. B35 is not modelled.</p>` },
         ] },
       { icon: 'flag', short: 'To apply the rule', title: 'To apply the B20 / B30 rule', chip: c => mandateLabel(c.p.mandate),
-        body: () => `<div class="lights" style="grid-template-columns:1fr">${light('1 · Price gap', 'priceState', 'priceWord', '@gapShort')}${light('2 · Fund balance', 'fundState', 'fundWord', `Above ${rmMn(FUND_LIMIT)}`)}${light('3 · B30 approval', 'approvalState', 'approvalWord', 'Government decision')}</div>
+        body: () => `<div class="lights" style="grid-template-columns:1fr">${light('1 · Viability gap', 'priceState', 'priceWord', '@gapShort')}${light('2 · Fund balance', 'fundState', 'fundWord', `Above ${rmMn(FUND_LIMIT)}`)}${light('3 · B30 approval', 'approvalState', 'approvalWord', 'Government decision')}</div>
           <div>${verdict('mandate', 'mandateState', 'mandateTag', 'reason')}${basisLine('basis')}<p class="note">The Objective 3 survival answer is not one of these checks.</p></div>`,
         stack: () => [
           { icon: 'code', title: 'Rule logic', src: 'policyState', body: () => code(`if VG > ${num(A.b30GapThreshold)} and fund > ${fx(FUND_LIMIT, 2)} and approved:\n    B30\nelif VG < ${num(A.b15GapFloor)} and not fund > ${fx(FUND_LIMIT, 2)}:\n    B15   # proposed safeguard only\nelse:\n    B20`) },
-          { icon: 'grid', title: 'Price map', src: 'rq4_map', body: () => policyMap() + `<p class="note">Price check only. Each cell lists the PME and MOPS behind it.</p>` },
+          { icon: 'grid', title: 'Price map', src: 'rq4_map', body: () => policyMap() + `<p class="note">Viability gap check only. Each cell lists the PME and MOPS behind it.</p>` },
         ] },
       { icon: 'globe', short: 'To stress-test five years', title: 'To stress-test five years', chip: c => c.m ? rmMn(c.m.mean) : noRun,
         body: () => `<div>
@@ -1024,7 +1025,7 @@ const TABS = [
     id: 'decision', label: 'Decision now', sub: '', kicker: 'Decision now',
     title: 'To decide the biodiesel blend for the chosen prices and fund.',
     steps: [
-      { icon: 'scale', short: 'To check prices', title: 'To check the prices', chip: c => signedRmT(c.dp.gap),
+      { icon: 'scale', short: 'To check the viability gap', title: 'To check the viability gap', chip: c => signedRmT(c.dp.gap),
         body: () => `<div>${slider('dec.mops', 'Diesel price (MOPS)')}${slider('dec.pme', 'Biodiesel cost (PME)')}<p class="note">Values come from Objective 1 until you change them here.</p></div>
           <div>${outCard('Viability gap', 'dGap', 'Must be above RM 0/t for B30', 'dGapState')}<span class="badge" data-state-of="dPriceState" data-out="dPriceWord"></span></div>`,
         stack: () => [
@@ -1049,7 +1050,7 @@ const TABS = [
         ] },
       { icon: 'flag', short: 'To decide the blend', title: 'To decide the blend', chip: c => mandateLabel(c.dp.mandate), single: true,
         body: () => `<div class="stage-body" style="margin-top:0">
-            <div class="lights" style="grid-template-columns:1fr">${light('1 · Price gap', 'dPriceState', 'dPriceWord', '@dGapShort')}${light('2 · Fund balance', 'dFundState', 'dFundWord', '@dFundShort')}${light('3 · B30 approval', 'dApprovalState', 'dApprovalWord', 'Government decision')}</div>
+            <div class="lights" style="grid-template-columns:1fr">${light('1 · Viability gap', 'dPriceState', 'dPriceWord', '@dGapShort')}${light('2 · Fund balance', 'dFundState', 'dFundWord', '@dFundShort')}${light('3 · B30 approval', 'dApprovalState', 'dApprovalWord', 'Government decision')}</div>
             <div>${verdict('dMandate', 'dMandateState', 'dMandateTag', 'dReason')}${basisLine('dBasis')}</div></div>
           <div class="summary4">
             <button type="button" class="sum" data-tab="obj1" style="--k:var(--s1-ink)"><span>OBJ1 · Price</span><strong data-out="dGapShort"></strong><small>Viability gap</small></button>
@@ -1423,7 +1424,7 @@ function writeText(el, text, n) {
   el.animate([{ transform: `translateY(${up ? 0.32 : -0.32}em)`, opacity: 0.25, filter: 'blur(2px)' }, { transform: 'none', opacity: 1, filter: 'blur(0)' }],
     { duration: 240, easing: 'cubic-bezier(.23, 1, .32, 1)' });
 }
-// What the step pictures show: the balance tips by the price gap; the shield, stamp, ladder and drop follow the checks.
+// What the step pictures show: the balance tips by the viability gap; the shield, stamp, ladder and drop follow the checks.
 const artState = (c, tab) => tab.id === 'decision'
   ? { gap: c.dp.gap, fundSafe: c.dp.fundSafe, auth: c.dc.b30Auth, mandate: c.dp.mandate, capture: S.capture }
   : { gap: c.p.gap, fundSafe: c.p.fundSafe, auth: S.b30Auth, mandate: c.p.mandate, capture: S.capture };
@@ -1503,10 +1504,10 @@ function announce(c) {
   clearTimeout(announceTimer);
   announceTimer = setTimeout(() => {
     const t = S.tab;
-    say(t === 'obj1' ? `Viability gap ${signedRmT(c.p.gap)}. B30 price check ${c.p.pricePass ? 'passes' : 'fails'}.`
+    say(t === 'obj1' ? `Viability gap ${signedRmT(c.p.gap)}. B30 viability gap check ${c.p.pricePass ? 'passes' : 'fails'}.`
       : t === 'obj3' ? (c.e.row ? `${scenarioName(S.scenario)}, ${periodLabel(S.horizon)}: lasts the whole period in ${pct(c.e.solvency, 1)} of saved paths, the first 6 months in ${pct(c.e.survival6m, 1)}.` : 'No saved run for this choice.')
       : t === 'obj2' ? `Money in each year ${rmMn(fixedNow(S) + c.f.fundingEstimate, 1)}. BSL ${rmMn(c.f.bslRevenue, 1)}.`
-      : t === 'obj4' ? `Blend ${c.p.mandate}. ${c.p.decisionReason}` : `Blend ${c.dp.mandate}. ${c.dp.decisionReason}`);
+      : t === 'obj4' ? `Blend ${c.p.mandate}. ${gapWords(c.p.decisionReason)}` : `Blend ${c.dp.mandate}. ${gapWords(c.dp.decisionReason)}`);
   }, 600);
 }
 
@@ -1627,7 +1628,7 @@ function printSummary() {
     <p>${String(META.modelStatus)} · data through ${DATA_THROUGH} · model ${META.modelVersion ?? ''} estimated ${META.estimatedAtLabel ?? ''} · snapshot ${String(SNAP.snapshotSha256 ?? '').slice(0, 12)} · printed ${new Date().toLocaleDateString('en-MY')}</p>
     <table><thead><tr><th>Input</th><th>Value</th><th>Source</th></tr></thead><tbody>${rows.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('')}</tbody></table>
     <table><thead><tr><th>Rule check</th><th>Value</th><th>Result</th></tr></thead><tbody>${checks.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2] ? 'Pass' : 'Fail'}</td></tr>`).join('')}</tbody></table>
-    <p class="ps-result">Blend under these settings: <b>${c.dp.mandate}</b>. ${c.dp.decisionReason}</p>
+    <p class="ps-result">Blend under these settings: <b>${c.dp.mandate}</b>. ${gapWords(c.dp.decisionReason)}</p>
     <p>Money in each year (${PROD_PERIOD}): export-point levy ${rmMn(FIXED_EXPORT, 1)} and production tax ${rmMn(fixedNow(c.dc) - FIXED_EXPORT, 1)}, counted as in place at a placeholder rate; BSL ${rmMn(c.df.bslRevenue, 1)}; savings ${rmMn(c.df.paidSavings, 1)}, a yearly estimate. Starting money ${rmMn(c.dc.governmentSeed)}, paid once. Not cash in hand.</p>
     <ul><li>Values are simulated placeholders from the reviewed snapshot, not official MPOB figures.</li><li>Controls do not rerun the research models.</li><li>B15 is a proposed safeguard only. WPL is a baseline reference only.</li><li>This is a result under stated assumptions, not a forecast, budget or B30 approval.</li></ul>`;
 }

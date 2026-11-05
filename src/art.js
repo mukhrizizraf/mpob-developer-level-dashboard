@@ -6,7 +6,7 @@
 // fruit red, leaf green and diesel blue, on a ground tinted by the step colour, so the looks still recolour it.
 // Motion: each picture moves on its own (a drip, swaying fronds, a waving flag, falling coins, a flipping calendar...),
 // tilts and shifts in layers under the pointer, and a light sweeps across the step in hand. The pictures that show a check
-// follow the live numbers: the balance tips by the price gap, the flag turns green or amber, the shield turns red when the
+// follow the live numbers: the balance tips by the viability gap, the flag turns green or amber, the shield turns red when the
 // fund is short, the B30 stamp comes down when approval is on, the ladder and the drop move to the blend, the jar fills to
 // the savings share. Pictures rest while the row is off screen and stand still under Reduce motion.
 // Self-contained: it brings its own stylesheet, so shared.css stays identical across the two levels.
