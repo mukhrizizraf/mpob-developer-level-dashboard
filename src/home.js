@@ -38,7 +38,7 @@ const HOME = (() => {
     { n: '04', short: 'Three checks', side: 'r', k: 'The rule for B30', h: 'Three checks before thirty.',
       p: 'B30 starts only when biodiesel is cheaper than diesel, the fund is above its safety limit and the government has approved it.', links: [['Price gap', 'obj4', 0], ['Fund', 'obj4', 1], ['Approval', 'obj4', 2]] },
     { n: '05', short: 'Fund', side: 'l', k: 'Biodiesel Stabilisation Fund', h: 'A fund for the hard months.',
-      p: 'When biodiesel costs more than diesel, the fund pays the gap. When it costs less, the savings go back in.', links: [['Test the fund against shocks', 'obj2', 0]] },
+      p: 'When biodiesel costs more than diesel, the fund pays the gap. When it costs less, the savings go back in.', links: [['Test the fund', 'obj3', 0]] },
     { n: '06', short: 'Decide', side: 'l', k: 'Your turn', h: 'Make the next call.',
       p: 'Set the prices and the fund, and see whether the blend stays at B20 or can move to B30.', links: [['Decide now', 'decision', 0, true], ['Start with Objective 1', 'obj1', 0]] },
   ];

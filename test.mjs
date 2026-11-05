@@ -52,6 +52,18 @@ test('fund-survival selection matches V3 for every whole-percent share', () => {
   assert.deepEqual(user.rq2CaptureChoices(q, '9'), [1]);
   assert.deepEqual(user.rq2CaptureChoices(q, '60'), [0.25, 0.5, 0.75, 1]);
 });
+test('the saved fund grid covers every case and agrees with the full saved runs at the default money', () => {
+  for (const h of ['9', '60']) for (const s of ['A', 'B', 'C', 'D', 'E']) {
+    const full = user.selectRq2(q, h, s, 1);
+    const grid = user.selectFund(q, h, s, base.bslRateRmT, 1, a.seedCapitalRmMn);
+    assert.ok(full.row, `no saved run for ${s} ${h}`);
+    assert.equal(grid.solvency, full.solvency, `${s} ${h}`);
+    assert.equal(grid.survival6m, full.survival6m, `${s} ${h}`);
+  }
+  assert.equal(user.selectFund(q, '60', 'A', 33, 1, 1000).row, undefined);
+  const more = user.selectFund(q, '60', 'B', 25, 1, 10000), less = user.selectFund(q, '60', 'B', 0, 1, 1000);
+  assert.ok(more.solvency > less.solvency, 'more money must not lower survival');
+});
 test('fitted cost from the reviewed master inputs reproduces the saved diagnostic within coefficient rounding', () => {
   const trace = JSON.parse(readFileSync(new URL('./data/master-trace.json', import.meta.url), 'utf8'));
   const last = trace.rows.at(-1);

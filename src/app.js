@@ -21,6 +21,7 @@ const REQUIRED = {
   rq2_scenarios_60m: ['Scenario', 'solvency_prob', 'p6_months'],
   rq2_capture: ['Scenario', 'Horizon (months)', 'Savings capture'],
   rq2_seed: ['Mandate', 'Scenario', 'Optimal F0 (RM mn)'],
+  rq2_fund_grid: ['Case', 'Months', 'BSL', 'Capture', 'Seed', 'solvency_prob', 'p6_months'],
   rq3_financing: ['Instrument', 'Collection point'],
   rq3_bsl: ['BSL rate (RM/t)', 'Production scenario', 'Annual revenue (RM mn)'],
   rq3_competitiveness: ['Instrument'],
@@ -48,7 +49,7 @@ function snapshotProblems(snap, extra = []) {
   }
   const vars = (q.rq1_coefficients?.rows ?? []).map(r => r.Variable);
   ['const', 'cpo_lag1', 'meoh_rm', 'gly_rm'].filter(v => !vars.includes(v)).forEach(v => problems.push(`rq1_coefficients: no ${v}`));
-  for (const h of ['9m', '60m']) for (const s of ['A', 'B', 'C', 'D'])
+  for (const h of ['9m', '60m']) for (const s of ['A', 'B', 'C', 'D', 'E'])
     if (!(q[`rq2_scenarios_${h}`]?.rows ?? []).some(r => String(r.Scenario).trim().startsWith(s))) problems.push(`rq2_scenarios_${h}: no case ${s}`);
   if (!(q.rq1_monthly?.rows?.length >= 2)) problems.push('rq1_monthly: fewer than two months');
   return problems.concat(extra);
@@ -71,8 +72,15 @@ const LATEST_CPO = num(MONTHLY.at(-1).cpoRmT);
 const SAVINGS_ANNUAL = num(Q.rq3_financing.rows.find(row => row.Instrument === 'Subsidy savings')?.['Annual revenue (RM mn)']);
 const BREAK_EVEN = Q.rq1_breakeven.rows.map(row => ({ brent: num(row['Brent (USD/bbl)']), mops: num(row['MOPS diesel (RM/t)']), cpo: num(row['Break-even CPO (RM/t)']) }));
 const BASE_CAPTURE = num(A.savingsCaptureRate);
-const SCENARIOS = ['A', 'B', 'C', 'D'];
-const CAPTURE_OPTIONS = [...new Set(['9', '60'].flatMap(h => rq2CaptureChoices(Q, h, BASE_CAPTURE)))].sort((a, b) => a - b);
+const SCENARIOS = ['A', 'B', 'C', 'D', 'E'];
+const FIXED_EXPORT = num(Q.rq3_financing.rows.find(row => row.Instrument === 'Export-point levy')?.['Annual revenue (RM mn)']);
+const FIXED_PROD = num(Q.rq3_financing.rows.find(row => row.Instrument === 'Production tax')?.['Annual revenue (RM mn)']);
+const FIXED_RATE = num(Q.rq3_financing.rows.find(row => row.Instrument === 'Production tax')?.['Rate (RM/t)']);
+const FUND_RATES = [...new Set(Q.rq2_fund_grid.rows.map(row => num(row.BSL)))].filter(v => v > 0).sort((a, b) => a - b);
+const FUND_SEEDS = [...new Set(Q.rq2_fund_grid.rows.map(row => num(row.Seed)))].sort((a, b) => a - b);
+const FUND_CAPTURES = Object.fromEntries(['9', '60'].map(h => [h, [...new Set(Q.rq2_fund_grid.rows.filter(row => String(row.Months) === h).map(row => num(row.Capture)))].sort((a, b) => a - b)]));
+const SEED_ALL_AT_LIMIT = Q.rq2_seed.rows.every(row => num(row['Optimal F0 (RM mn)']) >= Math.max(...Q.rq2_seed.rows.map(r => num(r['Optimal F0 (RM mn)']))));
+const CAPTURE_OPTIONS = [...new Set(['9', '60'].flatMap(h => FUND_CAPTURES[h]))].sort((a, b) => a - b);
 const SEED_MAX = Math.max(...Q.rq2_seed.rows.map(row => num(row['Optimal F0 (RM mn)'])));
 const RQ4 = Q.rq4_summary.rows[0];
 const REDUCTION_VS_B20 = num(RQ4.vol_b20) === 0 ? 0 : (num(RQ4.vol_b20) - num(RQ4.vol_dual)) / num(RQ4.vol_b20);
@@ -82,7 +90,7 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 const monthLabel = period => { const [y, m] = String(period).split('-'); return MONTHS[Number(m) - 1] ? `${MONTHS[Number(m) - 1]} ${y}` : String(period); };
 const SNAP_MONTH = monthLabel(BASE.period);
 const DATA_THROUGH = monthLabel(META.dataThrough ?? META.dataThroughLabel);
-const PROD_PERIOD = 'Jan–Apr 2026';
+const PROD_PERIOD = (() => { const [y, m] = String(BASE.period).split('-').map(Number); const k = y * 12 + m - 12; return `${MONTHS[k % 12]} ${Math.floor(k / 12)} to ${SNAP_MONTH}`; })();
 const reduced = () => MOTION.reduce;
 
 // Ingredient prices behind the fitted cost: CPO from the preceding month; methanol and glycerol are the
@@ -105,20 +113,20 @@ const MATRIX = Q.rq4_matrix.rows.map(row => ({
 
 const DEFAULTS = {
   mops: num(BASE.mopsRmT), pme: num(BASE.pmeRmT), fund: num(BASE.fundRmMn), bslRate: num(BASE.bslRateRmT),
-  capture: BASE_CAPTURE, productionPct: 100, governmentSeed: 100, b30Auth: String(BASE.b30Authorised) === 'true',
+  capture: BASE_CAPTURE, productionPct: 100, governmentSeed: num(A.seedCapitalRmMn), bslOn: true, b30Auth: String(BASE.b30Authorised) === 'true',
   pmeMode: 'latest', ...INGREDIENTS, brent: 100, scenario: 'A', horizon: '60',
   energy: 'Baseline', geo: 'Normal', ceiling: 'B30',
   wplRate: num(WPL.WPL_SCENARIO_RATE ?? 0.03) * 100, wplCpo: num(WPL.WPL_SCENARIO_CPO_RM_T ?? LATEST_CPO),
 };
-const S = { ...DEFAULTS, dec: {}, tab: 'home', step: { home: 0, obj1: 0, obj2: 0, obj3: 0, obj4: 0, decision: 0 }, open: {}, cards: {}, cause: 'commit' };
+const S = { ...DEFAULTS, dec: {}, tab: 'home', step: { home: 0, obj1: 0, obj3: 0, obj2: 0, obj4: 0, decision: 0 }, open: {}, cards: {}, cause: 'commit' };
 
 /* ── Scenario state: snapshot values, your edits, and Decision-page overrides ── */
 // Inputs that change a result. Case, period, Brent, energy, geopolitics and ceiling only select saved results.
-const SCENARIO_KEYS = ['mops', 'pmeMode', 'pme', 'cpoLag', 'methanol', 'glycerol', 'fund', 'bslRate', 'capture', 'productionPct', 'governmentSeed', 'b30Auth', 'wplRate', 'wplCpo'];
-const FROM_SNAPSHOT = new Set(['mops', 'pme', 'fund', 'bslRate', 'capture', 'b30Auth', 'cpoLag', 'methanol', 'glycerol', 'wplRate', 'wplCpo']);
-const DEC_FROM = { mops: 'OBJ1', pme: 'OBJ1', fund: 'OBJ4', b30Auth: 'OBJ4', bslRate: 'OBJ3', capture: 'OBJ3' };
+const SCENARIO_KEYS = ['mops', 'pmeMode', 'pme', 'cpoLag', 'methanol', 'glycerol', 'fund', 'bslRate', 'capture', 'productionPct', 'governmentSeed', 'bslOn', 'b30Auth', 'wplRate', 'wplCpo'];
+const FROM_SNAPSHOT = new Set(['mops', 'pme', 'fund', 'bslRate', 'bslOn', 'capture', 'governmentSeed', 'b30Auth', 'cpoLag', 'methanol', 'glycerol', 'wplRate', 'wplCpo']);
+const DEC_FROM = { mops: 'OBJ1', pme: 'OBJ1', fund: 'OBJ4', b30Auth: 'OBJ4', bslRate: 'OBJ2', capture: 'OBJ2' };
 const LABEL = { mops: 'diesel price', pmeMode: 'cost method', pme: 'biodiesel cost', cpoLag: 'CPO price', methanol: 'methanol price', glycerol: 'glycerol price',
-  fund: 'fund balance', bslRate: 'BSL rate', capture: 'savings share', productionPct: 'CPO production', governmentSeed: 'starting money', b30Auth: 'B30 approval',
+  fund: 'fund balance', bslRate: 'BSL rate', capture: 'savings share', productionPct: 'CPO production', governmentSeed: 'starting money', bslOn: 'BSL switch', b30Auth: 'B30 approval',
   wplRate: 'WPL rate', wplCpo: 'WPL CPO price' };
 const same = (a, b) => (typeof a === 'number' || typeof b === 'number') ? Math.abs(Number(a) - Number(b)) < 1e-9 : a === b;
 
@@ -126,7 +134,7 @@ const pmeNow = () => S.pmeMode === 'formula'
   ? fittedPme(COEF, { cpoLag: S.cpoLag, methanol: S.methanol, glycerol: S.glycerol })
   : S.pme;
 const sharedControls = () => ({
-  mops: S.mops, pme: pmeNow(), fund: S.fund, bslRate: S.bslRate, capture: S.capture,
+  mops: S.mops, pme: pmeNow(), fund: S.fund, bslRate: S.bslOn ? S.bslRate : 0, capture: S.capture,
   productionPct: S.productionPct, governmentSeed: S.governmentSeed, b30Auth: S.b30Auth,
 });
 const decisionControls = () => ({ ...sharedControls(), ...S.dec });
@@ -138,6 +146,11 @@ const sharedEdits = () => SCENARIO_KEYS.filter(k => {
 const decEdits = () => Object.keys(S.dec);
 const listWords = keys => { const w = keys.map(k => LABEL[k] ?? k); return w.length <= 3 ? w.join(', ') : `${w.slice(0, 3).join(', ')} and ${w.length - 3} more`; };
 
+const bslNow = () => (S.bslOn ? S.bslRate : 0);
+const fundIsDefault = () => same(bslNow(), DEFAULTS.bslRate) && same(S.capture, BASE_CAPTURE) && same(S.governmentSeed, DEFAULTS.governmentSeed);
+// The default money mix reads the full saved run; any other mix reads the saved grid. Unsaved mixes come back with no row.
+const fundPick = id => (fundIsDefault() ? selectRq2(Q, S.horizon, id, BASE_CAPTURE, BASE_CAPTURE) : selectFund(Q, S.horizon, id, bslNow(), S.capture, S.governmentSeed));
+const fixedNow = c => FIXED_EXPORT + FIXED_PROD * num(c.productionPct) / 100;
 const funding = c => fundingAmounts({ baseProductionMt: A.annualCpoProductionMt, productionPct: c.productionPct, bslRate: c.bslRate,
   savingsEstimate: SAVINGS_ANNUAL, savingsShare: c.capture, startingMoney: c.governmentSeed });
 const geoNow = () => GEO_RUNS.find(g => g.anchor === S.geo) ?? GEO_RUNS[0];
@@ -150,9 +163,9 @@ function compute() {
   const dc = decisionControls();
   const g = geoNow();
   return {
-    pme, p, f: funding(S), dc, dp: policyState(dc, A), df: funding(dc), g,
+    pme, p, f: funding(sharedControls()), dc, dp: policyState(dc, A), df: funding(dc), g,
     be: BREAK_EVEN.find(row => row.brent === S.brent) ?? BREAK_EVEN[0],
-    e: selectRq2(Q, S.horizon, S.scenario, S.capture, BASE_CAPTURE),
+    e: fundPick(S.scenario),
     m: matrixRow(S.energy, g.anchor, S.ceiling),
     mB20: matrixRow(S.energy, g.anchor, 'B20'), mB30: matrixRow(S.energy, g.anchor, 'B30'),
     wPen: wplImpact(S.wplCpo, num(WPL.WPL_THRESHOLD_PEN_RM_T), S.wplRate, true, WPL.WPL_ELIGIBLE_FFB_PEN_T ?? null, num(WPL.WPL_BASELINE_RATE) * 100),
@@ -214,7 +227,7 @@ const SL = {
   bslRate: { min: 0, max: 100, step: 1, fmt: v => rmT(v) },
   capture: { min: 0, max: 1, step: 0.01, fmt: v => pct(v, 0), raw: v => String(Math.round(v * 100)), parse: v => v / 100 },
   productionPct: { min: 90, max: 110, step: 1, fmt: v => `${Math.round(v)}%` },
-  governmentSeed: { min: 0, max: 1000, step: 25, fmt: v => rmMn(v) },
+  governmentSeed: { min: 0, max: 20000, step: 500, fmt: v => rmMn(v) },
   wplRate: { min: num(WPL.WPL_RATE_MIN ?? 0) * 100, max: num(WPL.WPL_RATE_MAX ?? 0.06) * 100, step: num(WPL.WPL_RATE_STEP ?? 0.001) * 100, fmt: v => `${num(v).toFixed(1)}%` },
   wplCpo: { min: 1500, max: 8000, step: 0.5, fmt: v => rmT(v, 1) },
 };
@@ -304,7 +317,7 @@ const B = {
   beWord: c => LATEST_CPO <= c.be.cpo ? `CPO is ${rm(c.be.cpo - LATEST_CPO, 1)} below break-even` : `CPO is ${rm(LATEST_CPO - c.be.cpo, 1)} above break-even`,
   priceState: c => passState(c.p.pricePass),
   priceWord: c => c.p.pricePass ? 'Pass' : 'Fail',
-  // OBJ2
+  // OBJ3
   s6: c => c.e.row ? T(num(c.e.survival6m), v => pct(v, 1)) : 'Not tested',
   s6w: c => c.e.row ? num(c.e.survival6m) * 100 : 0,
   s6state: c => tested(c.e, num(c.e.survival6m) >= 0.9),
@@ -325,14 +338,28 @@ const B = {
   stCvar: c => fullStats(c) ? rmMn(c.e.cvar, 0) : '—',
   stMed: c => fullStats(c) ? rmMn(c.e.median, 0) : '—',
   stPeriod: () => `RM mn, total support over ${periodLabel(S.horizon)}. Not an annual figure.`,
-  // OBJ3
+  // OBJ2
+  moneyYearT: c => `About ${rmMn(fixedNow(S) + c.f.fundingEstimate, 0)} a year`,
+  runBadge: c => !c.e.row ? 'No saved run for this money mix' : `Saved run · B20 · starting money ${rmMn(S.governmentSeed)} · BSL ${S.bslOn ? rmT(S.bslRate) : 'off'} · ${num(A.mcPaths).toLocaleString('en-MY')} price paths`,
+  bslIsOn: () => S.bslOn,
+  prodYearT: () => `${rmMn(fixedNow(S) - FIXED_EXPORT, 0)} a year`,
+  rq2Short: c => c.e.row ? `Whole period ${pct(c.e.solvency, 1)} · first 6 months ${pct(c.e.survival6m, 1)}` : 'Choose a saved mix',
+  prodNote: () => !same(S.productionPct, 100),
+  stackExp: () => FIXED_EXPORT,
+  stackProd: c => fixedNow(S) - FIXED_EXPORT,
+  stackExpT: () => rmMn(FIXED_EXPORT, 0),
+  stackProdT: c => rmMn(fixedNow(S) - FIXED_EXPORT, 0),
+  legExp: () => `Export-point levy · ${rmMn(FIXED_EXPORT, 1)} · counted as in place`,
+  legProd: c => `Production tax · ${rmMn(fixedNow(S) - FIXED_EXPORT, 1)} · counted as in place`,
   bslRevenue: c => T(c.f.bslRevenue, v => rmMn(v, 1)),
-  bslSub: c => `${rmT(S.bslRate)} × ${c.f.productionMt.toFixed(3)} mn t of CPO (${PROD_PERIOD} base, not a full year)`,
+  bslSub: c => S.bslOn ? `${rmT(S.bslRate)} × ${c.f.productionMt.toFixed(3)} mn t of CPO (${PROD_PERIOD})` : 'The BSL is switched off',
   production: c => T(c.f.productionMt, v => `${v.toFixed(3)} mn t`),
   paidSavings: c => T(c.f.paidSavings, v => rmMn(v, 1)),
   savingsSub: () => `${pct(S.capture, 0)} of ${rmMn(SAVINGS_ANNUAL, 2)} modelled yearly savings`,
-  combined: c => T(c.f.withStartingMoney, v => rmMn(v, 1)),
-  combinedSub: () => `Levy (${PROD_PERIOD} base) + savings (yearly estimate) + ${rmMn(S.governmentSeed)} paid once. Not cash in hand: the periods differ.`,
+  combined: c => T(fixedNow(S) + c.f.withStartingMoney, v => rmMn(v, 1)),
+  moneyYear: c => T(fixedNow(S) + c.f.fundingEstimate, v => rmMn(v, 1)),
+  legSeedShort: () => rmMn(S.governmentSeed),
+  combinedSub: () => `One year of money coming in, plus ${rmMn(S.governmentSeed)} paid once. Not cash in hand.`,
   fundingEstimate: c => T(c.f.fundingEstimate, v => rmMn(v, 1)),
   stackBsl: c => c.f.bslRevenue,
   stackSav: c => c.f.paidSavings,
@@ -340,7 +367,7 @@ const B = {
   stackBslT: c => rmMn(c.f.bslRevenue, 0),
   stackSavT: c => rmMn(c.f.paidSavings, 0),
   stackSeedT: () => rmMn(S.governmentSeed, 0),
-  legBsl: c => `BSL levy · ${rmMn(c.f.bslRevenue, 1)} · ${PROD_PERIOD} base`,
+  legBsl: c => `BSL · ${rmMn(c.f.bslRevenue, 1)} · ${S.bslOn ? 'proposed' : 'switched off'}`,
   legSav: c => `Savings paid in · ${rmMn(c.f.paidSavings, 1)} · yearly estimate`,
   legSeed: () => `Starting money · ${rmMn(S.governmentSeed, 0)} · one-off assumption`,
   eqRate: () => rmT(S.bslRate),
@@ -386,7 +413,7 @@ const B = {
   dFundWord: c => c.dp.fundSafe ? 'Pass' : 'Fail',
   dFundShort: c => rmMn(c.dc.fund),
   dFundBar: c => Math.min(100, num(c.dc.fund) / SL.fund.max * 100),
-  dFunding: c => T(c.df.fundingEstimate, v => rmMn(v, 1)),
+  dFunding: c => T(fixedNow(c.dc) + c.df.fundingEstimate, v => rmMn(v, 1)),
   dBsl: c => rmMn(c.df.bslRevenue, 1),
   dSav: c => rmMn(c.df.paidSavings, 1),
   dApprovalState: c => passState(c.dc.b30Auth),
@@ -407,14 +434,14 @@ const B = {
   dPmeSrc: () => Object.hasOwn(S.dec, 'pme') ? 'This page' : S.pmeMode === 'formula' ? 'OBJ1 · fitted estimate' : same(S.pme, DEFAULTS.pme) ? `OBJ1 · snapshot ${SNAP_MONTH}` : 'OBJ1 · your scenario',
   dFundSrc: () => Object.hasOwn(S.dec, 'fund') ? 'This page' : 'OBJ4',
   dAuthSrc: () => Object.hasOwn(S.dec, 'b30Auth') ? 'This page' : 'OBJ4',
-  dBslSrc: () => Object.hasOwn(S.dec, 'bslRate') ? 'This page' : 'OBJ3',
-  dCapSrc: () => Object.hasOwn(S.dec, 'capture') ? 'This page' : 'OBJ3',
+  dBslSrc: () => Object.hasOwn(S.dec, 'bslRate') ? 'This page' : 'OBJ2',
+  dCapSrc: () => Object.hasOwn(S.dec, 'capture') ? 'This page' : 'OBJ2',
   dProd: c => `${c.dc.productionPct}% of base`,
   dSeed: c => rmMn(c.dc.governmentSeed),
   dReport: c => `At diesel ${rmT(c.dc.mops, 2)} and biodiesel ${rmT(c.dc.pme, 2)} the gap is ${signedRmT(c.dp.gap)}. The fund of ${rmMn(c.dc.fund)} is ${c.dp.fundSafe ? 'above' : 'not above'} the ${rmMn(c.dp.fundThreshold, 2)} limit. B30 approval is ${c.dc.b30Auth ? 'assumed' : 'not assumed'}. The rule gives ${c.dp.mandate === 'B15' ? 'B15, a proposed safeguard only' : c.dp.mandate}. Data through ${DATA_THROUGH}${decEdits().length || sharedEdits().length ? ', with values changed from the snapshot' : ''}.`,
 };
 for (const id of SCENARIOS) {
-  const pick = () => selectRq2(Q, S.horizon, id, S.capture, BASE_CAPTURE);
+  const pick = () => fundPick(id);
   B[`mc_${id}`] = () => pick().row ? num(pick().solvency) * 100 : 0;
   B[`mcs_${id}`] = () => tested(pick(), num(pick().solvency) >= num(A.solvencyTarget));
   B[`mcv_${id}`] = () => pick().row ? pct(pick().solvency, 1) : 'Not tested';
@@ -422,7 +449,7 @@ for (const id of SCENARIOS) {
   B[`m6v_${id}`] = () => pick().row ? pct(pick().survival6m, 1) : 'Not tested';
 }
 for (const value of CAPTURE_OPTIONS) {
-  B[`cap_${Math.round(value * 100)}`] = () => rq2CaptureChoices(Q, S.horizon, BASE_CAPTURE).some(v => Math.abs(v - value) < 1e-8);
+  B[`cap_${Math.round(value * 100)}`] = () => FUND_CAPTURES[String(S.horizon)].some(v => Math.abs(v - value) < 1e-8);
 }
 Q.rq2_capture.rows.forEach((row, i) => {
   B[`hlcap_${i}`] = () => String(row.Scenario).trim()[0] === S.scenario && String(row['Horizon (months)']) === String(S.horizon) && Math.abs(num(row['Savings capture']) - S.capture) < 1e-8;
@@ -449,7 +476,22 @@ const formula = () => `PME = ${coef('const').toFixed(4)} + ${coef('cpo_lag1').to
 const fundBar = (bar, state) => `<div class="bar" style="margin-top:22px"><i data-w="${bar}" data-state-of="${state}"></i><em style="left:${FUND_LIMIT / SL.fund.max * 100}%"><b>Limit</b></em></div>`;
 const fundLimit = `Must be above ${rmMn(FUND_LIMIT, 2)} (${num(A.fundSafetyMultiple)} × recent average drawdown of ${rmMn(A.rolling12AvgB20DrawdownRmMn, 2)}).`;
 const blendTestNote = `<p class="note"><b>Tested on B20 only.</b> A pass means the fund lasts while the blend stays at B20. It is not a move to B30: Objective 4 decides that with the price gap, the fund balance and government approval. <button type="button" class="btn-link" data-tab="obj4" data-step="3">See the rule</button></p>`;
-const savedRun = `Saved run · B20 · opening fund ${rmMn(A.seedCapitalRmMn)} · levy ${rmT(BASE.bslRateRmT)} · ${num(A.mcPaths).toLocaleString('en-MY')} price paths`;
+const fixedNote = `Export-point levy and production tax are counted as already in place. This assumes the government pays them into the fund. ${rmT(FIXED_RATE)} is a placeholder rate, not the actual rate.`;
+const seedOptions = () => FUND_SEEDS.map(v => `<option value="${v}">${v === 0 ? 'None' : rmMn(v)}</option>`).join('');
+const seedChips = () => `<div class="control-label">Government starting money (paid once)</div><div class="chips" role="group" aria-label="Saved starting money">${FUND_SEEDS.map(v => `<button type="button" class="chip" data-set="governmentSeed" data-type="num" data-val="${v}">${v === 0 ? 'None' : rmMn(v)}</button>`).join('')}</div>`;
+const bslSwitch = id => `<div class="switch-row"><div><strong id="${id}">Introduce the BSL</strong><span>A new levy proposed by this study. It is not in place today.</span></div><button type="button" class="switch" role="switch" data-switch="bslOn" aria-labelledby="${id}"></button></div>`;
+const moneyPanel = () => `<div class="moneyin">
+  <div class="moneyin-head"><strong>Money going into the fund</strong><span data-out="moneyYearT"></span></div>
+  <div class="moneyin-row"><span><b>Export-point levy</b><small>In place</small></span><em>${rmMn(FIXED_EXPORT, 0)} a year</em></div>
+  <div class="moneyin-row"><span><b>Production tax</b><small>In place</small></span><em data-out="prodYearT"></em></div>
+  <div class="moneyin-row"><span><b>Subsidy savings</b><small>In place · share paid in</small></span><select data-select="capture" aria-label="Share of savings paid in">${FUND_CAPTURES[String(S.horizon)].map(v => `<option value="${v}">${pct(v, 0)}</option>`).join('')}</select></div>
+  <div class="moneyin-row"><span id="sw-bsl-test"><b>BSL</b><small>Proposed · switch on or off</small></span><span class="moneyin-ctl"><span class="chips" data-show="bslIsOn" role="group" aria-label="Saved BSL rates">${FUND_RATES.map(v => `<button type="button" class="chip" data-set="bslRate" data-type="num" data-val="${v}">${rmT(v)}</button>`).join('')}</span><button type="button" class="switch" role="switch" data-switch="bslOn" aria-labelledby="sw-bsl-test"></button></span></div>
+  <div class="moneyin-row"><span><b>Starting money</b><small>Proposed · paid once</small></span><select data-select="governmentSeed" aria-label="Starting money">${seedOptions()}</select></div>
+  <div class="out moneyin-result" data-state-of="rq2State"><div class="out-label">With this money</div><div class="out-big md" data-out="rq2Head"></div><div class="out-sub" data-out="rq2Short"></div></div>
+  <p class="note" data-show="capUntested"><b>This mix has no saved run.</b> Choose a saved BSL rate and savings share.</p>
+  <p class="note" data-show="prodNote">The fund test uses base production, not the CPO production set in Objective 2.</p>
+  <p class="note">${fixedNote}</p>
+</div>`;
 
 // Developer fragments
 const tbl = (cols, rows, { hl, cls = '', caption = '' } = {}) => `<div class="tbl-wrap" tabindex="0" role="region" aria-label="${esc(caption || 'Table')}"><table class="tbl ${cls}">${caption ? `<caption class="sr-only">${esc(caption)}</caption>` : ''}<thead><tr>${cols.map(c => `<th scope="col" class="${c.n ? 'n' : ''}">${c.h}</th>`).join('')}</tr></thead>
@@ -565,9 +607,9 @@ const SEED_ALL_AT_MAX = Q.rq2_seed.rows.every(r => num(r['Optimal F0 (RM mn)']) 
 const PROPOSAL = {
   obj1: ['Objective (i)', 'Develop an Automatic Pricing Formula (APM-Bio): design a flexible biodiesel-price proxy equation based on the spread between diesel price (MOPS proxy) and biodiesel price (PME-cost proxy), including the fiscal break-even point for B20 and B30 mandates.',
     'H1', 'A significant long-run cointegration relationship exists among diesel price (MOPS proxy), biodiesel price (PME-cost proxy), and Brent crude oil prices for 2010-2026, with structural break points in 2022, 2024 and February 2026.'],
-  obj2: ['Objective (ii)', 'Evaluate the feasibility of a Biodiesel Stabilisation Fund (BSF): develop a mathematical BSF model and stress-test its fiscal resilience via Monte Carlo simulation under multiple energy price scenarios.',
+  obj3: ['Objective (ii)', 'Evaluate the feasibility of a Biodiesel Stabilisation Fund (BSF): develop a mathematical BSF model and stress-test its fiscal resilience via Monte Carlo simulation under multiple energy price scenarios.',
     'H2', 'A Biodiesel Stabilisation Fund funded from ring-fenced subsidy savings and/or low-burden fiscal instruments can sustain subsidy deficits for at least 6 months under extreme energy price shock scenarios (90th percentile Monte Carlo).'],
-  obj3: ['Objective (iii)', 'Examine alternative financing sources: compare production tax, export-point tax/levy, ring-fenced subsidy savings, seed capital and a Biodiesel Stability Levy (BSL) as potential BSF funding instruments, while treating WPL only as a baseline reference because of its existing allocation and industry-burden concerns.',
+  obj2: ['Objective (iii)', 'Examine alternative financing sources: compare production tax, export-point tax/levy, ring-fenced subsidy savings, seed capital and a Biodiesel Stability Levy (BSL) as potential BSF funding instruments, while treating WPL only as a baseline reference because of its existing allocation and industry-burden concerns.',
     'H3', 'Export-point tax/levy and BSL mechanisms can generate more stable BSF capitalisation than production-tax or WPL-based options while reducing direct burden on upstream growers and maintaining palm oil industry competitiveness.'],
   obj4: ['Objective (iv)', 'Develop a Dynamic Hybrid Mandate Model: design an automatic blending-rate adjustment mechanism (B20/B30) based on a dual-trigger system combining a price threshold and a fiscal savings formula.',
     'H4', 'The dual-trigger mechanism can reduce biodiesel mandate fiscal cost volatility by at least 25% compared to the existing fixed-mandate mechanism.'],
@@ -579,12 +621,12 @@ const FINDINGS = {
     { o: 'partial', t: 'Check the equation against independent cost data.', d: 'The PME cost series is a constructed proxy.' },
     { o: 'partial', t: 'H1 (PME, MOPS Diesel, Brent) is a separate test.', d: 'The saved test uses CPO in place of MOPS Diesel.' },
   ] },
-  obj2: { head: `${SHORT_PASS} of ${SHORT.length} cases pass the six-month target`, status: 'Partly: H2 passes only some short tests', items: [
-    { o: 'yes', t: 'The fund model and Monte Carlo stress tests are built.', d: `${num(A.mcPaths).toLocaleString('en-MY')} paths. Controls select saved runs.` },
+  obj3: { head: `${SHORT_PASS} of ${SHORT.length} cases pass the six-month target`, status: 'Partly: H2 passes only some short tests', items: [
+    { o: 'yes', t: 'The fund model and Monte Carlo tests are built.', d: `${num(A.mcPaths).toLocaleString('en-MY')} paths. Controls select saved runs. Results below use the default money.` },
     { o: SHORT_PASS === SHORT.length ? 'yes' : 'partial', t: `${SHORT_PASS} of ${SHORT.length} nine-month cases meet the 90% six-month target.`, d: `Weakest case: ${pct(SHORT_MIN)}.` },
-    { o: LONG.some(row => num(row.solvency_prob) >= num(A.solvencyTarget)) ? 'partial' : 'no', t: `Five-year survival peaks at ${pct(LONG_MAX)}. ${fiveYearPasses} of ${LONG.length} meet ${pct(A.solvencyTarget, 0)}.`, d: `Every starting-money search result sits at ${rmMn(SEED_MAX)}, the largest amount tested.` },
+    { o: LONG.some(row => num(row.solvency_prob) >= num(A.solvencyTarget)) ? 'partial' : 'no', t: `Five-year survival peaks at ${pct(LONG_MAX)}. ${fiveYearPasses} of ${LONG.length} meet ${pct(A.solvencyTarget, 0)}.`, d: SEED_ALL_AT_MAX ? `Every starting-money search result sits at ${rmMn(SEED_MAX)}, the largest amount tested.` : 'Some starting-money searches found an amount.' },
   ] },
-  obj3: { head: 'Lower cost to growers', status: 'Export levy and BSL carry a lower grower burden than a production tax', items: [
+  obj2: { head: 'Lower cost to growers', status: 'Export levy and BSL carry a lower grower burden than a production tax', items: [
     { o: 'yes', t: 'Export levy and BSL carry a lower grower burden than a production tax.', d: `${rmT(FIN('Export-point')['Grower burden (RM/t)'], 2)} and ${rmT(FIN('BSL')['Grower burden (RM/t)'], 2)} vs ${rmT(FIN('Production tax')['Grower burden (RM/t)'], 2)}.` },
     { o: 'partial', t: 'Steadier income is not yet shown.', d: `Income CV ${fx(FIN('Export-point')['Revenue CV (↓=stable)'], 3)}, ${fx(FIN('BSL')['Revenue CV (↓=stable)'], 3)} and ${fx(FIN('Production tax')['Revenue CV (↓=stable)'], 3)}. WPL not estimated.` },
     { o: NO_CONCERN ? 'yes' : 'partial', t: NO_CONCERN ? `BSL passes the cost check at ${COMP.map(row => rm(row['Levy (RM/t CPO)'])).join(', ')} per tonne.` : 'Some BSL rates fail the cost check.', d: 'Uses assumed prices and costs.' },
@@ -711,39 +753,107 @@ const TABS = [
     ],
   },
   {
-    id: 'obj2', label: 'OBJ2', sub: 'Shock test', kicker: 'Objective 2',
-    title: 'To evaluate whether a Biodiesel Stabilisation Fund (BSF) can withstand price shocks.',
+    id: 'obj2', label: 'OBJ2', sub: 'Money sources', kicker: 'Objective 2 · Proposal objective (iii)',
+    title: 'To determine the best sources of funding for the BSF.',
+    steps: [
+      { icon: 'coins', short: 'To set the levy rate (BSL)', title: 'To set the Biodiesel Stability Levy (BSL) rate', chip: () => (S.bslOn ? rmT(S.bslRate) : 'Off'),
+        body: () => `<div>${bslSwitch('sw-bsl')}${slider('bslRate', 'BSL rate per tonne of CPO')}<div class="chips" role="group" aria-label="Saved BSL rates">${[20, 25, 30].map(v => `<button type="button" class="chip" data-set="bslRate" data-type="num" data-val="${v}">${rmT(v)}</button>`).join('')}</div>
+          ${term('BSL', 'Biodiesel Stability Levy: a proposed charge per tonne of CPO, paid into the fund.')}</div>
+          ${outCard('BSL income · a year', 'bslRevenue', '@bslSub')}`,
+        stack: () => {
+          const rates = [...new Set(Q.rq3_bsl.rows.map(r => num(r['BSL rate (RM/t)'])))].sort((a, b) => a - b);
+          return [
+            { icon: 'grid', title: 'Saved levy grid', src: 'rq3_bsl', body: () => `<div class="bslgrid"><span class="ax">Rate \\ Production</span>${[90, 100, 110].map(p => `<span class="ax">${prodName(p)}</span>`).join('')}
+              ${rates.map(rate => `<span class="ax">${rmT(rate)}</span>${[90, 100, 110].map(p => { const i = Q.rq3_bsl.rows.findIndex(r => num(r['BSL rate (RM/t)']) === rate && prodPct(r['Production scenario']) === p); const row = Q.rq3_bsl.rows[i];
+                return row ? `<div class="bc ${num(row['Annual revenue (RM mn)']) >= 500 ? 'meets' : ''}" data-hl="hlbsl_${i}"><b>${fx(row['Annual revenue (RM mn)'], 1)}</b><small>${row['CPO production (MT)']} t</small></div>` : '<div class="bc">—</div>'; }).join('')}`).join('')}</div>
+              <p class="note">RM mn a year, ${PROD_PERIOD}. Highlights only at a saved rate and production. Shaded cells reach the RM 500 mn line.</p>` },
+            { icon: 'bars', title: 'Producer margin', src: 'rq3_competitiveness', body: () => hbars([
+                ...COMP.map(r => ({ label: r.Instrument, v: num(r['Margin reduction (%)']), text: `${fx(r['Margin reduction (%)'], 2)}%` })),
+                ...Q.rq3_competitiveness.rows.filter(r => !String(r.Instrument).startsWith('BSL')).map(r => ({ label: 'Indonesia levy', v: num(r['Margin reduction (%)']), text: `${fx(r['Margin reduction (%)'], 2)}%`, color: 'var(--muted)' }))],
+              6, { v: 5, label: '5% concern' })
+              + tbl([{ h: 'Levy', v: r => r.Instrument }, { h: 'Burden', v: r => r['Producer burden (RM/t)'] == null ? '—' : rmT(r['Producer burden (RM/t)'], 2), n: 1 },
+                { h: 'vs Indonesia', v: r => `<small>${r['vs Indonesia levy']}</small>` }, { h: 'Concern', v: r => r['Competitive concern'] }], Q.rq3_competitiveness.rows, { caption: 'Producer burden and margin' }) },
+          ];
+        } },
+      { icon: 'palm', short: 'To set CPO production', title: 'To set CPO production', chip: () => `${S.productionPct}%`,
+        body: () => `<div>${slider('productionPct', 'CPO production (% of base)', `Base: ${num(A.annualCpoProductionMt).toFixed(3)} mn t (${PROD_PERIOD}).`)}</div>
+          <div class="out"><div class="out-label">CPO production</div><div class="out-big" data-out="production"></div><div class="out-sub">BSL income: <b data-out="bslRevenue"></b></div></div>`,
+        stack: () => [
+          { icon: 'db', title: 'Production base', src: 'model_assumptions · K column', body: () => kv([
+            ['Base', `${num(A.annualCpoProductionMt).toFixed(6)} mn t`], ['Period', PROD_PERIOD], ['Tested range', '90% to 110%']])
+            + `<p class="note">The same 12 months as the fund model.</p>` },
+        ] },
+      { icon: 'wallet', short: 'To choose the savings paid in', title: 'To choose the share of savings paid into the fund', chip: () => pct(S.capture, 0),
+        body: () => `<div>${slider('capture', 'Savings paid into the fund')}</div>${outCard('Savings paid in · yearly estimate', 'paidSavings', '@savingsSub')}`,
+        stack: () => [
+          { icon: 'db', title: 'Savings estimate', src: 'rq3_financing', body: () => kv([
+            ['Modelled yearly savings', rmMn(SAVINGS_ANNUAL, 2)], ['Income swings (CV)', fx(FIN('Subsidy savings')['Revenue CV (↓=stable)'], 3)], ['Cost to growers', rmT(FIN('Subsidy savings')['Grower burden (RM/t)'], 2)]])
+            + `<p class="note">${esc(FIN('Subsidy savings')['H3 assessment'])}.</p>` },
+        ] },
+      { icon: 'bank', short: 'To add starting money', title: 'To add one-off starting money', chip: () => rmMn(S.governmentSeed),
+        body: () => `<div>${seedChips()}</div>${outCard('One year of money plus starting money', 'combined', '@combinedSub')}`,
+        stack: () => [
+          { icon: 'code', title: 'Formula', src: 'funding-arithmetic', body: () => code(`levy     = BSL rate × production        (${PROD_PERIOD})\nsavings  = share × modelled savings      (yearly estimate)\nsum      = export-point levy + production tax + levy + savings + starting money (one-off)`)
+            + `<div class="build"><div><span>BSL rate</span><b data-out="eqRate"></b></div><div><span>Production</span><b data-out="eqProd"></b></div><div><span>Savings share</span><b data-out="eqShare"></b></div><div class="is-total"><span>One year plus starting money</span><b data-out="combined"></b></div></div>` },
+        ] },
+      { icon: 'bars', short: 'To compare funding options', title: 'To compare funding options', chip: c => rmMn(fixedNow(S) + c.f.fundingEstimate, 0), single: true,
+        body: () => `<div class="out"><div class="out-label">Money in each year</div><div class="out-big md" data-out="moneyYear"></div><div class="out-sub">Plus starting money, paid once: <b data-out="legSeedShort"></b></div>
+            <div class="stack" role="img" aria-label="Funding mix: export-point levy, production tax, BSL, savings and one-off starting money"><i style="background:var(--s2);--on:var(--s2-on)" data-grow="stackExp" data-out="stackExpT"></i><i style="background:var(--s3);--on:var(--s3-on)" data-grow="stackProd" data-out="stackProdT"></i><i style="background:var(--s1);--on:var(--s1-on)" data-grow="stackBsl" data-out="stackBslT"></i><i style="background:var(--s6);--on:var(--s6-on)" data-grow="stackSav" data-out="stackSavT"></i><i style="background:var(--s4);--on:var(--s4-on)" data-grow="stackSeed" data-out="stackSeedT"></i></div>
+            <div class="legend legend-values"><span style="--k:var(--s2)" data-out="legExp"></span><span style="--k:var(--s3)" data-out="legProd"></span><span style="--k:var(--s1)" data-out="legBsl"></span><span style="--k:var(--s6)" data-out="legSav"></span><span style="--k:var(--s4)" data-out="legSeed"></span></div></div>
+          <div style="margin-top:22px">${financingCompare()}${term('CV', 'Coefficient of variation: how much yearly income swings. Lower is steadier.')}</div>
+          <div class="out" data-state="good" style="margin-top:18px"><div class="out-label">Result</div><div class="out-big md" style="font-size:28px">Export-point levy and BSL carry a lower grower burden than a production tax.</div>
+            <div class="out-sub">Steadier income is not yet shown: their income swings are similar to a production tax. Subsidy savings has no direct grower burden, but its income depends on the price gap. Starting money is paid once, not every year. WPL is a baseline reference only. The table uses the saved RM 25/t comparison.</div></div>
+          <p class="note">${fixedNote}</p>
+          <div class="chips"><button type="button" class="btn btn-primary" data-tab="obj3" data-step="4">Test this money in Objective 3${ICON.chev}</button></div>`,
+        stack: () => [
+          { icon: 'table', title: 'Full comparison', src: 'rq3_financing', body: () => tbl([
+            { h: 'Instrument', v: r => `<b>${r.Instrument}</b><small>${r['Collection point']}</small>` }, { h: 'Rate', v: r => r['Rate (RM/t)'] == null ? '—' : rmT(r['Rate (RM/t)']), n: 1 },
+            { h: 'Revenue', v: r => r.Instrument === 'Seed capital (one-off)' ? 'Paid once' : r['Annual revenue (RM mn)'] == null ? 'Not estimated' : fx(r['Annual revenue (RM mn)'], 2), n: 1 },
+            { h: 'CV', v: r => r.Instrument === 'Seed capital (one-off)' ? 'n/a' : r['Revenue CV (↓=stable)'] == null ? '—' : fx(r['Revenue CV (↓=stable)'], 3), n: 1 },
+            { h: 'Burden', v: r => r['Grower burden (RM/t)'] == null ? '—' : fx(r['Grower burden (RM/t)'], 2), n: 1 }, { h: 'Assessment', v: r => `<small>${esc(r['H3 assessment'])}</small>` }], Q.rq3_financing.rows, { caption: 'Financing instruments' })
+            + `<p class="note">Revenue RM mn, burden RM/t. Missing WPL values stay “not estimated”, never RM 0.</p>` },
+          { icon: 'scale', title: 'WPL · baseline reference', src: 'rq3_wpl', body: () => `${slider('wplCpo', 'CPO price')}${slider('wplRate', 'WPL rate')}
+            <div class="wpl"><div><span>Peninsular · above ${rm(WPL.WPL_THRESHOLD_PEN_RM_T)}</span><b data-out="wPenSel"></b><small>excess <em data-out="wPenEx"></em> · at baseline <em data-out="wPenBase"></em></small></div>
+              <div><span>Sabah & Sarawak · above ${rm(WPL.WPL_THRESHOLD_EAST_RM_T)}</span><b data-out="wEastSel"></b><small>excess <em data-out="wEastEx"></em> · at baseline <em data-out="wEastBase"></em></small></div></div>
+            ${alertBox('Not added to the fund.', `Per tonne of FFB-equivalent. No eligible volume, so no total. BSF allocation: ${rmMn(WPL.WPL_BSF_ALLOCATION ?? 0)}.`)}` },
+          ...evidenceCards('obj2'),
+        ] },
+    ],
+  },
+  {
+    id: 'obj3', label: 'OBJ3', sub: 'Fund test', kicker: 'Objective 3 · Proposal objective (ii)',
+    title: 'To evaluate whether a Biodiesel Stabilisation Fund (BSF) can withstand oil price fluctuations.',
     steps: [
       { icon: 'cycle', short: 'To see how the fund moves', title: 'To see how the fund moves each month', chip: () => 'Monthly flow', single: true,
         body: () => `<div class="cycle" data-cycle>
-          <div class="cyc on" style="--k:var(--s1-ink)"><b>F</b><strong>Opening balance</strong><span>Starts at ${rmMn(A.seedCapitalRmMn)}</span></div><div class="cyc-op">+</div>
-          <div class="cyc on" style="--k:var(--s6-ink);animation-delay:.5s"><b>+</b><strong>Money in</strong><span>Levy and savings</span></div><div class="cyc-op">−</div>
+          <div class="cyc on" style="--k:var(--s1-ink)"><b>F</b><strong>Opening balance</strong><span>Starts at ${rmMn(S.governmentSeed)}</span></div><div class="cyc-op">+</div>
+          <div class="cyc on" style="--k:var(--s6-ink);animation-delay:.5s"><b>+</b><strong>Money in</strong><span>The sources from Objective 2</span></div><div class="cyc-op">−</div>
           <div class="cyc on" style="--k:var(--s2-ink);animation-delay:1s"><b>−</b><strong>Support paid</strong><span>When biodiesel costs more</span></div><div class="cyc-op">=</div>
           <div class="cyc on" style="--k:var(--s3-ink);animation-delay:1.5s"><b>F′</b><strong>Closing balance</strong><span>Next month’s start</span></div></div>
-          <p class="loop-note">Repeated every month on B20 across ${num(A.mcPaths).toLocaleString('en-MY')} simulated oil-price paths. The balance cannot fall below RM 0.
+          <p class="loop-note">Objective 2 sets the money coming in. Repeated every month on B20 across ${num(A.mcPaths).toLocaleString('en-MY')} simulated oil-price paths. The balance cannot fall below RM 0.
             <button type="button" class="btn-link replay" data-replay>${ICON.replay}<span>Replay</span></button></p>
           ${term('BSF', 'Biodiesel Stabilisation Fund: money set aside to pay the gap when biodiesel costs more than diesel.')}`,
         stack: () => [
           { icon: 'code', title: 'Implemented rule', src: 'rq2 · Python model', body: () => code('F(t) = max(0, F(t−1) + savings(t) + levy(t) − support(t))\nsolvent  if  F(t) > 0 in every month')
             + `<p class="note">Unpaid support after the fund empties is not carried forward.</p>` },
           { icon: 'grid', title: 'Run settings', src: 'model_assumptions', body: () => kv([
-            ['Blend in the runs', 'B20 · no switching'], ['Simulated paths', num(A.mcPaths).toLocaleString('en-MY')], ['Opening fund', rmMn(A.seedCapitalRmMn)], ['Levy in the runs', rmT(BASE.bslRateRmT)],
+            ['Blend in the runs', 'B20 · no switching'], ['Simulated paths', num(A.mcPaths).toLocaleString('en-MY')], ['Default starting money', rmMn(A.seedCapitalRmMn)], ['Default BSL', rmT(BASE.bslRateRmT)], ['Export-point levy', `${rmMn(FIXED_EXPORT, 1)} a year`], ['Production tax', `${rmMn(FIXED_PROD, 1)} a year`],
             ['Full-period target', pct(A.solvencyTarget, 0)], ['Six-month target', '90%'], ['Test periods', `${A.headlineMonths} and ${A.robustnessMonths} months`]])
-            + `<p class="note">Saved runs use these values, not the sliders.</p>` },
+            + `<p class="note">The sources are fixed in every run. The saved grid covers every BSL rate, savings share and starting money on the Answer step.</p>` },
           { icon: 'alert', title: 'Review flag', src: 'V3 note', body: () => alertBox('The monthly price step needs checking.', 'Prices change monthly, then get a second yearly-to-monthly adjustment. Review before policy use.') },
         ] },
       { icon: 'drop', short: 'To choose an oil-price case', title: 'To choose an oil-price case', chip: () => scenarioName(S.scenario), single: true,
         body: () => `<div class="choice-grid" role="group" aria-label="Oil-price case">${SCENARIOS.map(id => { const s = rq2CaseSettings[id];
-          return `<button type="button" class="choice" data-set="scenario" data-val="${id}"><span class="tag">Case ${id}</span><strong>${s.name}</strong><span>${s.jump ? `Brent USD ${s.brentTarget}/bbl after a ${s.jump}% jump` : `Brent USD ${s.brentTarget}/bbl`}</span></button>`; }).join('')}</div>
-          <p class="note">Four saved stress cases, not forecasts.</p>`,
+          return `<button type="button" class="choice" data-set="scenario" data-val="${id}"><span class="tag">Case ${id}</span><strong>${s.name}</strong><span>${s.dropTo ? `Brent USD ${s.dropTo}/bbl, climbing back toward USD ${s.brentTarget}` : s.jump ? `Brent USD ${s.brentTarget}/bbl after a ${s.jump}% jump` : `Brent USD ${s.brentTarget}/bbl`}</span></button>`; }).join('')}</div>
+          <p class="note">Five saved oil-price cases, not forecasts.</p>`,
         stack: () => [
           { icon: 'table', title: 'Case settings', src: 'v3_config.py · SCENARIOS', body: () => tbl([
             { h: 'Case', v: id => `<b>${id}</b> ${rq2CaseSettings[id].name}` }, { h: 'Brent target', v: id => `USD ${rq2CaseSettings[id].brentTarget}`, n: 1 },
-            { h: 'Volatility', v: id => `${rq2CaseSettings[id].volatility.toFixed(2)}×`, n: 1 }, { h: 'Jump', v: id => rq2CaseSettings[id].jump ? `+${rq2CaseSettings[id].jump}%` : '—', n: 1 },
-            { h: 'CPO rise', v: id => rq2CaseSettings[id].cpoRise ? `+${rq2CaseSettings[id].cpoRise}%` : '—', n: 1 },
+            { h: 'Volatility', v: id => `${rq2CaseSettings[id].volatility.toFixed(2)}×`, n: 1 }, { h: 'Jump', v: id => rq2CaseSettings[id].dropTo ? `to USD ${rq2CaseSettings[id].dropTo}` : rq2CaseSettings[id].jump ? `+${rq2CaseSettings[id].jump}%` : '—', n: 1 },
+            { h: 'CPO move', v: id => rq2CaseSettings[id].cpoRise ? `${rq2CaseSettings[id].cpoRise > 0 ? '+' : '−'}${Math.abs(rq2CaseSettings[id].cpoRise)}%` : '—', n: 1 },
             { h: 'Reversion', v: id => rq2CaseSettings[id].reversionMonths ? `${rq2CaseSettings[id].reversionMonths} mo` : '—', n: 1 }], SCENARIOS, { caption: 'Oil-price case settings' })
             + `<p class="note">Volatility is a multiple of the historical estimate.</p>` },
-          { icon: 'alert', title: 'Why four cases', src: 'V3 note', body: () => alertBox('Four selected stress cases, not forecasts.', 'A fifth case needs a new reviewed run.') },
+          { icon: 'alert', title: 'Why five cases', src: 'v3_config.py', body: () => alertBox('Five selected cases, not forecasts.', 'The crash case follows COVID-19: CPO falls 31%, as it did from January to May 2020 in the master. A sixth case needs a new run.') },
         ] },
       { icon: 'calendar', short: 'To choose the test period', title: 'To choose the test period', chip: () => periodLabel(S.horizon), single: true,
         body: () => `<div class="choice-grid two" role="group" aria-label="Test period">
@@ -757,11 +867,11 @@ const TABS = [
         ] },
       { icon: 'percent', short: 'To choose the savings paid in', title: 'To choose the share of savings paid into the fund', chip: c => `${pct(S.capture, 0)}${c.e.row ? '' : ' · not tested'}`, single: true,
         body: () => `<div class="choice-grid" role="group" aria-label="Savings share">${CAPTURE_OPTIONS.map(v => `<button type="button" class="choice" data-set="capture" data-type="num" data-val="${v}" data-show="cap_${Math.round(v * 100)}"><span class="tag">Savings share</span><strong>${pct(v, 0)}</strong><span>of savings paid in</span></button>`).join('')}</div>
-          <p class="note" data-show="capUntested"><b>This share was not tested for this period.</b> Choose one of the cards above.</p>
-          <p class="note">Only the shares tested in the saved runs are shown. The 9-month test used 100% only.</p>`,
+          <p class="note" data-show="capUntested"><b>This money mix has no saved run.</b> Choose a saved BSL rate, savings share and starting money.</p>
+          <p class="note">Only the shares in the saved runs are shown.</p>`,
         stack: () => [
           { icon: 'grid', title: 'Tested combinations', src: 'rq2_scenarios · rq2_capture', body: () => `<div class="cover"><span></span>${CAPTURE_OPTIONS.map(v => `<b>${pct(v, 0)}</b>`).join('')}
-            ${['9', '60'].map(h => `<b>${periodLabel(h)}</b>${CAPTURE_OPTIONS.map(v => rq2CaptureChoices(Q, h, BASE_CAPTURE).some(x => Math.abs(x - v) < 1e-8) ? `<i class="yes" aria-label="tested">${ICON.check}</i>` : '<i class="no" aria-label="not tested">—</i>').join('')}`).join('')}</div>
+            ${['9', '60'].map(h => `<b>${periodLabel(h)}</b>${CAPTURE_OPTIONS.map(v => FUND_CAPTURES[h].some(x => Math.abs(x - v) < 1e-8) ? `<i class="yes" aria-label="tested">${ICON.check}</i>` : '<i class="no" aria-label="not tested">—</i>').join('')}`).join('')}</div>
             <p class="note">Untested shares are never interpolated.</p>` },
           { icon: 'table', title: 'Savings runs', src: 'rq2_capture', body: () => tbl([
             { h: 'Share', v: r => pct(r['Savings capture'], 0), n: 1 }, { h: 'Case', v: r => scenarioName(r.Scenario) }, { h: 'Months', v: r => r['Horizon (months)'], n: 1 },
@@ -769,16 +879,17 @@ const TABS = [
         ] },
       { icon: 'shield', short: 'To read fund survival', title: 'To read whether the fund survives', chip: c => c.e.row ? pct(c.e.solvency, 1) : 'Not tested',
         body: () => `<div>
-          <span class="run-badge">${savedRun}</span>
+          <span class="run-badge" data-out="runBadge"></span>
           <div class="gauge"><div class="gauge-top"><span>Lasts the first 6 months</span><strong data-out="s6"></strong></div><div class="bar"><i data-w="s6w" data-state-of="s6state"></i><em style="left:90%"><b>90%</b></em></div><small data-out="s6word"></small></div>
           <div class="gauge" style="margin-top:28px"><div class="gauge-top"><span data-out="fullLabel"></span><strong data-out="sol"></strong></div><div class="bar"><i data-w="solw" data-state-of="solstate"></i><em style="left:${num(A.solvencyTarget) * 100}%"><b>${pct(A.solvencyTarget, 0)}</b></em></div><small data-out="solword"></small></div>
           <div class="mini-cases" role="group" aria-label="Oil-price case">${SCENARIOS.map(id => `<button type="button" class="mini-case" data-set="scenario" data-val="${id}"><div class="col"><i data-h="mc_${id}" data-state-of="mcs_${id}"></i></div><strong data-out="mcv_${id}"></strong><span>${scenarioName(id)}</span></button>`).join('')}</div>
-          <p class="note">Chance the fund lasts the whole period, for each oil-price case.</p></div>
+          <p class="note">Chance the fund lasts the whole period, for each oil-price case.</p>
+          ${moneyPanel()}</div>
           <div><div class="out" data-state-of="rq2State"><div class="out-label">Answer</div><div class="out-big md" data-out="rq2Head"></div><div class="out-sub" data-out="rq2Sub"></div><div class="out-sub">Saved run: <code data-out="rq2Query"></code></div>${blendTestNote}</div>
             <p class="limit"><b>Read with care.</b> Saved model runs with their own assumptions. The monthly price step gets a second yearly-to-monthly scaling and is under review, so treat these probabilities as indicative.</p>
-            <details class="disclose"><summary>What changes this result?</summary><p class="note">It changes with the oil-price case, the test period and the savings share, because each picks a different saved run. The levy rate, CPO production and starting money in Objective 3, and the fund balance in Objective 4, do <b>not</b> rerun this model.</p></details></div>`,
+            <details class="disclose"><summary>What changes this result?</summary><p class="note">It changes with the oil-price case, the test period, the savings share, the BSL and the starting money, because each picks a different saved run. CPO production in Objective 2, and the fund balance in Objective 4, do <b>not</b> rerun this model.</p></details></div>`,
         stack: () => [
-          { icon: 'bars', title: 'All four cases', src: 'rq2_scenarios', body: () => `<div class="gbars">
+          { icon: 'bars', title: 'All five cases', src: 'rq2_scenarios', body: () => `<div class="gbars">
               <div class="gb-lines"><em style="bottom:${num(A.solvencyTarget) * 100}%"><b>${pct(A.solvencyTarget, 0)}</b></em><em class="six" style="bottom:90%"><b>90%</b></em></div>
               ${SCENARIOS.map(id => `<div class="gb"><div class="gb-plot"><i class="a" data-h="mc_${id}"></i><i class="b" data-h="m6_${id}"></i></div><span>${scenarioName(id)}</span><small><b data-out="mcv_${id}"></b> · <b data-out="m6v_${id}"></b></small></div>`).join('')}</div>
             <div class="legend"><span style="--k:var(--s3)">Whole period</span><span style="--k:var(--s1)">First 6 months</span></div>` },
@@ -786,12 +897,12 @@ const TABS = [
               ['95th-percentile support requirement (VaR 95%)', '<span data-out="stVar"></span>'], ['Average support in the worst 5% of paths (CVaR 95%)', '<span data-out="stCvar"></span>'], ['Median final balance', '<span data-out="stMed"></span>']])}
               <p class="note" data-out="stPeriod"></p>
               <p class="note">VaR 95% is the cut-off: 95% of paths need no more support than this. CVaR 95% is the average of the paths at or beyond that cut-off.</p></div>
-            <div data-show="noStats">${alertBox('Not in this savings run.', 'Only the 100% runs saved tail results.')}</div>
+            <div data-show="noStats">${alertBox('Not saved for this money mix.', 'Only the default mix saved tail results.')}</div>
             <div data-show="capUntested">${alertBox('No saved run for this choice.', '')}</div>` },
           { icon: 'table', title: 'Saved runs', src: `rq2_scenarios_${S.horizon}m`, body: () => tbl([
             { h: 'Case', v: r => scenarioName(r.Scenario) }, { h: 'Full period', v: r => pct(r.solvency_prob, 2), n: 1 }, { h: '6 months', v: r => pct(r.p6_months, 2), n: 1 },
             { h: 'CVaR 95%', v: r => fx(r.cvar95_rm_m, 0), n: 1 }, { h: 'Median end', v: r => fx(r.median_end, 0), n: 1 }], Q[`rq2_scenarios_${S.horizon}m`].rows, { caption: 'Saved fund runs' })
-            + `<p class="note">RM mn · ${periodLabel(S.horizon)} · 100% savings share.</p>` },
+            + `<p class="note">RM mn · ${periodLabel(S.horizon)} · saved default money.</p>` },
         ] },
       { icon: 'seed', short: 'To find the starting money', title: 'To find the starting money needed', chip: () => `Cap ${rmMn(SEED_MAX)}`,
         body: () => { const seed = (m, s) => num(Q.rq2_seed.rows.find(r => r.Mandate === m && String(r.Scenario).trim().startsWith(s))?.['Optimal F0 (RM mn)']);
@@ -801,79 +912,12 @@ const TABS = [
             <div class="kcard" style="--k:var(--b30)"><span>B30 · low oil</span><strong>${rmMn(b30)}</strong><small>5-year search</small></div>
             <div class="kcard" style="--k:var(--s5)"><span>B30 minus B20</span><strong>${rmMn(Math.max(0, b30 - b20))}</strong><small>both at the largest amount tested</small></div></div>
           <div class="out" data-state="hold"><div class="out-label">Answer</div><div class="out-big md">${SEED_ALL_AT_MAX ? 'Search cap reached' : 'Mixed search results'}</div><div class="out-sub">${rmMn(SEED_MAX)} is the largest amount tested, not a confirmed minimum. The saved table has no search-status column, so “cap reached” is inferred from every result sitting at that amount.</div></div>
-          <p class="note">Each blend is searched on its own and stays at that blend for all 5 years, with no switching.</p>`; },
+          <p class="note">Each blend is searched on its own and stays at that blend for all 5 years, with no switching. The search uses the default money.</p>`; },
         stack: () => [
           { icon: 'table', title: 'All starting-money tests', src: 'rq2_seed', body: () => tbl([
             { h: 'Blend', v: r => r.Mandate }, { h: 'Case', v: r => scenarioName(r.Scenario) }, { h: 'Levy', v: r => rmT(r['BSL rate (RM/t)']), n: 1 },
             { h: 'Months', v: r => r['Horizon (months)'], n: 1 }, { h: 'Amount tested', v: r => `${fx(r['Optimal F0 (RM mn)'], 0)}${num(r['Optimal F0 (RM mn)']) >= SEED_MAX ? ' <span class="pill">largest tested</span>' : ''}`, n: 1 }], Q.rq2_seed.rows, { caption: 'Starting-money search' })
             + `<p class="note">RM mn. ${rmMn(SEED_MAX)} = RM ${(SEED_MAX / 1000).toLocaleString('en-MY')} billion.</p>` },
-          ...evidenceCards('obj2'),
-        ] },
-    ],
-  },
-  {
-    id: 'obj3', label: 'OBJ3', sub: 'Money sources', kicker: 'Objective 3',
-    title: 'To determine the best sources of funding for the BSF.',
-    steps: [
-      { icon: 'coins', short: 'To set the levy rate (BSL)', title: 'To set the Biodiesel Stability Levy (BSL) rate', chip: () => rmT(S.bslRate),
-        body: () => `<div>${slider('bslRate', 'BSL rate per tonne of CPO')}<div class="chips" role="group" aria-label="Saved BSL rates">${[20, 25, 30].map(v => `<button type="button" class="chip" data-set="bslRate" data-type="num" data-val="${v}">${rmT(v)}</button>`).join('')}</div>
-          ${term('BSL', 'Biodiesel Stability Levy: a proposed charge per tonne of CPO, paid into the fund.')}</div>
-          ${outCard(`Levy income · ${PROD_PERIOD} production base`, 'bslRevenue', '@bslSub')}`,
-        stack: () => {
-          const rates = [...new Set(Q.rq3_bsl.rows.map(r => num(r['BSL rate (RM/t)'])))].sort((a, b) => a - b);
-          return [
-            { icon: 'grid', title: 'Saved levy grid', src: 'rq3_bsl', body: () => `<div class="bslgrid"><span class="ax">Rate \\ Production</span>${[90, 100, 110].map(p => `<span class="ax">${prodName(p)}</span>`).join('')}
-              ${rates.map(rate => `<span class="ax">${rmT(rate)}</span>${[90, 100, 110].map(p => { const i = Q.rq3_bsl.rows.findIndex(r => num(r['BSL rate (RM/t)']) === rate && prodPct(r['Production scenario']) === p); const row = Q.rq3_bsl.rows[i];
-                return row ? `<div class="bc ${num(row['Annual revenue (RM mn)']) >= 500 ? 'meets' : ''}" data-hl="hlbsl_${i}"><b>${fx(row['Annual revenue (RM mn)'], 1)}</b><small>${row['CPO production (MT)']} t</small></div>` : '<div class="bc">—</div>'; }).join('')}`).join('')}</div>
-              <p class="note">RM mn on the ${PROD_PERIOD} production base. Highlights only at a saved rate and production. All cells are below the RM 500 mn line.</p>` },
-            { icon: 'bars', title: 'Producer margin', src: 'rq3_competitiveness', body: () => hbars([
-                ...COMP.map(r => ({ label: r.Instrument, v: num(r['Margin reduction (%)']), text: `${fx(r['Margin reduction (%)'], 2)}%` })),
-                ...Q.rq3_competitiveness.rows.filter(r => !String(r.Instrument).startsWith('BSL')).map(r => ({ label: 'Indonesia levy', v: num(r['Margin reduction (%)']), text: `${fx(r['Margin reduction (%)'], 2)}%`, color: 'var(--muted)' }))],
-              6, { v: 5, label: '5% concern' })
-              + tbl([{ h: 'Levy', v: r => r.Instrument }, { h: 'Burden', v: r => r['Producer burden (RM/t)'] == null ? '—' : rmT(r['Producer burden (RM/t)'], 2), n: 1 },
-                { h: 'vs Indonesia', v: r => `<small>${r['vs Indonesia levy']}</small>` }, { h: 'Concern', v: r => r['Competitive concern'] }], Q.rq3_competitiveness.rows, { caption: 'Producer burden and margin' }) },
-          ];
-        } },
-      { icon: 'palm', short: 'To set CPO production', title: 'To set CPO production', chip: () => `${S.productionPct}%`,
-        body: () => `<div>${slider('productionPct', 'CPO production (% of base)', `Base: ${num(A.annualCpoProductionMt).toFixed(3)} mn t (${PROD_PERIOD}, not a full year).`)}</div>
-          <div class="out"><div class="out-label">CPO production</div><div class="out-big" data-out="production"></div><div class="out-sub">Levy income: <b data-out="bslRevenue"></b></div></div>`,
-        stack: () => [
-          { icon: 'db', title: 'Production base', src: 'model_assumptions · K column', body: () => kv([
-            ['Base', `${num(A.annualCpoProductionMt).toFixed(6)} mn t`], ['Period', PROD_PERIOD], ['Tested range', '90% to 110%']])
-            + alertBox('Labelled annual in the saved output.', 'Align periods before reporting yearly income. The page does not annualise four months.') },
-        ] },
-      { icon: 'wallet', short: 'To choose the savings paid in', title: 'To choose the share of savings paid into the fund', chip: () => pct(S.capture, 0),
-        body: () => `<div>${slider('capture', 'Savings paid into the fund')}</div>${outCard('Savings paid in · yearly estimate', 'paidSavings', '@savingsSub')}`,
-        stack: () => [
-          { icon: 'db', title: 'Savings estimate', src: 'rq3_financing', body: () => kv([
-            ['Modelled yearly savings', rmMn(SAVINGS_ANNUAL, 2)], ['Income swings (CV)', fx(FIN('Subsidy savings')['Revenue CV (↓=stable)'], 3)], ['Cost to growers', rmT(FIN('Subsidy savings')['Grower burden (RM/t)'], 2)]])
-            + `<p class="note">${esc(FIN('Subsidy savings')['H3 assessment'])}.</p>` },
-        ] },
-      { icon: 'bank', short: 'To add starting money', title: 'To add one-off starting money', chip: () => rmMn(S.governmentSeed),
-        body: () => `<div>${slider('governmentSeed', 'Government starting money (paid once)')}</div>${outCard('Illustrative sum · periods differ', 'combined', '@combinedSub')}`,
-        stack: () => [
-          { icon: 'code', title: 'Formula', src: 'funding-arithmetic', body: () => code(`levy     = BSL rate × production        (${PROD_PERIOD} base)\nsavings  = share × modelled savings      (yearly estimate)\nsum      = levy + savings + starting money (one-off)\n         → illustrative arithmetic; the periods differ`)
-            + `<div class="build"><div><span>BSL rate</span><b data-out="eqRate"></b></div><div><span>Production</span><b data-out="eqProd"></b></div><div><span>Savings share</span><b data-out="eqShare"></b></div><div class="is-total"><span>Illustrative sum</span><b data-out="combined"></b></div></div>` },
-        ] },
-      { icon: 'bars', short: 'To compare funding options', title: 'To compare funding options', chip: c => rmMn(c.f.fundingEstimate, 1), single: true,
-        body: () => `<div class="out"><div class="out-label">Levy + savings · illustrative, the periods differ</div><div class="out-big md" data-out="fundingEstimate"></div><div class="out-sub">Plus one-off starting money (not every year): <b data-out="combined"></b></div>
-            <div class="stack" role="img" aria-label="Funding mix: levy, savings and one-off starting money"><i style="background:var(--s1);--on:var(--s1-on)" data-grow="stackBsl" data-out="stackBslT"></i><i style="background:var(--s6);--on:var(--s6-on)" data-grow="stackSav" data-out="stackSavT"></i><i style="background:var(--s4);--on:var(--s4-on)" data-grow="stackSeed" data-out="stackSeedT"></i></div>
-            <div class="legend legend-values"><span style="--k:var(--s1)" data-out="legBsl"></span><span style="--k:var(--s6)" data-out="legSav"></span><span style="--k:var(--s4)" data-out="legSeed"></span></div></div>
-          <div style="margin-top:22px">${financingCompare()}${term('CV', 'Coefficient of variation: how much yearly income swings. Lower is steadier.')}</div>
-          <div class="out" data-state="good" style="margin-top:18px"><div class="out-label">Result</div><div class="out-big md" style="font-size:28px">Export-point levy and BSL carry a lower grower burden than a production tax.</div>
-            <div class="out-sub">Steadier income is not yet shown: their income swings are similar to a production tax. Subsidy savings has no direct grower burden, but its income depends on the price gap. Starting money is paid once, not every year. WPL is a baseline reference only. The table uses the saved RM 25/t comparison.</div></div>
-          <p class="note">This is a funding calculator. It does not rerun the fund survival model in Objective 2 or change the fund balance in Objective 4.</p>`,
-        stack: () => [
-          { icon: 'table', title: 'Full comparison', src: 'rq3_financing', body: () => tbl([
-            { h: 'Instrument', v: r => `<b>${r.Instrument}</b><small>${r['Collection point']}</small>` }, { h: 'Rate', v: r => r['Rate (RM/t)'] == null ? '—' : rmT(r['Rate (RM/t)']), n: 1 },
-            { h: 'Revenue', v: r => r.Instrument === 'Seed capital (one-off)' ? 'Paid once' : r['Annual revenue (RM mn)'] == null ? 'Not estimated' : fx(r['Annual revenue (RM mn)'], 2), n: 1 },
-            { h: 'CV', v: r => r.Instrument === 'Seed capital (one-off)' ? 'n/a' : r['Revenue CV (↓=stable)'] == null ? '—' : fx(r['Revenue CV (↓=stable)'], 3), n: 1 },
-            { h: 'Burden', v: r => r['Grower burden (RM/t)'] == null ? '—' : fx(r['Grower burden (RM/t)'], 2), n: 1 }, { h: 'Assessment', v: r => `<small>${esc(r['H3 assessment'])}</small>` }], Q.rq3_financing.rows, { caption: 'Financing instruments' })
-            + `<p class="note">Revenue RM mn, burden RM/t. Missing WPL values stay “not estimated”, never RM 0.</p>` },
-          { icon: 'scale', title: 'WPL · baseline reference', src: 'rq3_wpl', body: () => `${slider('wplCpo', 'CPO price')}${slider('wplRate', 'WPL rate')}
-            <div class="wpl"><div><span>Peninsular · above ${rm(WPL.WPL_THRESHOLD_PEN_RM_T)}</span><b data-out="wPenSel"></b><small>excess <em data-out="wPenEx"></em> · at baseline <em data-out="wPenBase"></em></small></div>
-              <div><span>Sabah & Sarawak · above ${rm(WPL.WPL_THRESHOLD_EAST_RM_T)}</span><b data-out="wEastSel"></b><small>excess <em data-out="wEastEx"></em> · at baseline <em data-out="wEastBase"></em></small></div></div>
-            ${alertBox('Not added to the fund.', `Per tonne of FFB-equivalent. No eligible volume, so no total. BSF allocation: ${rmMn(WPL.WPL_BSF_ALLOCATION ?? 0)}.`)}` },
           ...evidenceCards('obj3'),
         ] },
     ],
@@ -890,7 +934,7 @@ const TABS = [
           { icon: 'grid', title: 'Price limits', src: 'model_assumptions', body: () => kv([['B30 price check', `VG > ${rmT(A.b30GapThreshold)}`], ['B15 floor', `VG < ${rmT(A.b15GapFloor)}`], ['Source of VG', 'OBJ1']]) },
         ] },
       { icon: 'shield', short: 'To check the fund balance', title: 'To check the fund balance', chip: c => c.p.fundSafe ? 'Pass' : 'Fail',
-        body: () => `<div>${slider('fund', 'Fund balance (BSF)')}<p class="note">Enter the current balance. It is not calculated from Objective 3.</p></div>
+        body: () => `<div>${slider('fund', 'Fund balance (BSF)')}<p class="note">Enter the current balance. It is not calculated from Objective 2.</p></div>
           <div class="out" data-state-of="fundState"><div class="out-label">Fund balance</div><div class="out-big" data-out="fundT"></div><div class="out-sub">${fundLimit}</div>${fundBar('fundBar', 'fundState')}<span class="badge" data-state-of="fundState" data-out="fundWord"></span></div>`,
         stack: () => [
           { icon: 'code', title: 'Fund limit', src: 'model_assumptions', body: () => code(`limit = ${num(A.fundSafetyMultiple)} × ${fx(A.rolling12AvgB20DrawdownRmMn, 4)}\n      = ${fx(FUND_LIMIT, 4)}  (RM mn)\nsafe  if  fund > limit   (strictly greater)`)
@@ -904,7 +948,7 @@ const TABS = [
         ] },
       { icon: 'flag', short: 'To apply the rule', title: 'To apply the B20 / B30 rule', chip: c => mandateLabel(c.p.mandate),
         body: () => `<div class="lights" style="grid-template-columns:1fr">${light('1 · Price gap', 'priceState', 'priceWord', '@gapShort')}${light('2 · Fund balance', 'fundState', 'fundWord', `Above ${rmMn(FUND_LIMIT)}`)}${light('3 · B30 approval', 'approvalState', 'approvalWord', 'Government decision')}</div>
-          <div>${verdict('mandate', 'mandateState', 'mandateTag', 'reason')}${basisLine('basis')}<p class="note">The Objective 2 survival answer is not one of these checks.</p></div>`,
+          <div>${verdict('mandate', 'mandateState', 'mandateTag', 'reason')}${basisLine('basis')}<p class="note">The Objective 3 survival answer is not one of these checks.</p></div>`,
         stack: () => [
           { icon: 'code', title: 'Rule logic', src: 'policyState', body: () => code(`if VG > ${num(A.b30GapThreshold)} and fund > ${fx(FUND_LIMIT, 2)} and approved:\n    B30\nelif VG < ${num(A.b15GapFloor)} and not fund > ${fx(FUND_LIMIT, 2)}:\n    B15   # proposed safeguard only\nelse:\n    B20`) },
           { icon: 'grid', title: 'Price map', src: 'rq4_map', body: () => policyMap() + `<p class="note">Price check only. Each cell lists the PME and MOPS behind it.</p>` },
@@ -992,9 +1036,9 @@ const TABS = [
           <div class="out" data-state-of="dFundState"><div class="out-label">Fund balance</div><div class="out-big" data-out="dFund"></div><div class="out-sub">${fundLimit}</div>${fundBar('dFundBar', 'dFundState')}<span class="badge" data-state-of="dFundState" data-out="dFundWord"></span></div>`,
         stack: () => [
           { icon: 'coins', title: 'Money coming in', src: 'funding-arithmetic', body: () => `${slider('dec.bslRate', 'BSL rate')}${slider('dec.capture', 'Savings paid into the fund')}
-            <div class="build"><div><span>BSL revenue · ${PROD_PERIOD} base</span><b data-out="dBsl"></b></div><div><span>Savings paid in · yearly</span><b data-out="dSav"></b></div><div class="is-total"><span>Levy + savings · illustrative</span><b data-out="dFunding"></b></div></div>
-            <p class="note">The periods differ. Does not change the blend.</p>` },
-          { icon: 'link', title: 'Imported from OBJ3 and OBJ4', src: 'Shared state', body: () => kv([['Fund balance', '<span data-out="dFundSrc"></span>'], ['BSL rate', '<span data-out="dBslSrc"></span>'], ['Savings share', '<span data-out="dCapSrc"></span>'],
+            <div class="build"><div><span>BSL a year</span><b data-out="dBsl"></b></div><div><span>Savings paid in · yearly</span><b data-out="dSav"></b></div><div class="is-total"><span>Money in each year, with both fixed sources</span><b data-out="dFunding"></b></div></div>
+            <p class="note">Does not change the blend.</p>` },
+          { icon: 'link', title: 'Imported from OBJ2 and OBJ4', src: 'Shared state', body: () => kv([['Fund balance', '<span data-out="dFundSrc"></span>'], ['BSL rate', '<span data-out="dBslSrc"></span>'], ['Savings share', '<span data-out="dCapSrc"></span>'],
             ['Production', '<span data-out="dProd"></span>'], ['Starting money', '<span data-out="dSeed"></span>']]) },
         ] },
       { icon: 'stamp', short: 'To confirm B30 approval', title: 'To confirm government approval for B30', chip: c => c.dc.b30Auth ? 'On' : 'Off', single: true,
@@ -1009,8 +1053,8 @@ const TABS = [
             <div>${verdict('dMandate', 'dMandateState', 'dMandateTag', 'dReason')}${basisLine('dBasis')}</div></div>
           <div class="summary4">
             <button type="button" class="sum" data-tab="obj1" style="--k:var(--s1-ink)"><span>OBJ1 · Price</span><strong data-out="dGapShort"></strong><small>Viability gap</small></button>
-            <button type="button" class="sum" data-tab="obj2" style="--k:var(--s2-ink)"><span>OBJ2 · Shock test</span><strong>${fiveYearPasses} of ${Q.rq2_scenarios_60m.rows.length} cases</strong><small>last 5 years on B20 · baseline saved cases at 100% savings share</small></button>
-            <button type="button" class="sum" data-tab="obj3" style="--k:var(--s3-ink)"><span>OBJ3 · Money sources</span><strong data-out="dFunding"></strong><small>Levy + savings · illustrative</small></button>
+            <button type="button" class="sum" data-tab="obj2" style="--k:var(--s2-ink)"><span>OBJ2 · Money sources</span><strong data-out="dFunding"></strong><small>Money in each year</small></button>
+            <button type="button" class="sum" data-tab="obj3" style="--k:var(--s3-ink)"><span>OBJ3 · Fund test</span><strong>${fiveYearPasses} of ${Q.rq2_scenarios_60m.rows.length} cases</strong><small>last 5 years on B20 · saved default money</small></button>
             <button type="button" class="sum" data-tab="obj4" style="--k:var(--s4-ink)"><span>OBJ4 · Rule</span><strong data-out="dChecks"></strong><small>B30 needs all three</small></button></div>
           <div class="reset-row">
             <span data-show="dChanged"><button type="button" class="btn-link" data-use-objectives>Use the objective settings</button><small>Clears the values set on this page.</small></span>
@@ -1411,6 +1455,7 @@ function refresh(initial = false) {
     el.setAttribute('aria-pressed', String(on));
   });
   $$('[data-switch]', live).forEach(el => el.setAttribute('aria-checked', String(Boolean(get(el.dataset.switch)))));
+  $$('[data-select]', live).forEach(el => { el.value = String(num(get(el.dataset.select))); });
   $$('[data-out]', live).forEach(el => {
     const v = B[el.dataset.out](c);
     if (initial) el._n = undefined;
@@ -1459,8 +1504,8 @@ function announce(c) {
   announceTimer = setTimeout(() => {
     const t = S.tab;
     say(t === 'obj1' ? `Viability gap ${signedRmT(c.p.gap)}. B30 price check ${c.p.pricePass ? 'passes' : 'fails'}.`
-      : t === 'obj2' ? (c.e.row ? `${scenarioName(S.scenario)}, ${periodLabel(S.horizon)}: lasts the whole period in ${pct(c.e.solvency, 1)} of saved paths, the first 6 months in ${pct(c.e.survival6m, 1)}.` : 'No saved run for this choice.')
-      : t === 'obj3' ? `Levy income ${rmMn(c.f.bslRevenue, 1)}. Levy plus savings ${rmMn(c.f.fundingEstimate, 1)}, illustrative.`
+      : t === 'obj3' ? (c.e.row ? `${scenarioName(S.scenario)}, ${periodLabel(S.horizon)}: lasts the whole period in ${pct(c.e.solvency, 1)} of saved paths, the first 6 months in ${pct(c.e.survival6m, 1)}.` : 'No saved run for this choice.')
+      : t === 'obj2' ? `Money in each year ${rmMn(fixedNow(S) + c.f.fundingEstimate, 1)}. BSL ${rmMn(c.f.bslRevenue, 1)}.`
       : t === 'obj4' ? `Blend ${c.p.mandate}. ${c.p.decisionReason}` : `Blend ${c.dp.mandate}. ${c.dp.decisionReason}`);
   }, 600);
 }
@@ -1583,7 +1628,7 @@ function printSummary() {
     <table><thead><tr><th>Input</th><th>Value</th><th>Source</th></tr></thead><tbody>${rows.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('')}</tbody></table>
     <table><thead><tr><th>Rule check</th><th>Value</th><th>Result</th></tr></thead><tbody>${checks.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2] ? 'Pass' : 'Fail'}</td></tr>`).join('')}</tbody></table>
     <p class="ps-result">Blend under these settings: <b>${c.dp.mandate}</b>. ${c.dp.decisionReason}</p>
-    <p>Funding (illustrative, periods differ): levy ${rmMn(c.df.bslRevenue, 1)} on the ${PROD_PERIOD} production base, savings ${rmMn(c.df.paidSavings, 1)} yearly estimate, starting money ${rmMn(c.dc.governmentSeed)} paid once. These are kept separate; they are not cash in hand.</p>
+    <p>Money in each year (${PROD_PERIOD}): export-point levy ${rmMn(FIXED_EXPORT, 1)} and production tax ${rmMn(fixedNow(c.dc) - FIXED_EXPORT, 1)}, counted as in place at a placeholder rate; BSL ${rmMn(c.df.bslRevenue, 1)}; savings ${rmMn(c.df.paidSavings, 1)}, a yearly estimate. Starting money ${rmMn(c.dc.governmentSeed)}, paid once. Not cash in hand.</p>
     <ul><li>Values are simulated placeholders from the reviewed snapshot, not official MPOB figures.</li><li>Controls do not rerun the research models.</li><li>B15 is a proposed safeguard only. WPL is a baseline reference only.</li><li>This is a result under stated assumptions, not a forecast, budget or B30 approval.</li></ul>`;
 }
 window.addEventListener('beforeprint', printSummary);
@@ -1593,7 +1638,11 @@ document.addEventListener('input', event => {
   const el = event.target.closest('[data-range]');
   if (el) set(el.dataset.range, Number(el.value), 'drag');
 });
-document.addEventListener('change', event => { if (event.target.closest('[data-range]')) S.cause = 'commit'; });
+document.addEventListener('change', event => {
+  if (event.target.closest('[data-range]')) S.cause = 'commit';
+  const pickEl = event.target.closest('[data-select]');
+  if (pickEl) set(pickEl.dataset.select, Number(pickEl.value));
+});
 
 // Exact-value fields: a draft until committed. Invalid text and Escape never change the model.
 const NUM_RE = /^[+-]?(?:\d{1,3}(?:,\d{3})+|\d+)?(?:\.\d+)?$/;

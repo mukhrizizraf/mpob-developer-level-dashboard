@@ -74,12 +74,21 @@ export function wplImpact(price, threshold, ratePercent, enabled, volume, baseli
     totalDelta: validVolume ? (selected-baseline)*tonnes : null };
 }
 
+// The fund test for a chosen money mix, from the saved grid (rq2_fund_grid). An unsaved mix comes back with no row.
+export function selectFund(queries, horizon, scenario, bslRate, capture, seed) {
+  const same = (a, b) => Math.abs(Number(a) - Number(b)) < 1e-8;
+  const row = queries.rq2_fund_grid?.rows?.find(r => r.Case === String(scenario).trim()[0] && same(r.Months, horizon)
+    && same(r.BSL, bslRate) && same(r.Capture, capture) && same(r.Seed, seed));
+  return { queryId: 'rq2_fund_grid', row, solvency: row?.solvency_prob, survival6m: row?.p6_months };
+}
+
 // Read-only display copies of SCENARIOS in codex_pipeline/v3_config.py.
 export const rq2CaseSettings = {
   A: { name: 'Low oil', brentTarget: 80, volatility: 0.90 },
   B: { name: 'Base', brentTarget: 105, volatility: 1.00 },
   C: { name: 'High oil', brentTarget: 135, volatility: 1.10 },
   D: { name: 'Geopolitical shock', brentTarget: 105, volatility: 1.25, jump: 40, reversionMonths: 5, cpoRise: 10 },
+  E: { name: 'Oil price crash', brentTarget: 60, volatility: 1.25, dropTo: 30, reversionMonths: 12, cpoRise: -31 },
 };
 
 // Fitted APM-Bio cost equation (OLS-HAC, rq1_coefficients):
@@ -96,4 +105,4 @@ export const rmT = (value, digits = 0) => `${rm(value, digits)}/t`;
 export const rmMn = (value, digits = 0) => `${rm(value, digits)} mn`;
 export const pct = (value, digits = 1) => `${(num(value) * 100).toFixed(digits)}%`;
 export const signedRmT = value => `${num(value) >= 0 ? '+' : '−'}${rm(Math.abs(num(value)), 2)}/t`;
-export const scenarioName = value => ({ A: 'Low oil', B: 'Base', C: 'High oil', D: 'Geopolitical shock' })[String(value).trim()[0]] ?? value;
+export const scenarioName = value => ({ A: 'Low oil', B: 'Base', C: 'High oil', D: 'Geopolitical shock', E: 'Oil price crash' })[String(value).trim()[0]] ?? value;

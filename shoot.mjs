@@ -114,14 +114,14 @@ expect('The page ends in the same night', await run(`document.documentElement.cl
 await shot('home-story-end', false);
 expect('The MPOB and UKM marks sit on the last screen', await run(`document.querySelectorAll('#page [data-ss="5"] .hive-sponsors img, #page [data-ss="5"] .hive-sponsors .sp-word').length`), 2);
 await storyAt(0.75); await sleep(1600);
-await click('#page [data-ss="4"] button[data-tab="obj2"]'); await sleep(1200);
-expect('A link in the journey opens its objective', await run('S.tab + ":" + S.step.obj2'), 'obj2:0');
+await click('#page [data-ss="4"] button[data-tab="obj3"]'); await sleep(1200);
+expect('A link in the journey opens its objective', await run('S.tab + ":" + S.step.obj3'), 'obj3:0');
 expect('Leaving Home ends the night footer and the night top bar', await run(`['home-night-end', 'story-under-bar', 'home-on'].some(c => document.documentElement.classList.contains(c))`), false);
 // The swarm carries on as the background of every other page, in the colour of the step on show
 expect('The swarm becomes the page background', await run('document.querySelector("#hive-layer").classList.contains("is-on")'), true);
 await sleep(1500);
 expect('The swarm writes the step in hand under the objective', await run('HOME.scene.words + ":" + HOME.scene.writing'), 'See how fund moves:true');
-await shot('obj2-swarm-words', false);
+await shot('obj3-swarm-words', false);
 expect('Every step box shows a drawn picture of its step', await run("document.querySelectorAll('#page .flow-wrap.has-art').length + ':' + document.querySelectorAll('#page .node .ring > .step-art').length"), '1:' + await run("document.querySelectorAll('#page .node').length"));
 expect('The pictures move', await run("[...document.querySelectorAll('#page .step-art')].every(s => s.getAnimations({ subtree: true }).length > 0)"), true);
 expect('Each card carries its number and value, not a ring arrow', await run("getComputedStyle(document.querySelector('#page .has-hall .ring'), '::after').display"), 'none');
@@ -134,7 +134,7 @@ const bf0 = await run('HOME.scene.frames'); await sleep(700);
 expect('The background keeps moving', (await run('HOME.scene.frames')) > bf0, true);
 expect('The background takes the step colour', await run('HOME.scene.tint'), await run(`(() => { const c = document.createElement('canvas').getContext('2d'); c.fillStyle = getComputedStyle(document.getElementById('page')).getPropertyValue('--accent').trim(); const m = /^#(..)(..)(..)$/.exec(c.fillStyle); return m ? \`rgb(\${[1, 2, 3].map(k => parseInt(m[k], 16)).join(', ')})\` : null; })()`));
 expect('The old ambient glow gives way to the swarm', await run(`getComputedStyle(document.getElementById('aurora')).display`), 'none');
-await shot('obj2-swarm', false);
+await shot('obj3-swarm', false);
 await click('[data-home-pause]'); await sleep(150); const fp = await run('HOME.scene.frames'); await sleep(500);
 expect('Pause in the top bar stops the swarm', await run('HOME.scene.frames'), fp);
 await click('[data-home-pause]'); await sleep(500);
@@ -146,7 +146,7 @@ expect('A step link in the journey opens that exact step', await run('S.tab + ":
 
 // 1 · Tour every step
 let placeholderLeaks = 0;
-const tabs = { obj1: 6, obj2: 6, obj3: 5, obj4: 7, decision: 4 };
+const tabs = { obj1: 6, obj3: 6, obj2: 5, obj4: 7, decision: 4 };
 for (const [tab, steps] of Object.entries(tabs)) {
   await go(tab);
   for (let s = 0; s < steps; s++) { await click(`.node[data-go="${s}"]`); await sleep(750); await shot(`${tab}-step${s + 1}`); placeholderLeaks += await run(`document.body.innerText.includes('$' + '{') ? 1 : 0`); }
@@ -202,24 +202,43 @@ expect('Decision deep-stress case is B15', await text('.stage:not(.is-leaving) .
 await shot('decision-step4-B15');
 await click('.reset-row [data-restore]'); await sleep(300);
 
-// 6 · CR12: untested choice is neither zero nor failure; OBJ2 numbers
-await go('obj2', 2); await click('[data-set="horizon"][data-val="9"]'); await sleep(200);
+// 6 · CR12: untested choice is neither zero nor failure; OBJ3 numbers
+await go('obj3', 2); await click('[data-set="horizon"][data-val="9"]'); await sleep(200);
 await click('.node[data-go="4"]'); await sleep(900);
-expect('OBJ2 9-month low-oil six-month survival', await text('.stage:not(.is-leaving) .gauge strong'), '32.0%');
-expect('OBJ2 answer line names B20', (await text('.stage:not(.is-leaving) [data-out="rq2Sub"]'))?.startsWith('B20 · '), true);
-expect('OBJ2 saved-run label names B20', (await text('.stage:not(.is-leaving) .run-badge'))?.startsWith('Saved run · B20 · '), true);
-expect('OBJ2 answer says a pass is not a move to B30', await run(`[...document.querySelectorAll('.stage:not(.is-leaving) .out .note')].some(n => n.textContent.includes('Tested on B20 only.') && n.textContent.includes('It is not a move to B30'))`), true);
-await run(`set('capture', 0.5)`); await sleep(200);
+expect('OBJ3 9-month low-oil six-month survival', await text('.stage:not(.is-leaving) .gauge strong'), '96.9%');
+expect('OBJ3 answer line names B20', (await text('.stage:not(.is-leaving) [data-out="rq2Sub"]'))?.startsWith('B20 · '), true);
+expect('OBJ3 saved-run label names B20', (await text('.stage:not(.is-leaving) .run-badge'))?.startsWith('Saved run · B20 · '), true);
+expect('OBJ3 answer says a pass is not a move to B30', await run(`[...document.querySelectorAll('.stage:not(.is-leaving) .out .note')].some(n => n.textContent.includes('Tested on B20 only.') && n.textContent.includes('It is not a move to B30'))`), true);
+await run(`set('capture', 0.33)`); await sleep(200);
 expect('CR12 untested share shows "Not tested"', await text('.stage:not(.is-leaving) .gauge strong'), 'Not tested');
 expect('CR12 untested share has no failure colour', await run(`document.querySelector('.stage:not(.is-leaving) .bar > i').dataset.state`), 'na');
 await run(`set('capture', 1); set('horizon', '60')`);
+await sleep(200);
+expect('Tabs run OBJ1, money sources, fund test, OBJ4', await run(`[...document.querySelectorAll('.tab')].map(t => t.dataset.tab).join()`), 'home,obj1,obj2,obj3,obj4,decision');
+expect('OBJ3 says oil price fluctuations', await run(`document.querySelector('.hero h1').textContent.includes('withstand oil price fluctuations')`), true);
+expect('OBJ3 shows five oil-price cases', await run(`document.querySelectorAll('.stage:not(.is-leaving) .mini-case').length`), 5);
+expect('OBJ3 crash case at the default money', await text('.stage:not(.is-leaving) .mini-case[data-val="E"] strong'), '0.0%');
+expect('Money panel at the default mix', await text('[data-out="moneyYearT"]'), 'About RM 1,521 mn a year');
+expect('In-place sources have no switch', await run(`[...document.querySelectorAll('.moneyin-row')].filter(r => /Export-point|Production tax/.test(r.textContent)).every(r => !r.querySelector('button, select'))`), true);
+const fullNow = () => run(`document.querySelectorAll('.stage:not(.is-leaving) .gauge strong')[1].textContent`);
+expect('Low oil, 5 years, default money', await fullNow(), '9.2%');
+await click('.moneyin [data-switch="bslOn"]'); await sleep(250);
+expect('BSL off lowers survival', await fullNow(), '3.3%');
+expect('BSL off lowers the money', await text('[data-out="moneyYearT"]'), 'About RM 1,005 mn a year');
+await click('.moneyin [data-switch="bslOn"]'); await sleep(250);
+await run(`const el = document.querySelector('.moneyin select[data-select="governmentSeed"]'); el.value = '10000'; el.dispatchEvent(new Event('change', { bubbles: true })); set('scenario', 'B'); true`); await sleep(250);
+expect('More starting money can pass the test', await text('.stage:not(.is-leaving) [data-out="rq2Head"]'), 'Passes both tests');
+expect('The panel shows the same result', await text('.moneyin-result [data-out="rq2Head"]'), 'Passes both tests');
+await run(`set('bslRate', 33); true`); await sleep(200);
+expect('A mix with no saved run says so', await text('.stage:not(.is-leaving) .run-badge'), 'No saved run for this money mix');
+await run(`set('bslRate', 25); set('governmentSeed', 1000); set('scenario', 'A'); true`); await sleep(200);
 await sleep(200); await click('.stage:not(.is-leaving) .out .note [data-tab="obj4"]'); await sleep(1200);
-expect('OBJ2 "See the rule" opens the Objective 4 rule step', await run('S.tab + ":" + S.step.obj4'), 'obj4:3');
-expect('OBJ4 rule step says the survival answer is not a check', await run(`document.querySelector('.stage:not(.is-leaving)').textContent.includes('The Objective 2 survival answer is not one of these checks.')`), true);
+expect('OBJ3 "See the rule" opens the Objective 4 rule step', await run('S.tab + ":" + S.step.obj4'), 'obj4:3');
+expect('OBJ4 rule step says the survival answer is not a check', await run(`document.querySelector('.stage:not(.is-leaving)').textContent.includes('The Objective 3 survival answer is not one of these checks.')`), true);
 
 // 7 · CR05: funding is labelled by period, never "money available"
-await go('obj3', 4);
-expect('OBJ3 levy + savings at RM25/t, 100%', await text('.stage:not(.is-leaving) [data-out="fundingEstimate"]'), 'RM 227.4 mn');
+await go('obj2', 4);
+expect('OBJ2 money in each year at RM25/t, 100%', await text('.stage:not(.is-leaving) [data-out="moneyYear"]'), 'RM 1,521.0 mn');
 expect('CR05 no "Money available" wording', await run(`!document.body.innerText.includes('Money available')`), true);
 
 // 8 · CR10: Lottie instances settle to what is mounted
@@ -255,7 +274,7 @@ await shot('obj1-after-swipe', false);
 // Developer · CR07: a collapsed card's inputs are not reachable
 const live = sel => '.stage:not(.is-leaving) ' + sel;
 const cardBy = title => "[...document.querySelectorAll('.stage:not(.is-leaving) .dcard')].find(c => c.textContent.includes('" + title + "'))";
-await go('obj3', 4); await sleep(500);
+await go('obj2', 4); await sleep(500);
 await click(live('[data-stack-toggle]')); await sleep(700);
 expect('CR07 WPL input inert while its card is collapsed', await run("Boolean(document.querySelector('.stage:not(.is-leaving) [data-range=\"wplCpo\"]').closest('[inert]'))"), true);
 await run("document.querySelector('.stage:not(.is-leaving) [data-range=\"wplCpo\"]').focus()");
@@ -263,7 +282,7 @@ expect('CR07 focus cannot land in a collapsed card', await run("document.activeE
 await run(cardBy('WPL · baseline') + ".querySelector('[data-card-toggle]').click()"); await sleep(700);
 expect('CR07 expanding the card exposes its controls', await run("!document.querySelector('.stage:not(.is-leaving) [data-range=\"wplCpo\"]').closest('[inert]')"), true);
 expect('CR07 card header reports expanded', await run(cardBy('WPL · baseline') + ".querySelector('[data-card-toggle]').getAttribute('aria-expanded')"), 'true');
-await shot('dev-obj3-stack-open');
+await shot('dev-obj2-stack-open');
 // CR13: constant shown and terms reconcile
 await go('obj1', 1); await click(live('[data-stack-toggle]')); await sleep(700);
 const terms = await run("[...document.querySelectorAll('.stage:not(.is-leaving) .build b')].map(b => b.textContent)");
@@ -272,7 +291,7 @@ const val = t => { const neg = /−|-/.test(t); const n = Number(String(t).repla
 expect('CR13 terms reconcile to fitted PME within RM 0.02', Math.abs(terms.slice(0, 4).reduce((a, t) => a + val(t), 0) - val(terms[4])) < 0.02, true);
 expect('CR13 methanol from the master input', await run('S.methanol'), 1647.041175);
 // CR14: VaR and CVaR have separate definitions
-await go('obj2', 4); await click(live('[data-stack-toggle]')); await sleep(600);
+await go('obj3', 4); await click(live('[data-stack-toggle]')); await sleep(600);
 expect('CR14 VaR labelled as the 95th-percentile requirement', await run("document.querySelector('.stage:not(.is-leaving)').textContent.includes('95th-percentile support requirement (VaR 95%)')"), true);
 expect('CR14 CVaR labelled as the tail average', await run("document.querySelector('.stage:not(.is-leaving)').textContent.includes('Average support in the worst 5% of paths (CVaR 95%)')"), true);
 // CR15: source inspector
@@ -326,8 +345,8 @@ await run(`THEME.choose('system')`); await sleep(500);
 // 12 · Phones: status stays readable, no overlap, no horizontal scroll
 for (const width of [375, 320]) {
   await size(width, 800);
-  await go('obj3', 4); await sleep(600);
-  await shot(`mobile-${width}-obj3-compare`);
+  await go('obj2', 4); await sleep(600);
+  await shot(`mobile-${width}-obj2-compare`);
   expect(`${width}px snapshot status visible`, await run(`(() => { const s = document.querySelector('.status .status-short'); return Boolean(s && s.offsetWidth > 0); })()`), true);
   expect(`${width}px compare cells do not overflow`, await run(`[...document.querySelectorAll('table.compare tbody td, table.compare tbody th')].filter(el => el.scrollWidth > el.clientWidth + 1).length`), 0);
   expect(`${width}px no horizontal page scroll`, await run('document.documentElement.scrollWidth <= window.innerWidth'), true);
@@ -394,10 +413,10 @@ for (let i = 0; i < 60 && await run(cleared); i++) await sleep(50);
 expect('Flight: nothing is left behind after landing', await run(cleared), 0);
 expect('Flight: the landed cards stay put, their own entrance does not replay', await run(`[...document.querySelectorAll('#page .flow .node')].flatMap(n => n.getAnimations().map(a => a.animationName)).filter(n => n === 'nodeIn').length + (getComputedStyle(document.querySelector('#page .flow .node')).opacity === '1' ? 0 : 100)`), 0);
 expect('Flight: the real cards are back, with their moving pictures', await run(`getComputedStyle(document.querySelector('#page .flow .node .step-art')).visibility`), 'visible');
-await run(`document.querySelector('.tab[data-tab="obj2"]').click(); document.querySelector('.tab[data-tab="obj3"]').click(); true`); // two tabs inside one frame
+await run(`document.querySelector('.tab[data-tab="obj3"]').click(); document.querySelector('.tab[data-tab="obj2"]').click(); true`); // two tabs inside one frame
 for (let i = 0; i < 100 && !(await run(`document.querySelectorAll('.morph-card').length > 0`)); i++) await sleep(20);
 await sleep(200);
-expect('Flight: two quick tabs open the last one', await run(`S.tab + document.querySelectorAll('#page .page').length`), 'obj31');
+expect('Flight: two quick tabs open the last one', await run(`S.tab + document.querySelectorAll('#page .page').length`), 'obj21');
 await click('.tab[data-tab="decision"]'); await sleep(300); await click('.tab[data-tab="home"]'); // change of mind in mid-air, then Home
 await sleep(1500);
 for (let i = 0; i < 60 && await run(cleared); i++) await sleep(50);

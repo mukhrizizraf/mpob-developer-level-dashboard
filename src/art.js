@@ -15,14 +15,14 @@
 const ART = (() => {
   const SCENES = {
     obj1: ['pump', 'palm', 'balance', 'cross', 'signal'],
-    obj2: ['fundflow', 'oilcase', 'period', 'share', 'survive'],
-    obj3: ['levy', 'production', 'savings', 'seed', 'compare'],
+    obj3: ['fundflow', 'oilcase', 'period', 'share', 'survive'],
+    obj2: ['levy', 'production', 'savings', 'seed', 'compare'],
     obj4: ['balance', 'fundcheck', 'stamp', 'ladder', 'swings', 'b30'],
     decision: ['balance', 'fundcheck', 'stamp', 'blend']
   };
   const DEVELOPER = { // the Developer level shows more steps on three objectives
     obj1: ['pump', 'palm', 'balance', 'cross', 'longrun', 'signal'],
-    obj2: ['fundflow', 'oilcase', 'period', 'share', 'survive', 'seedsearch'],
+    obj3: ['fundflow', 'oilcase', 'period', 'share', 'survive', 'seedsearch'],
     obj4: ['balance', 'fundcheck', 'stamp', 'ladder', 'matrix', 'swings', 'b30']
   };
   const F ='font-family="Segoe UI, -apple-system, Roboto, sans-serif"';

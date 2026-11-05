@@ -425,7 +425,7 @@ input[type=range]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 4px co
 .vbar strong { font-size: 20px; font-variant-numeric: tabular-nums; }
 .vbar span { font-size: 14px; color: var(--muted); font-weight: 600; text-align: center; }
 
-.mini-cases { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 18px; }
+.mini-cases { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; margin-top: 18px; }
 .mini-case { text-align: center; padding: 12px 6px; border-radius: 16px; background: var(--card-2); border: 1px solid var(--line); cursor: pointer; transition: border-color .3s; }
 .mini-case[aria-pressed="true"] { border-color: var(--c); }
 .mini-case .col { height: 70px; display: flex; align-items: flex-end; justify-content: center; position: relative; }

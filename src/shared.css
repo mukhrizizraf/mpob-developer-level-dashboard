@@ -753,3 +753,21 @@ table.compare tbody td:last-child { border-radius: 0 calc(18px * var(--rk)) calc
   .step-jump { order: -1; flex: 1 0 100%; justify-content: center; background: none; padding: 0 0 4px; }
 }
 @media (prefers-reduced-motion: reduce) { .jump:active { scale: 1; } }
+
+/* ── Fund test: the money going into the fund ── */
+.moneyin { margin-top: 18px; padding: 16px 18px; background: var(--card-2); border: 1px solid var(--line); border-radius: calc(20px * var(--rk)); }
+.moneyin-head { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 4px 12px; margin-bottom: 8px; }
+.moneyin-head strong { font-size: 15px; }
+.moneyin-head span { font-size: 13px; font-weight: 600; color: var(--ink-2); }
+.moneyin-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 12px; padding: 10px 0; border-top: 1px solid var(--line); }
+.moneyin-row b { display: block; font-size: 14px; }
+.moneyin-row small { display: block; font-size: 12px; color: var(--muted); }
+.moneyin-row em { font-style: normal; font-size: 14px; font-weight: 600; }
+.moneyin-ctl { display: flex; align-items: center; flex-wrap: wrap; justify-content: flex-end; gap: 8px 12px; }
+.moneyin-ctl .chips { margin-top: 0; }
+.moneyin-row select { font: inherit; font-size: 14px; font-weight: 600; min-height: 40px; padding: 6px 10px; color: var(--ink); background: var(--card); border: 1px solid var(--line); border-radius: calc(12px * var(--rk)); }
+@media (pointer: coarse) { .moneyin-row select { font-size: 16px; } }
+.moneyin-result { margin-top: 8px; padding: 14px 16px; }
+.moneyin-result .out-big { font-size: 22px; line-height: 1.2; }
+@media (max-width: 640px) { .mini-cases { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.note .btn-link { white-space: nowrap; }
