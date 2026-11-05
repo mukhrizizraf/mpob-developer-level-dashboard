@@ -1,7 +1,7 @@
 {
   "surface": "dashboard",
   "title": "Malaysia Biodiesel Mandate Decision Studio",
-  "generatedAt": "2026-11-05T19:17:33+08:00",
+  "generatedAt": "2026-11-05T20:57:42+08:00",
   "status": "analytical snapshot",
   "filters": [],
   "queries": {
@@ -16,7 +16,7 @@
           "dataThrough": "2026-04",
           "dataThroughLabel": "2026-04",
           "sampleSize": 195,
-          "estimatedAt": "2026-11-05T19:17:33+08:00",
+          "estimatedAt": "2026-11-05T20:57:42+08:00",
           "estimatedAtLabel": "2026-11-05",
           "refreshMode": "Codex V3 authorised Python refresh",
           "operationalMaster": "MPOB_V3_Codex_Master.xlsx",
@@ -13423,6 +13423,6 @@
       }
     }
   },
-  "releaseFingerprint": "4dc23f1b06d543cd1f6ca4a5a07a8dd7514f4378401d8e524c10b62eef53ba42",
+  "releaseFingerprint": "4e7e2e7daa40993dceaefca60f7b63720cba23d8d378be05ae26d3913a4c703d",
   "buildStatus": "complete"
 }

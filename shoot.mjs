@@ -153,6 +153,12 @@ for (const [tab, steps] of Object.entries(tabs)) {
 }
 expect('No unfilled code placeholder on any step', placeholderLeaks, 0);
 expect('Only the standard term viability gap appears on any step', oldTerms, 0);
+// A number's label names only the settings that can change that number
+await run(`set('governmentSeed', 5000); true`);
+await go('obj1', 5);
+const basisAfterSeed = await run(`document.querySelector('#stage-shell .basis')?.textContent ?? ''`);
+expect('OBJ1 label does not list starting money, which cannot change the viability gap', basisAfterSeed.includes('Reviewed snapshot'), true);
+await run(`set('governmentSeed', 1000); true`);
 const nanCount = await run(`[...document.querySelectorAll('[data-out]')].filter(el => /NaN|undefined/.test(el.textContent)).length`);
 expect('No NaN/undefined in outputs on the last step', nanCount, 0);
 

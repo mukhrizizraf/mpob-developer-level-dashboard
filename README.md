@@ -4,6 +4,7 @@
 
 **https://mukhrizizraf.github.io/mpob-developer-level-dashboard/** works in any browser, on a phone, tablet or computer.
 Companion: the [User level](https://mukhrizizraf.github.io/mpob-user-level-dashboard/), the short version for MPOB / MOF staff.
+Guide: the [Studio Guide with audio](https://mukhrizizraf.github.io/mpob-developer-level-dashboard/guide-with-audio.html), a narrated walk through both levels that shows where every number comes from.
 
 The step-by-step studio with the V3 "Detailed" evidence behind every step: equations, coefficients, tests,
 saved Monte Carlo runs, the five-year stress matrix, the financing table and the WPL baseline reference.
