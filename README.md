@@ -20,8 +20,8 @@ that open like an iPhone notification stack.
 |---|---|---|
 | Home | To decide, each month, whether Malaysia's biodiesel blend stays at B20 or moves to B30. | The biodiesel journey only: one long camera move from B5 to the B30 decision, with Play and clickable chapters |
 | OBJ1 · Price | To develop an automatic pricing mechanism for biodiesel (APM-Bio). | 6 |
-| OBJ2 · Shock test | To evaluate whether a Biodiesel Stabilisation Fund (BSF) can withstand price shocks. | 6 |
-| OBJ3 · Money sources | To determine the best sources of funding for the BSF. | 5 |
+| OBJ2 · Money sources | To determine the best sources of funding for the BSF. | 5 |
+| OBJ3 · Fund test | To evaluate whether a Biodiesel Stabilisation Fund (BSF) can withstand oil price fluctuations. | 6 |
 | OBJ4 · Mandate rule | To develop a dynamic rule for moving between B20 and B30. | 7 |
 | Decision now | To decide the biodiesel blend for the chosen prices and fund. | 4 |
 
