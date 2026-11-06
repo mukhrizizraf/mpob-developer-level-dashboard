@@ -489,6 +489,160 @@ expect('Swipe: right from a later step goes back a tab', await run('S.tab'), 'ho
 await send('Emulation.setTouchEmulationEnabled', { enabled: false });
 await size(1440);
 
+/* ── Number origins: the floating card ── */
+{
+const ntAt = needle => run(`(() => { const root = document.querySelector('.stage:not(.is-leaving)'); const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT); let n; while ((n = w.nextNode())) { const i = n.data.indexOf(${JSON.stringify(needle)}); if (i < 0 || n.parentElement.closest('[hidden], [inert]')) continue; const r = document.createRange(); r.setStart(n, i); r.setEnd(n, i + ${needle.length}); let b = r.getBoundingClientRect(); if (!b.width) continue; if (b.top < 70 || b.bottom > innerHeight) { n.parentElement.scrollIntoView({ block: 'center' }); b = r.getBoundingClientRect(); } return [b.left + b.width / 2, b.top + b.height / 2]; } return null; })()`);
+const ntMouse = (x, y, type = 'mouseMoved', more = {}) => send('Input.dispatchMouseEvent', { type, x, y, button: 'none', ...more });
+const ntHover = async needle => { const at = await ntAt(needle); await sleep(120); await ntMouse(at[0] - 10, at[1] + 30); await sleep(30); await ntMouse(at[0], at[1]); await sleep(700); return at; };
+const ntLeave = async () => { await ntMouse(4, 4); await sleep(450); };
+const ntText = sel => run(`document.querySelector(${JSON.stringify(sel)})?.textContent ?? ''`);
+await run('NUMTRACE.voice(false); true');
+await go('obj1', 1);
+const before = await run('JSON.stringify([S.mops, S.pme, S.fund, S.bslRate, S.capture, S.governmentSeed, S.tab, S.step])');
+await ntHover('RM 4,650.94');
+expect('Origins: resting on a number opens the card', await run('NUMTRACE.isOpen()'), true);
+expect('Origins: the card names the number', await ntText('.nt-val'), 'RM 4,650.94/t');
+expect('Origins: the workbook cell carries the ORIGIN pin', await run(`[...document.querySelectorAll('.nt-cards td.hl')].map(c => c.dataset.a).join()`), 'cell:I201');
+expect('Origins: a thread runs from the number to the card', await run(`document.querySelectorAll('.nt-wire path.t').length`), 1);
+const box = await run(`(() => { const a = document.querySelector('.nt-inner').getBoundingClientRect(); const b = document.querySelector('.nt-ring').getBoundingClientRect(); return { covers: !(a.right < b.left || a.left > b.right || a.bottom < b.top || a.top > b.bottom), inside: a.left >= 0 && a.top >= 0 && a.right <= innerWidth && a.bottom <= innerHeight }; })()`);
+expect('Origins: the card does not cover the number', box.covers, false);
+expect('Origins: the card stays on screen', box.inside, true);
+expect('Origins: the card sits above everything', await run(`document.querySelector('.nt-panel').matches(':popover-open')`), true);
+await ntLeave();
+expect('Origins: leaving the number closes the card', await run('NUMTRACE.isOpen()'), false);
+expect('Origins: looking changes no setting', await run('JSON.stringify([S.mops, S.pme, S.fund, S.bslRate, S.capture, S.governmentSeed, S.tab, S.step])'), before);
+// the fitted sum threads three workbook cells into its terms
+await run(`S.pmeMode = 'formula'; refresh(); true`); await sleep(250);
+await ntHover('RM 4,628.39');
+expect('Origins: the fitted cost shows its three workbook cells', await run(`[...document.querySelectorAll('.nt-cards td.hl')].map(c => c.dataset.a).join()`), 'cell:D200,cell:E201,cell:F201');
+expect('Origins: threads tie each cell to its term', await run(`document.querySelectorAll('.nt-threads path.t').length`), 3);
+await ntLeave();
+await run(`S.pmeMode = 'latest'; refresh(); true`);
+// a moved slider gets a live sum with the new value, not the guide's fixed one
+await run(`S.mops = 3000; refresh(); true`); await go('obj1', 2);
+await ntHover('−RM 1,650.94');
+expect('Origins: after a change the sum is worked out live', (await ntText('.nt-kind')).startsWith('Worked out live'), true);
+expect('Origins: the live sum uses the new diesel price', (await ntText('.nt-cards')).includes('RM 3,000.00/t'), true);
+await ntLeave();
+await run(`restoreSnapshot(); true`); await sleep(200);
+// click keeps it, Escape closes it, moving onto the card keeps it
+await go('obj2', 0);
+let ntPos = await ntHover('RM 516.2 mn');
+await ntMouse(ntPos[0], ntPos[1], 'mousePressed', { button: 'left', clickCount: 1, buttons: 1 }); await ntMouse(ntPos[0], ntPos[1], 'mouseReleased', { button: 'left', clickCount: 1 }); await sleep(150);
+await ntLeave();
+expect('Origins: a click keeps the card open', await run('NUMTRACE.isOpen()'), true);
+await key('Escape'); await sleep(150);
+expect('Origins: Escape closes it', await run('NUMTRACE.isOpen()'), false);
+await ntHover('RM 516.2 mn');
+const inner = await run(`(() => { const r = document.querySelector('.nt-inner').getBoundingClientRect(); return [r.left + 60, r.top + 60]; })()`);
+await ntMouse(inner[0], inner[1]); await sleep(500);
+expect('Origins: the cursor can move onto the card', await run('NUMTRACE.isOpen()'), true);
+await ntLeave();
+// the switch in the footer turns it off and on
+await run(`document.getElementById('nt-toggle').click(); true`); await sleep(80);
+await ntHover('RM 516.2 mn');
+expect('Origins: the footer switch turns it off', await run('NUMTRACE.isOpen()'), false);
+await ntLeave();
+await run(`document.getElementById('nt-toggle').click(); true`);
+// every number on every step, Detail included, has an origin
+const ntWalk = `(() => { const skip = '.step-jump, .step-pill, .dstack-count, .dstack-bar, .dcard-head, .src-link, .prov-line, .tags, .light > span, .hb > span, .art, [data-art], .stage-head, .cyc > b'; const root = document.querySelector('.stage:not(.is-leaving)'); const out = { n: 0, none: [] }; const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT); let n; while ((n = w.nextNode())) { const p = n.parentElement; if (!p || p.closest(skip) || p.closest('style, script, [hidden]')) continue; for (const t of NUMTRACE.tokensIn(n.data)) { out.n++; const info = NUMTRACE.resolve(t.text, p); if (info.kind === 'unknown') out.none.push(t.text); } } return out; })()`;
+const ntTabs = await run(`TABS.filter(t => t.id !== 'home').map(t => [t.id, t.steps.length])`);
+let ntCount = 0; const ntNone = [];
+for (const [tab, n] of ntTabs) for (let step = 0; step < n; step++) {
+  await run(`goTab(${JSON.stringify(tab)}, { instant: true, step: ${step} }); true`); await sleep(120);
+  const r = await run(ntWalk); ntCount += r.n; ntNone.push(...r.none.map(v => `${tab}-${step + 1} ${v}`));
+}
+expect(`Origins: all ${ntCount} numbers on the steps and Detail cards have an origin`, ntNone.join(', '), '');
+// result words have a reason too, and each card says whether the item is on the User level
+await run(`goTab('obj4', { instant: true, step: 3 }); scrollTo(0, 0); true`); await sleep(450);
+const blendAt = await run(`(() => { const r = document.querySelector('.stage:not(.is-leaving) .verdict-blend'); r.scrollIntoView({ block: 'center' }); const range = document.createRange(); range.selectNodeContents(r); const b = range.getBoundingClientRect(); return [b.left + b.width / 2, b.top + b.height / 2]; })()`);
+await sleep(150); await ntMouse(blendAt[0] - 8, blendAt[1] + 24); await sleep(30); await ntMouse(blendAt[0], blendAt[1]); await sleep(700);
+expect('Origins: the blend verdict has its reason', (await ntText('.nt-cards')).includes('The rule, in order'), true);
+expect('Origins: it says where it is on the User level', await ntText('.nt-where'), 'Also on the User level · OBJ4 step 4');
+await ntLeave();
+const wordsLeft = [];
+for (const [tab, n] of ntTabs) for (let step = 0; step < n; step++) {
+  await run(`goTab(${JSON.stringify(tab)}, { instant: true, step: ${step} }); true`); await sleep(100);
+  const r = await run(`[...document.querySelectorAll('.stage:not(.is-leaving) [data-out]')].filter(el => ['priceWord', 'dPriceWord', 'fundWord', 'dFundWord', 'approvalWord', 'dApprovalWord', 'mandate', 'dMandate', 'mandateTag', 'dMandateTag', 'reason', 'dReason', 'gapWord', 'rq2Head', 's6word', 'solword'].includes(el.dataset.out)).map(el => { const i = NUMTRACE.resolve(el.textContent.trim(), el); return i.kind === 'unknown' ? el.dataset.out : ''; }).filter(Boolean)`);
+  wordsLeft.push(...r.map(v => tab + '-' + (step + 1) + ' ' + v));
+}
+expect('Origins: every Pass, Fail, blend and answer word has a reason', wordsLeft.join(', '), '');
+await run(`goTab('obj1', { instant: true, step: 4 }); scrollTo(0, 0); true`); await sleep(400);
+await ntHover('79.0');
+expect('Origins: a Developer-only step says so', await ntText('.nt-where'), 'Developer level only');
+await ntLeave();
+// the voice: a stand-in records what would be said, because headless Chrome has no speakers
+await run(`(() => { window.__said = []; const real = window.speechSynthesis; real.speak = u => { window.__said.push(u.text); u.onboundary?.({ charIndex: u.text.length / 2, charLength: 1 }); setTimeout(() => u.onend?.(), 60); }; real.cancel = () => {}; NUMTRACE.voice(true); return true; })()`);
+await run(`SOUND.enable(); goTab('obj1', { instant: true, step: 0 }); scrollTo(0, 0); true`); await sleep(400);
+await ntHover('RM 4,004.93'); await sleep(900);
+const said = await run('window.__said');
+expect('Voice: resting on a number reads the guide line aloud', said.some(t => /4,004\.93 ringgit per tonne/.test(t)), true);
+expect('Voice: it reads the run of lines about this number', said.length >= 2, true);
+expect('Voice: the card has the guide controls', await run(`Boolean(document.querySelector('.nt-play') && document.querySelector('.nt-rate') && document.querySelector('.nt-narr').options.length)`), true);
+await ntLeave();
+await run(`NUMTRACE.close(); window.__said.length = 0; S.mops = 3000; refresh(); goTab('obj1', { instant: true, step: 2 }); true`); await sleep(400);
+await ntHover('−RM 1,650.94'); await sleep(900);
+expect('Voice: a live sum is read with the new values', (await run('window.__said')).some(t => /3,000\.00 ringgit per tonne minus .*equals minus 1,650\.94 ringgit per tonne/.test(t)), true);
+await run(`NUMTRACE.close(); restoreSnapshot(); window.__said.length = 0; true`); await ntLeave();
+await run(`SOUND.disable(); goTab('obj1', { instant: true, step: 0 }); scrollTo(0, 0); true`); await sleep(400);
+await ntHover('RM 4,004.93'); await sleep(600);
+expect('Voice: the round mute button also silences it', (await run('window.__said')).length, 0);
+await run(`document.querySelector('.nt-play').click(); true`); await sleep(500);
+expect('Voice: Play still reads it when muted', (await run('window.__said')).length > 0, true);
+await run(`NUMTRACE.close(); SOUND.enable(); true`); await ntLeave();
+// the label says what the number really is
+await run(`NUMTRACE.voice(false); goTab('obj2', { instant: true, step: 0 }); scrollTo(0, 0); true`); await sleep(400);
+await ntHover('RM 20/t');
+expect('Label: a saved button that is not pressed', await ntText('.nt-kind'), 'A saved choice');
+await ntLeave();
+await run(`goTab('obj1', { instant: true, step: 3 }); scrollTo(0, 0); true`); await sleep(400);
+await ntHover('RM 1,410.5');
+expect('Label: a sum at the snapshot values', await ntText('.nt-kind'), 'Worked out in the app, at the snapshot values');
+await ntLeave();
+await run(`goTab('obj1', { instant: true, step: 1 }); S.pmeMode = 'formula'; refresh(); true`); await sleep(400);
+expect('Label: an ingredient read from the workbook', await run(`NUMTRACE.resolve('RM 4,321/t', document.querySelector('.stage:not(.is-leaving) [data-num="cpoLag"]')).kind`), 'workbook');
+await run(`S.pmeMode = 'latest'; S.mops = 3000; refresh(); true`); await sleep(200);
+await run(`goTab('obj1', { instant: true, step: 0 }); scrollTo(0, 0); true`); await sleep(400);
+await ntHover('RM 3,000.00');
+expect('Label: a value you entered', await ntText('.nt-kind'), 'Your setting');
+await ntLeave();
+await run(`restoreSnapshot(); goTab('obj4', { instant: true, step: 1 }); scrollTo(0, 0); true`); await sleep(400);
+await ntHover('RM 0 mn');
+expect('Label: a slider limit is not a result', await ntText('.nt-kind'), 'Fixed setting or target');
+await ntLeave();
+await run(`NUMTRACE.voice(true); true`);
+// Explain: a visible button that walks every number on the step, with no hovering
+await run(`goTab('obj2', { instant: true, step: 0 }); scrollTo(0, 0); window.__said.length = 0; true`); await sleep(450);
+const explainAt = await run(`(() => { const r = document.getElementById('nt-explain').getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2, r.width]; })()`);
+expect('Explain: the button is on screen on an objective', explainAt[2] > 0, true);
+await ntMouse(explainAt[0], explainAt[1]); await sleep(60); await ntMouse(explainAt[0], explainAt[1], 'mousePressed', { button: 'left', clickCount: 1, buttons: 1 }); await ntMouse(explainAt[0], explainAt[1], 'mouseReleased', { button: 'left', clickCount: 1 }); await sleep(250);
+expect('Explain: pressing it opens the card with no hovering', await run('NUMTRACE.isOpen()'), true);
+expect('Explain: it reads aloud', (await run('window.__said')).length > 0, true);
+const walkAt = await run('NUMTRACE.tourAt()');
+expect('Explain: it knows how many numbers are on the step', walkAt[1] >= 3, true);
+await sleep(1600);
+expect('Explain: it moves on by itself', (await run('NUMTRACE.tourAt()'))?.[0] > 0, true);
+await run(`document.querySelector('[data-nt-next]').click(); true`); await sleep(120);
+await key('Escape'); await sleep(150);
+expect('Explain: Escape ends the walk', [await run('NUMTRACE.isOpen()'), await run('NUMTRACE.tourAt()')].join(), 'false,');
+await run(`goTab('home', { instant: true }); true`); await sleep(500);
+expect('Explain: it is hidden on Home', await run(`getComputedStyle(document.getElementById('nt-explain')).display`), 'none');
+await run(`goTab('obj1', { instant: true, step: 0 }); NUMTRACE.voice(false); true`); await sleep(300);
+for (const w of [1180, 390]) { await size(w); await sleep(350); const fit = await run(`(() => { const b = document.getElementById('nt-explain').getBoundingClientRect(); const t = document.querySelector('.theme').getBoundingClientRect(); return b.width > 0 && b.right <= innerWidth && t.right <= innerWidth + 1 && document.documentElement.scrollWidth <= innerWidth + 1; })()`); expect(`Explain: the top bar still fits at ${w}px`, fit, true); }
+await size(1440);
+// phone: tap a number, the card is a sheet at the bottom
+await size(390);
+await send('Emulation.setTouchEmulationEnabled', { enabled: true });
+await run(`goTab('obj2', { instant: true, step: 0 }); scrollTo(0, 0); true`); await sleep(400);
+const tapAt = await ntAt('RM 516.2 mn');
+await send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: tapAt[0], y: tapAt[1] }] }); await send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }); await sleep(600);
+expect('Origins: on a phone a tap opens it', await run('NUMTRACE.isOpen()'), true);
+expect('Origins: on a phone it fits the screen width', await run(`(() => { const r = document.querySelector('.nt-inner').getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth; })()`), true);
+await run('NUMTRACE.close(); true');
+await send('Emulation.setTouchEmulationEnabled', { enabled: false });
+await size(1440);
+}
+
 console.log(checks.join('\n'));
 const failed = checks.filter(c => c.startsWith('FAIL')).length;
 console.log(`${checks.length - failed} of ${checks.length} checks pass.`);

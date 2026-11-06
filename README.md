@@ -31,6 +31,7 @@ that open like an iPhone notification stack.
 Everything in the User level (swipe between steps and tabs, exact-value boxes that reject bad input, "Your scenario" labelling, reset
 scopes, the six looks, `#obj4-5` links, print summary, the Home journey (scroll, swipe or Play) with the sponsor marks, the living hive behind every page that writes the step in hand, the step pictures (a moving drawing of each step, five following the live numbers), the step morph (first click only, then a slight pop), the numbered step buttons in the footer, the slide-to-start guide and sound, and the tabs at the top), plus:
 
+- **Number origins.** Press **Explain** in the top bar to walk through every number on the step with the voice, or rest the cursor on any number and a card floats beside it, above everything, including an open Detail card: the workbook cells with the ORIGIN pin, the sum with its real values, the road from workbook to screen, and a thread back to the number. Click to keep it open; Escape closes it. On a phone, tap the number. It only reads, and the footer switch turns it off. At the default settings the words and sums come from the audio guide's checked lines. After you move a slider the sum is worked out live with your values. The card reads itself aloud (narrator picker, 1× to 2×; the round mute button silences it, and Play still works), covers result words such as Pass, Fail and the blend, and says whether the item is also on the User level.
 - **Detail stacks.** Tap a stack to fan the cards out, then open any card. Collapsed cards cannot be reached with Tab.
 - **Charts.** Hover or tap to read a point, or focus a chart and use the arrow keys (Shift for a year, Home and End for the ends).
   *Show the data as a table* lists every point.
@@ -65,7 +66,7 @@ Needs Node 20 or later. No `npm install`.
 ```sh
 npm run build            # or: node build.mjs
 npm test                 # rules match V3; snapshot check; trace matches the snapshot; nothing loads from the network
-npm run shoot -- shots   # optional: headless Chrome/Edge walk-through + the review's acceptance checks (SCHEME=dark for dark mode)
+npm run shoot -- shots   # optional: headless Chrome/Edge walk-through + the review's acceptance checks, about 9 minutes (SCHEME=dark for dark mode)
 ```
 
 ## Files
@@ -76,6 +77,7 @@ npm run shoot -- shots   # optional: headless Chrome/Edge walk-through + the rev
 | `src/styles.css` | Design tokens (light + dark), ring-step infographic, detail stack, tables, charts |
 | `src/shared.css` | Shared with the User level: mobile baseline, review fixes, motion hooks, themes, print |
 | `src/model.js` | V3 calculation rules and number formats |
+| `src/numtrace.js`, `src/numtrace.css` | Developer only: the number-origins card. Rebuilt data in `data/number-origins.json` |
 | `src/motion.js` | Shared spring engine, swipe gesture, CSS spring curves |
 | `src/theme.js` | Shared look selector (six looks) |
 | `src/home.js` | Shared: the biodiesel journey on Home (one long camera move, sponsor marks) and the living hive behind every page, which writes the step in hand |
@@ -88,6 +90,7 @@ npm run shoot -- shots   # optional: headless Chrome/Edge walk-through + the rev
 | `src/app.js` | Tabs, steps, detail stacks, charts, source inspector, live bindings |
 | `src/lottie-icons.mjs` | Project-authored Lottie marks (B30 / B20 / B15 results, detail-stack toggle) |
 | `data/master-trace.json` | Master-workbook trace rows (generated) |
+| `data/number-origins.json` | Generated: every monthly row of the master, the settings sheets, and the audio guide's lines. The guide's lines are kept only if the guide was built from this same snapshot, so rebuild the guide first, then this studio |
 | `build.mjs`, `test.mjs`, `shoot.mjs` | Build, tests, browser check |
 
 ## Design rules to keep

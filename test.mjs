@@ -108,3 +108,20 @@ test('equality is not a pass: gap 0 and fund at the limit both fail B30', () => 
   const r = user.policyState({ mops: 4000, pme: 4000, fund: Number(a.fundSafetyMultiple) * Number(a.rolling12AvgB20DrawdownRmMn), b30Auth: true }, a);
   assert.equal(r.pricePass, false); assert.equal(r.fundSafe, false); assert.equal(r.mandate, 'B20');
 });
+test('number origins: the embedded guide sums belong to this snapshot, and the workbook rows match it', () => {
+  const html = readFileSync(new URL(page, import.meta.url), 'utf8');
+  const origins = JSON.parse(html.match(/<script type="application\/json" id="number-origins">([\s\S]*?)<\/script>/)[1]);
+  assert.equal(origins.fingerprint, String(snapshot.releaseFingerprint).slice(0, 12));
+  const last = origins.workbook.months.at(-1);
+  assert.equal(last.p, base.period);
+  assert.ok(Math.abs(last.v.H - base.mopsRmT) < 0.01 && Math.abs(last.v.I - base.pmeRmT) < 0.01);
+  const kSum = origins.workbook.months.slice(-12).reduce((sum, m) => sum + m.v.K, 0) / 1000;
+  assert.ok(Math.abs(kSum - a.annualCpoProductionMt) < 1e-6, 'column K base');
+  for (const sc of origins.scenes) assert.match(sc.id, /^(obj[1-4]|decision)-\d+$/);
+});
+test('number origins only reads: it writes no setting and keeps to the agreed terms', () => {
+  const code = readFileSync(new URL('./src/numtrace.js', import.meta.url), 'utf8');
+  assert.ok(!/\bS\.\w+\s*=[^=]/.test(code) && !/(?<![.\w])set\(|resetKey\(|restoreSnapshot\(/.test(code), 'must not change a setting');
+  assert.ok(!/price gap|price signal|price check/i.test(code), 'one term: viability gap');
+  assert.ok(!/\u2014/.test(code));
+});

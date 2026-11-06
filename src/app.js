@@ -1524,7 +1524,7 @@ function showPoint(wrap, idx, at) {
   wrap.classList.add('is-hover');
   const guide = $('.guide', wrap); guide.setAttribute('x1', cfg.px[cfg.idx]); guide.setAttribute('x2', cfg.px[cfg.idx]);
   $$('.hov', wrap).forEach(dot => { const s = cfg.series[Number(dot.dataset.hov)]; dot.setAttribute('cx', cfg.px[cfg.idx]); dot.setAttribute('cy', cfg.Y(num(row[s.k]))); });
-  tip.innerHTML = `<b>${esc(cfg.tipX(row))}</b>${cfg.series.map(s => `<span><i style="background:${s.color}"></i>${s.label}<em>${cfg.yFmt(row[s.k])}</em></span>`).join('')}`;
+  tip.innerHTML = `<b>${esc(cfg.tipX(row))}</b>${cfg.series.map(s => `<span><i style="background:${s.color}"></i>${s.label}<em>${cfg.yFmt(row[s.k])}</em></span>`).join('')}<small class="nt-tip-hint">Click to see where these come from</small>`;
   tip.hidden = false;
   const box = $('svg', wrap).getBoundingClientRect();
   const x = at?.x ?? box.left + cfg.px[cfg.idx] / cfg.W * box.width;

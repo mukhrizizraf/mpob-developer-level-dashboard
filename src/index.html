@@ -24,6 +24,7 @@
     <nav class="tabs" id="tabs" aria-label="Objectives"></nav>
     <div class="status" id="status"></div>
     <div class="scenario" id="scenario" role="status" hidden></div>
+    <button type="button" class="nt-explain" id="nt-explain" title="Explain every number on this step, with voice"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9.2a4 4 0 0 1 0 5.6M18.3 6.6a7.8 7.8 0 0 1 0 10.8"/></svg><span>Explain</span></button>
     <div class="theme" id="theme"></div>
   </div>
 </header>
@@ -32,7 +33,7 @@
 <section class="print-only" id="print-summary" aria-hidden="true"></section>
 <div class="sr-only" id="announce" aria-live="polite" aria-atomic="true"></div>
 <footer class="foot">
-  <span>Values from the reviewed V3 snapshot. Simulated, not official MPOB figures.</span><span>Controls do not rerun the research models.</span><span>B15 is a proposed safeguard only.</span><span>WPL is a baseline reference only.</span><span>Settings reset when the page reloads; the link keeps your place.</span><span><button type="button" class="btn-link" data-prov-open>Sources and provenance</button></span>
+  <span>Values from the reviewed V3 snapshot. Simulated, not official MPOB figures.</span><span>Controls do not rerun the research models.</span><span>B15 is a proposed safeguard only.</span><span>WPL is a baseline reference only.</span><span>Settings reset when the page reloads; the link keeps your place.</span><span><button type="button" class="btn-link" data-prov-open>Sources and provenance</button></span><span><button type="button" class="btn-link" id="nt-toggle" aria-pressed="true">Number origins: on</button></span>
 </footer>
 <div class="tip" id="tip" role="status" aria-live="off" hidden></div>
 <dialog class="prov" id="prov" aria-labelledby="prov-title">
@@ -41,6 +42,7 @@
 </dialog>
 <script type="application/json" id="mpob-snapshot">__SNAPSHOT__</script>
 <script type="application/json" id="mpob-trace">__TRACE__</script>
+<script type="application/json" id="number-origins">__ORIGINS__</script>
 <script type="application/json" id="brand-logos">__BRAND__</script>
 <script type="application/json" id="lottie-icons">__LOTTIE_ICONS__</script>
 <script type="application/json" id="lottie-flow">__LOTTIE_FLOW__</script>
@@ -58,6 +60,7 @@
 /*__SOUND__*/
 /*__GUIDE__*/
 /*__APP__*/
+/*__NUMTRACE__*/
 THEME.mount(document.getElementById('theme'));
 </script>
 </body>

@@ -39,16 +39,44 @@ const snapshotText = read(snapshotPath);
 const snapshot = JSON.parse(snapshotText);
 if (trace.rows.at(-1).period !== snapshot.queries.decision_snapshot.rows[0].period) throw new Error('Master trace month does not match the snapshot month.');
 const inlineJson = value => JSON.stringify(value).replace(/</g, '\\u003c');
+
+// Number origins: what the floating "where does this number come from?" card reads.
+//   workbook: every monthly row of the master, with its Excel row numbers, and the settings sheets (from cell-provenance.json).
+//   scenes:   the audio guide's checked narration and sum cards. They hold fixed numbers, so they are used only while the
+//             guide was built from this same snapshot. After a data refresh they are dropped and the card falls back to live sums.
+// Inside the project this is rebuilt on every build; a standalone repo copy reads the saved file.
+const originsPath = 'data/number-origins.json';
+if (inProject) {
+  const cells = JSON.parse(read(provenancePath));
+  const months = Object.entries(cells.monthly).map(([p, record]) => ({ p, row: record.row, v: record.values }));
+  const workbook = { file: cells.masterFile, headers: Object.fromEntries(Object.entries(cells.monthlyHeaders).map(([col, text]) => [col, String(text).split('\n')[0]])), months, settings: cells.settings };
+  let scenes = [], rail = [], guideBuilt = null;
+  const guideFile = at('../MPOB_Studio_Guide_User_and_Developer with audio.html');
+  if (existsSync(guideFile)) {
+    const line = readFileSync(guideFile, 'utf8').split('\n').find(text => text.startsWith('const DATA = '));
+    const guide = line ? JSON.parse(line.slice('const DATA = '.length).replace(/;\s*$/, '')) : null;
+    if (guide?.meta?.fingerprint === String(snapshot.releaseFingerprint).slice(0, 12)) {
+      guideBuilt = guide.meta.built; rail = guide.rail;
+      scenes = guide.scenes.filter(sc => sc.tab !== 'overview').map(sc => ({ id: sc.id, tab: sc.tab, dev: sc.dev, user: sc.user, shot: sc.shot, title: sc.title, beats: sc.beats.map(b => ({
+        say: b.say.en, spot: b.spot, shot: b.shot, rail: b.rail, links: b.links, card: b.card && !['journey', 'files', 'detail'].includes(b.card.type) ? b.card : null })) }));
+    } else console.warn('Number origins: the audio guide was built from another snapshot, so its sums are left out. Rebuild it with make_motion_guide.py.');
+  }
+  writeFileSync(at(originsPath), `${JSON.stringify({ fingerprint: String(snapshot.releaseFingerprint).slice(0, 12), guideBuilt, rail, scenes, workbook })}\n`);
+}
+const origins = existsSync(at(originsPath)) ? JSON.parse(read(originsPath)) : { fingerprint: '', rail: [], scenes: [], workbook: { file: trace.masterFile, headers: {}, months: [], settings: {} } };
+if (origins.fingerprint !== String(snapshot.releaseFingerprint).slice(0, 12)) origins.scenes = [];
 const stripExports = source => source.replace(/^export\s+/gm, '');
 const lottiePlayer = read(`${lottieDir}/lottie-light-5.13.0.mjs`).replace(/^export \{ lottie as default \};\s*$/m, 'window.lottie = lottie;');
 if (!lottiePlayer.includes('window.lottie = lottie;')) throw new Error('Lottie export line not found; the player build changed.');
 
 const html = read('src/index.html')
   .replace('/*__CSS__*/', () => `${read('src/styles.css')}
-${read('src/shared.css')}`)
+${read('src/shared.css')}
+${read('src/numtrace.css')}`)
   .replace('__SNAPSHOT__', () => inlineJson({ generatedAt: snapshot.generatedAt, status: snapshot.status, releaseFingerprint: snapshot.releaseFingerprint,
     snapshotSha256: createHash('sha256').update(snapshotText).digest('hex'), builtAt: new Date().toISOString(), queries: snapshot.queries }))
   .replace('__TRACE__', () => inlineJson(trace))
+  .replace('__ORIGINS__', () => inlineJson(origins))
   .replace('__LOTTIE_ICONS__', () => inlineJson({ ...lottieIcons, stack: lottieStack }))
   .replace('__LOTTIE_FLOW__', () => inlineJson(JSON.parse(read(`${lottieDir}/fund-flow-arrow.json`))))
   .replace('/*__LOTTIE__*/', () => `(function(){\n${lottiePlayer}\n})();`)
@@ -62,9 +90,10 @@ ${read('src/shared.css')}`)
   .replace('/*__SOUND__*/', () => read('src/sound.js'))
   .replace('/*__GUIDE__*/', () => read('src/guide.js'))
   .replace('__BRAND__', () => JSON.stringify(brandLogos()).replace(/</g, '\\u003c'))
-  .replace('/*__APP__*/', () => read('src/app.js'));
+  .replace('/*__APP__*/', () => read('src/app.js'))
+  .replace('/*__NUMTRACE__*/', () => read('src/numtrace.js'));
 
-for (const token of ['/*__CSS__*/', '__SNAPSHOT__', '__TRACE__', '__LOTTIE_ICONS__', '__LOTTIE_FLOW__', '/*__LOTTIE__*/', '/*__MODEL__*/', '/*__MOTION__*/', '/*__THEME__*/', '/*__HOME__*/', '/*__HALL__*/', '/*__MORPH__*/', '/*__ART__*/', '/*__SOUND__*/', '/*__GUIDE__*/', '__BRAND__', '/*__APP__*/']) {
+for (const token of ['/*__CSS__*/', '__SNAPSHOT__', '__TRACE__', '__LOTTIE_ICONS__', '__LOTTIE_FLOW__', '/*__LOTTIE__*/', '/*__MODEL__*/', '/*__MOTION__*/', '/*__THEME__*/', '/*__HOME__*/', '/*__HALL__*/', '/*__MORPH__*/', '/*__ART__*/', '/*__SOUND__*/', '/*__GUIDE__*/', '__BRAND__', '/*__APP__*/', '__ORIGINS__', '/*__NUMTRACE__*/']) {
   if (html.includes(token)) throw new Error(`Unreplaced build token ${token}`);
 }
 writeFileSync(at(output), html);
