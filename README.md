@@ -5,7 +5,7 @@
 **https://mukhrizizraf.github.io/mpob-developer-level-dashboard/** works in any browser, on a phone, tablet or computer.
 Companion: the [User level](https://mukhrizizraf.github.io/mpob-user-level-dashboard/), the short version for MPOB / MOF staff.
 Guide: the [Studio Guide with audio](https://mukhrizizraf.github.io/mpob-developer-level-dashboard/guide-with-audio.html), a narrated walk through both levels that shows where every number comes from.
-Master data: the [Master Data Studio](https://mukhrizizraf.github.io/mpob-developer-level-dashboard/master-data-studio.html), which shows the raw data behind the workbook: what AI can download, what to ask MPOB for, and the actual column in the workbook. Also as a [PDF list](https://mukhrizizraf.github.io/mpob-developer-level-dashboard/MPOB_V3_Codex_Master_Raw_Data_List.pdf).
+Master data: the [Master Data Studio](https://mukhrizizraf.github.io/mpob-developer-level-dashboard/master-data-studio.html), one screen on the real workbook: click a column to see what it is and who has it, or press Listen. It shows what AI can download and what to ask MPOB for. Also as a [PDF list](https://mukhrizizraf.github.io/mpob-developer-level-dashboard/MPOB_V3_Codex_Master_Raw_Data_List.pdf).
 
 The step-by-step studio with the V3 "Detailed" evidence behind every step: equations, coefficients, tests,
 saved Monte Carlo runs, the five-year stress matrix, the financing table and the WPL baseline reference.
